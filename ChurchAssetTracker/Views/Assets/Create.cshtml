@@ -1,0 +1,13 @@
+@model ChurchAssetTracker.Models.AssetEditViewModel
+@{
+    ViewData["Title"] = "Add Asset";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Add Asset</h1>
+        <p>Add a church-owned item that can be tracked or checked out.</p>
+    </div>
+</div>
+
+@await Html.PartialAsync("_AssetForm", Model)

@@ -1,0 +1,225 @@
+<style>
+.directory-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.directory-header h2 {
+    margin: 0 0 6px;
+    font-size: 2rem;
+}
+
+.directory-header p {
+    margin: 0;
+    color: #64748b;
+}
+
+.directory-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.directory-filter-card {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid #dbe3ea;
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 18px;
+    box-shadow: 0 10px 28px rgba(15,23,42,.06);
+}
+
+.directory-filter-card label {
+    display: block;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.directory-filter-card input[type="text"] {
+    min-width: 280px;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+
+.directory-filter-card input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+.directory-table-card {
+    background: #fff;
+    border: 1px solid #dbe3ea;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 28px rgba(15,23,42,.06);
+}
+
+.directory-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.directory-table th,
+.directory-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.directory-table th {
+    background: #f8fafc;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.directory-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.directory-person-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.directory-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 3px solid #fff;
+    background: #e2e8f0;
+    box-shadow: 0 8px 18px rgba(15,23,42,.12);
+    flex: 0 0 auto;
+}
+
+.directory-avatar.initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #174c2f;
+    font-weight: 900;
+    font-size: 1rem;
+    border: 1px solid #dbe3ea;
+}
+
+.directory-name-block strong {
+    display: block;
+    color: #0f172a;
+}
+
+.directory-name-block span {
+    display: block;
+    margin-top: 3px;
+    color: #64748b;
+    font-size: .88rem;
+}
+
+.status-pill {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: .8rem;
+    font-weight: 900;
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.status-pill.inactive {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+}
+
+.directory-row-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.directory-row-actions .danger,
+.directory-row-actions button.danger {
+    background: #991b1b !important;
+    color: #fff !important;
+    border-color: #7f1d1d !important;
+}
+
+html.dark-mode .directory-filter-card,
+html.dark-mode .directory-table-card {
+    background: #111827 !important;
+    border-color: #334155 !important;
+    color: #e5e7eb !important;
+    box-shadow: 0 12px 28px rgba(0,0,0,.32) !important;
+}
+
+html.dark-mode .directory-header p,
+html.dark-mode .directory-name-block span {
+    color: #94a3b8 !important;
+}
+
+html.dark-mode .directory-table th {
+    background: #1f2937 !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+}
+
+html.dark-mode .directory-table td {
+    border-color: #334155 !important;
+}
+
+html.dark-mode .directory-table tbody tr:hover {
+    background: #1f2937 !important;
+}
+
+html.dark-mode .directory-name-block strong {
+    color: #f8fafc !important;
+}
+
+html.dark-mode .directory-avatar {
+    border-color: #1f2937;
+}
+
+html.dark-mode .directory-avatar.initials {
+    background: #020617 !important;
+    color: #86efac !important;
+    border-color: #334155 !important;
+}
+
+html.dark-mode .directory-filter-card input[type="text"] {
+    background: #020617 !important;
+    border-color: #475569 !important;
+    color: #e5e7eb !important;
+}
+
+@@media(max-width: 850px) {
+    .directory-header {
+        display: grid;
+    }
+
+    .directory-filter-card {
+        display: grid;
+    }
+
+    .directory-filter-card input[type="text"] {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .directory-table-card {
+        overflow-x: auto;
+    }
+
+    .directory-table {
+        min-width: 760px;
+    }
+}
+</style>

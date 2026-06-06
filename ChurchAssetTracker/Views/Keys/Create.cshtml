@@ -1,0 +1,22 @@
+@model ChurchAssetTracker.Models.KeyEditViewModel
+@{
+    ViewData["Title"] = "Add Key";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Add Key</h1>
+        <p>Add a physical church key to the tracking system.</p>
+    </div>
+</div>
+
+<div class="card form-card">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <partial name="_KeyForm" model="Model" />
+        <div class="form-actions">
+            <button type="submit" class="button primary">Save Key</button>
+            <a class="button" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,47 @@
+@model ChurchAssetTracker.Models.KeyAssignmentReturnViewModel
+@{
+    ViewData["Title"] = "Return Key";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Return Key</h1>
+        <p>Close out the key assignment and record any return notes.</p>
+    </div>
+    <a class="btn-secondary" asp-controller="KeyAssignments" asp-action="Index">Back to Key Assignments</a>
+</div>
+
+<div class="details-card">
+    <p><strong>Key:</strong> @Model.KeyName</p>
+    <p><strong>Code:</strong> @Model.KeyCode</p>
+    <p><strong>Key Holder:</strong> @Model.KeyHolder</p>
+    <p><strong>Issued:</strong> @Model.IssuedDate.ToShortDateString()</p>
+    <p><strong>Reason Issued:</strong> @(Model.ReasonIssued ?? "")</p>
+    <p><strong>Existing Notes:</strong> @(Model.ExistingNotes ?? "")</p>
+</div>
+
+<div class="form-card">
+    <form asp-action="Return" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="KeyAssignmentId" />
+        <input type="hidden" asp-for="KeyName" />
+        <input type="hidden" asp-for="KeyCode" />
+        <input type="hidden" asp-for="KeyHolder" />
+        <input type="hidden" asp-for="IssuedDate" />
+        <input type="hidden" asp-for="ReasonIssued" />
+        <input type="hidden" asp-for="ExistingNotes" />
+
+        <div class="form-grid">
+            <label class="full-width">
+                <span>Return Notes</span>
+                <textarea asp-for="ReturnNotes" rows="4" placeholder="Optional notes, such as returned in person, key condition, or follow-up needed."></textarea>
+                <span asp-validation-for="ReturnNotes" class="field-validation"></span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Mark Key Returned</button>
+            <a class="btn-secondary" asp-controller="KeyAssignments" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>

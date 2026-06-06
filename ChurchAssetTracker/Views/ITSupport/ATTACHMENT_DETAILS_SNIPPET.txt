@@ -1,0 +1,58 @@
+Add this to Views/ITSupport/Details.cshtml near the comments section.
+
+IMPORTANT: Also add this near the top of Details.cshtml:
+var attachments = await Context.RequestServices.GetRequiredService<ChurchAssetTracker.Data.SqlDataService>().GetITSupportTicketAttachmentsAsync(t.TicketId);
+
+---------------- SNIPPET START ----------------
+
+<div class="panel">
+    <h3>Attachments</h3>
+
+    <form asp-controller="ITSupportAttachments" asp-action="UploadAttachment" method="post" enctype="multipart/form-data" class="attachment-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="ticketId" value="@t.TicketId" />
+
+        <input type="file" name="attachment" />
+        <button class="btn primary" type="submit">Upload Attachment</button>
+    </form>
+
+    <small class="help-text">Max 10 MB. Executable/script files are blocked.</small>
+
+    @if (!attachments.Any())
+    {
+        <div class="empty-attachments">
+            <strong>No attachments yet</strong>
+            <span>Upload screenshots, PDFs, or supporting documents for this ticket.</span>
+        </div>
+    }
+    else
+    {
+        <div class="attachment-list">
+            @foreach (var a in attachments)
+            {
+                <a class="attachment-row" asp-controller="ITSupportAttachments" asp-action="DownloadAttachment" asp-route-id="@a.AttachmentId">
+                    <div>
+                        <strong>@a.OriginalFileName</strong>
+                        <span>@a.FileSizeDisplay • uploaded by @(a.UploadedByName ?? "Unknown")</span>
+                    </div>
+                    <small>@a.UploadedDate.ToString("g")</small>
+                </a>
+            }
+        </div>
+    }
+</div>
+
+<style>
+.attachment-form { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+.attachment-form input[type="file"] { border:1px solid #cbd5e1; border-radius:10px; padding:8px; background:#fff; }
+.help-text { display:block; color:#64748b; margin-bottom:14px; }
+.empty-attachments { border:1px dashed #cbd5e1; border-radius:14px; padding:16px; background:#f8fafc; color:#475569; }
+.empty-attachments strong, .empty-attachments span { display:block; }
+.attachment-list { display:flex; flex-direction:column; gap:10px; }
+.attachment-row { display:flex; justify-content:space-between; gap:14px; text-decoration:none; color:#0f172a; border:1px solid #e2e8f0; border-radius:14px; padding:12px 14px; background:#fff; }
+.attachment-row:hover { background:#f8fafc; }
+.attachment-row strong, .attachment-row span { display:block; }
+.attachment-row span, .attachment-row small { color:#64748b; }
+</style>
+
+---------------- SNIPPET END ----------------

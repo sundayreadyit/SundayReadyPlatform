@@ -1,0 +1,19 @@
+@model List<ChurchAssetTracker.Models.UserListItem>
+@{ ViewData["Title"] = "User Administration"; }
+<div class="page-header"><div><h2>User Administration</h2><p>Manage application logins and permissions.</p></div><a class="btn primary" asp-action="Create">Add User</a></div>
+@if (TempData["SuccessMessage"] != null) { <div class="alert success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"] != null) { <div class="alert danger">@TempData["ErrorMessage"]</div> }
+<table class="data-table"><thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Roles</th><th>Status</th><th class="actions">Actions</th></tr></thead><tbody>
+@foreach (var user in Model) {
+<tr>
+<td>@user.DisplayName</td><td>@user.Username</td><td>@user.Email</td><td>@user.Roles</td><td>@(user.IsActive ? "Active" : "Inactive")</td>
+<td class="actions">
+<a class="btn small" asp-action="Edit" asp-route-id="@user.UserId">Edit</a>
+@if (!string.IsNullOrWhiteSpace(user.Email) && user.IsActive) {
+<a class="btn small" asp-action="SendInvite" asp-route-id="@user.UserId">Send Invite</a>
+}
+@if (user.IsActive) {
+<form asp-action="Deactivate" asp-route-id="@user.UserId" method="post" class="inline-form">@Html.AntiForgeryToken()<button class="btn small danger" type="submit">Deactivate</button></form>
+}
+</td></tr>}
+</tbody></table>

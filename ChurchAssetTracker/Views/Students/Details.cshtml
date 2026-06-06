@@ -1,0 +1,107 @@
+@model ChurchAssetTracker.Data.StudentFormViewModel
+@{
+    ViewData["Title"] = "Student Details";
+    var student = Model.Student;
+    var photoUrl = string.IsNullOrWhiteSpace(student.PhotoPath) ? null : Url.Content("~" + student.PhotoPath);
+    var initials = $"{(string.IsNullOrWhiteSpace(student.FirstName) ? "S" : student.FirstName[0])}{(string.IsNullOrWhiteSpace(student.LastName) ? "" : student.LastName[0])}";
+}
+
+<div class="details-hero">
+    <div class="details-identity">
+        @if (!string.IsNullOrWhiteSpace(photoUrl))
+        {
+            <img class="details-photo" src="@photoUrl" alt="@student.DisplayName photo" />
+        }
+        else
+        {
+            <div class="details-photo initials">@initials</div>
+        }
+
+        <div>
+            <span class="eyebrow">CWCA Student Record</span>
+            <h2>@student.DisplayName</h2>
+            <p>@student.GradeLevel @(!string.IsNullOrWhiteSpace(student.Classroom) ? $"• {student.Classroom}" : "")</p>
+        </div>
+    </div>
+
+    <div class="details-actions">
+        <a class="btn" asp-action="Index">Back</a>
+        <a class="btn primary" asp-action="Edit" asp-route-id="@student.StudentId">Edit</a>
+    </div>
+</div>
+
+<div class="details-grid">
+    <section class="details-card">
+        <h3>Student Information</h3>
+        <dl>
+            <dt>Name</dt><dd>@student.DisplayName</dd>
+            <dt>Legal First Name</dt><dd>@student.FirstName</dd>
+            <dt>Last Name</dt><dd>@student.LastName</dd>
+            <dt>Preferred Name</dt><dd>@student.PreferredName</dd>
+            <dt>Date of Birth</dt><dd>@student.DateOfBirth?.ToString("yyyy-MM-dd")</dd>
+            <dt>Grade</dt><dd>@student.GradeLevel</dd>
+            <dt>Classroom</dt><dd>@student.Classroom</dd>
+            <dt>Teacher</dt><dd>@student.TeacherName</dd>
+            <dt>Status</dt><dd>@(student.IsActive ? "Active" : "Inactive")</dd>
+        </dl>
+    </section>
+
+    <section class="details-card">
+        <h3>Parent / Guardian Information</h3>
+        <dl>
+            <dt>Guardian 1</dt><dd>@student.ParentGuardian1Name</dd>
+            <dt>Guardian 1 Phone</dt><dd>@student.ParentGuardian1Phone</dd>
+            <dt>Guardian 1 Email</dt><dd>@student.ParentGuardian1Email</dd>
+            <dt>Guardian 2</dt><dd>@student.ParentGuardian2Name</dd>
+            <dt>Guardian 2 Phone</dt><dd>@student.ParentGuardian2Phone</dd>
+            <dt>Guardian 2 Email</dt><dd>@student.ParentGuardian2Email</dd>
+        </dl>
+    </section>
+
+    <section class="details-card">
+        <h3>Emergency / Medical</h3>
+        <dl>
+            <dt>Emergency Contact</dt><dd>@student.EmergencyContactName</dd>
+            <dt>Emergency Phone</dt><dd>@student.EmergencyContactPhone</dd>
+            <dt>Relationship</dt><dd>@student.EmergencyContactRelationship</dd>
+            <dt>Allergies / Medical Notes</dt><dd>@student.AllergiesMedicalNotes</dd>
+            <dt>Authorized Pickup Notes</dt><dd>@student.AuthorizedPickupNotes</dd>
+        </dl>
+    </section>
+
+    <section class="details-card">
+        <h3>Notes</h3>
+        <p class="details-notes">@student.Notes</p>
+    </section>
+</div>
+
+<section class="details-card">
+    <h3>Student Documents</h3>
+
+    @if (Model.Documents == null || !Model.Documents.Any())
+    {
+        <div class="details-empty">No documents uploaded.</div>
+    }
+    else
+    {
+        <div class="details-doc-list">
+            @foreach (var doc in Model.Documents)
+            {
+                <div class="details-doc-row">
+                    <div class="details-doc-icon">📄</div>
+                    <div>
+                        <strong>@doc.DocumentTitle</strong>
+                        <span>@doc.DocumentType • @doc.OriginalFileName • @doc.FileSizeDisplay</span>
+                        @if (!string.IsNullOrWhiteSpace(doc.Notes))
+                        {
+                            <small>@doc.Notes</small>
+                        }
+                    </div>
+                    <a class="btn small" asp-action="DownloadDocument" asp-route-id="@doc.StudentDocumentId">Download</a>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+@await Html.PartialAsync("_SchoolDetailsStyles")

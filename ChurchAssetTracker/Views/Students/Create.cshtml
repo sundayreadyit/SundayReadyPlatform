@@ -1,0 +1,154 @@
+@model ChurchAssetTracker.Data.StudentFormViewModel
+@{
+    ViewData["Title"] = "Add Student";
+    var actionText = "Save Student";
+    var photoUrl = string.IsNullOrWhiteSpace(Model.Student.PhotoPath) ? null : Url.Content("~" + Model.Student.PhotoPath);
+    var initials = $"{(string.IsNullOrWhiteSpace(Model.Student.FirstName) ? "S" : Model.Student.FirstName[0])}{(string.IsNullOrWhiteSpace(Model.Student.LastName) ? "" : Model.Student.LastName[0])}";
+}
+
+<div class="school-form-hero">
+    <span class="eyebrow">CWCA Student Management</span>
+    <h2>@ViewData["Title"]</h2>
+    <p>Maintain student records, teacher assignment, guardians, emergency information, and student photo.</p>
+</div>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="school-validation">
+            <strong>Please fix the following:</strong>
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+
+    <section class="school-form-card" style="margin-bottom:22px;">
+        <h3>Student Photo</h3>
+        <p>Add a student photo for easier identification.</p>
+
+        <div class="photo-upload-grid">
+            <div class="record-photo-card">
+                @if (!string.IsNullOrWhiteSpace(photoUrl))
+                {
+                    <img class="record-photo" src="@photoUrl" alt="Student photo" />
+                }
+                else
+                {
+                    <div class="record-photo placeholder">@initials</div>
+                }
+                <div class="photo-help">JPG, PNG, GIF, or WEBP. Max 2 MB.</div>
+            </div>
+
+            <div class="school-field">
+                <label>Upload Photo</label>
+                <input type="file" name="photoFile" accept="image/png,image/jpeg,image/gif,image/webp" />
+                <small>Uploading a new photo will replace the current photo.</small>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Student.PhotoPath))
+                {
+                    <label class="checkbox-row" style="margin-top:12px;">
+                        <input type="checkbox" name="removePhoto" value="true" />
+                        Remove current photo
+                    </label>
+                }
+            </div>
+        </div>
+    </section>
+
+    <div class="school-form-shell">
+        <section class="school-form-card">
+            <h3>Student Information</h3>
+            <p>Core student identity, grade, classroom, and assigned teacher.</p>
+
+            <div class="school-grid">
+                <div class="school-field"><label>First Name</label><input asp-for="Student.FirstName" /></div>
+                <div class="school-field"><label>Last Name</label><input asp-for="Student.LastName" /></div>
+                <div class="school-field"><label>Preferred Name</label><input asp-for="Student.PreferredName" /></div>
+            </div>
+
+            <div class="school-grid" style="margin-top:16px;">
+                <div class="school-field"><label>Date of Birth</label><input asp-for="Student.DateOfBirth" type="date" /></div>
+                <div class="school-field"><label>Grade Level</label><input asp-for="Student.GradeLevel" /></div>
+                <div class="school-field"><label>Classroom</label><input asp-for="Student.Classroom" /></div>
+            </div>
+
+            <div class="school-grid two" style="margin-top:16px;">
+                <div class="school-field">
+                    <label>Assigned Teacher</label>
+                    <select asp-for="Student.TeacherFacultyStaffId">
+                        <option value="">-- No teacher assigned --</option>
+                        @foreach (var teacher in Model.Teachers)
+                        {
+                            <option value="@teacher.FacultyStaffId">@teacher.DisplayName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="school-field">
+                    <label class="checkbox-row" style="margin-top:32px;">
+                        <input asp-for="Student.IsActive" />
+                        Active
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <aside class="school-side-panel">
+            <div class="school-side-box">
+                <h3>Photo Tips</h3>
+                <ul>
+                    <li>Use a clear, front-facing photo when possible.</li>
+                    <li>Photos help staff identify students quickly.</li>
+                    <li>Photos can support future attendance or pickup features.</li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <section class="school-form-card" style="margin-top:22px;">
+        <h3>Parent / Guardian 1</h3>
+        <div class="school-grid">
+            <div class="school-field"><label>Name</label><input asp-for="Student.ParentGuardian1Name" /></div>
+            <div class="school-field"><label>Phone</label><input asp-for="Student.ParentGuardian1Phone" /></div>
+            <div class="school-field"><label>Email</label><input asp-for="Student.ParentGuardian1Email" /></div>
+        </div>
+
+        <h3 style="margin-top:22px;">Parent / Guardian 2</h3>
+        <div class="school-grid">
+            <div class="school-field"><label>Name</label><input asp-for="Student.ParentGuardian2Name" /></div>
+            <div class="school-field"><label>Phone</label><input asp-for="Student.ParentGuardian2Phone" /></div>
+            <div class="school-field"><label>Email</label><input asp-for="Student.ParentGuardian2Email" /></div>
+        </div>
+    </section>
+
+    <section class="school-form-card" style="margin-top:22px;">
+        <h3>Emergency Contact</h3>
+        <div class="school-grid">
+            <div class="school-field"><label>Name</label><input asp-for="Student.EmergencyContactName" /></div>
+            <div class="school-field"><label>Phone</label><input asp-for="Student.EmergencyContactPhone" /></div>
+            <div class="school-field"><label>Relationship</label><input asp-for="Student.EmergencyContactRelationship" /></div>
+        </div>
+    </section>
+
+    <section class="school-form-card" style="margin-top:22px;">
+        <h3>Safety, Pickup, and Notes</h3>
+        <div class="school-grid full">
+            <div class="school-field"><label>Allergies / Medical Notes</label><textarea asp-for="Student.AllergiesMedicalNotes"></textarea></div>
+            <div class="school-field"><label>Authorized Pickup Notes</label><textarea asp-for="Student.AuthorizedPickupNotes"></textarea></div>
+            <div class="school-field"><label>General Notes</label><textarea asp-for="Student.Notes"></textarea></div>
+        </div>
+
+        <div class="school-actions">
+            <button class="btn primary" type="submit">@actionText</button>
+            <a class="btn" asp-action="Index">Cancel</a>
+        </div>
+    </section>
+</form>
+
+@await Html.PartialAsync("_SchoolFormStyles")
+@await Html.PartialAsync("_SchoolPhotoStyles")
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

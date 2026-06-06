@@ -1,0 +1,224 @@
+@{
+    var toasts = new List<(string Type, string Title, string Message)>();
+
+    void AddToast(string type, string title, string? message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            toasts.Add((type, title, message));
+        }
+    }
+
+    AddToast("success", "Success", Convert.ToString(TempData["Toast.Success"]));
+    AddToast("info", "Info", Convert.ToString(TempData["Toast.Info"]));
+    AddToast("warning", "Warning", Convert.ToString(TempData["Toast.Warning"]));
+    AddToast("error", "Error", Convert.ToString(TempData["Toast.Error"]));
+
+    // Backward compatibility with existing TempData keys already used in the portal.
+    AddToast("success", "Success", Convert.ToString(TempData["SuccessMessage"]));
+    AddToast("error", "Error", Convert.ToString(TempData["ErrorMessage"]));
+    AddToast("warning", "Warning", Convert.ToString(TempData["WarningMessage"]));
+    AddToast("info", "Info", Convert.ToString(TempData["InfoMessage"]));
+    AddToast("error", "Ticket Error", Convert.ToString(TempData["TicketError"]));
+}
+
+@if (toasts.Any())
+{
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true">
+        @foreach (var toast in toasts)
+        {
+            var icon = toast.Type switch
+            {
+                "success" => "✓",
+                "warning" => "!",
+                "error" => "×",
+                _ => "i"
+            };
+
+            <div class="toast-item toast-@toast.Type" role="alert">
+                <div class="toast-icon">@icon</div>
+
+                <div class="toast-content">
+                    <strong>@toast.Title</strong>
+                    <span>@toast.Message</span>
+                </div>
+
+                <button type="button" class="toast-close" onclick="dismissToast(this)" aria-label="Close notification">×</button>
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .toast-container {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: min(420px, calc(100vw - 32px));
+        pointer-events: none;
+    }
+
+    .toast-item {
+        pointer-events: auto;
+        display: grid;
+        grid-template-columns: 38px 1fr 32px;
+        gap: 12px;
+        align-items: start;
+        background: #ffffff;
+        border: 1px solid #dbe3ea;
+        border-left: 6px solid #64748b;
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, .18);
+        animation: toastSlideIn .22s ease-out both;
+        overflow: hidden;
+    }
+
+    .toast-item.toast-hiding {
+        animation: toastSlideOut .18s ease-in both;
+    }
+
+    .toast-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        color: #ffffff;
+        background: #64748b;
+        line-height: 1;
+    }
+
+    .toast-content strong {
+        display: block;
+        color: #0f172a;
+        margin-bottom: 3px;
+    }
+
+    .toast-content span {
+        display: block;
+        color: #475569;
+        line-height: 1.35;
+    }
+
+    .toast-close {
+        border: 0;
+        background: transparent;
+        color: #64748b;
+        font-size: 1.35rem;
+        line-height: 1;
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 8px;
+    }
+
+    .toast-close:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .toast-success {
+        border-left-color: #16a34a;
+    }
+
+    .toast-success .toast-icon {
+        background: #16a34a;
+    }
+
+    .toast-info {
+        border-left-color: #2563eb;
+    }
+
+    .toast-info .toast-icon {
+        background: #2563eb;
+    }
+
+    .toast-warning {
+        border-left-color: #f59e0b;
+    }
+
+    .toast-warning .toast-icon {
+        background: #f59e0b;
+    }
+
+    .toast-error {
+        border-left-color: #dc2626;
+    }
+
+    .toast-error .toast-icon {
+        background: #dc2626;
+    }
+
+    @@keyframes toastSlideIn {
+        from {
+            transform: translateY(14px) translateX(18px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0) translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @@keyframes toastSlideOut {
+        from {
+            transform: translateY(0) translateX(0);
+            opacity: 1;
+        }
+
+        to {
+            transform: translateY(10px) translateX(18px);
+            opacity: 0;
+        }
+    }
+
+    @@media (max-width: 640px){
+        .toast-container {
+            right: 12px;
+            bottom: 12px;
+            width: calc(100vw - 24px);
+        }
+
+        .toast-item {
+            grid-template-columns: 34px 1fr 28px;
+            padding: 12px;
+        }
+    }
+</style>
+
+<script>
+    function dismissToast(button) {
+        const toast = button.closest('.toast-item');
+        if (!toast) return;
+
+        toast.classList.add('toast-hiding');
+        window.setTimeout(() => toast.remove(), 190);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const toasts = document.querySelectorAll('.toast-item');
+
+        toasts.forEach(function (toast, index) {
+            const delay = 5200 + (index * 450);
+
+            window.setTimeout(function () {
+                if (!document.body.contains(toast)) return;
+
+                toast.classList.add('toast-hiding');
+
+                window.setTimeout(function () {
+                    if (document.body.contains(toast)) {
+                        toast.remove();
+                    }
+                }, 190);
+            }, delay);
+        });
+    });
+</script>

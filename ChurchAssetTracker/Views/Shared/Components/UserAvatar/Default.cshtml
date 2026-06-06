@@ -1,0 +1,12 @@
+@model ChurchAssetTracker.ViewComponents.UserAvatarViewModel
+
+@if (!string.IsNullOrWhiteSpace(Model.ProfilePicturePath))
+{
+    <img src="@Url.Content(Model.ProfilePicturePath)"
+         alt="@Model.DisplayName"
+         class="profile-avatar" />
+}
+else
+{
+    <span class="profile-avatar">@Model.Initial</span>
+}

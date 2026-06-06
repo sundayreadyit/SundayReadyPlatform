@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Email Test";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Email Test</h2>
+        <p>Send a test email using the configured SMTP settings.</p>
+    </div>
+</div>
+
+@if (TempData["EmailTestMessage"] != null)
+{
+    <div class="alert success">@TempData["EmailTestMessage"]</div>
+}
+
+@if (TempData["EmailTestError"] != null)
+{
+    <div class="alert danger">@TempData["EmailTestError"]</div>
+}
+
+<form asp-action="SendTest" method="post" class="form-card">
+    @Html.AntiForgeryToken()
+
+    <label>Send test email to</label>
+    <input type="email" name="toEmail" placeholder="name@cwczillah.org" required />
+
+    <div class="form-actions">
+        <button class="btn primary" type="submit">Send Test Email</button>
+    </div>
+</form>

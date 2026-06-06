@@ -1,0 +1,62 @@
+@model ChurchAssetTracker.Models.KeyAssignmentCreateViewModel
+@{
+    ViewData["Title"] = "Assign Key";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Assign Key</h1>
+        <p>Select the key being issued and the person responsible for it.</p>
+    </div>
+    <a class="btn-secondary" asp-controller="KeyAssignments" asp-action="Index">Back to Key Assignments</a>
+</div>
+
+<div class="form-card">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+        <div class="form-grid">
+            <label>
+                <span>Key</span>
+                <select asp-for="KeyId">
+                    <option value="">-- Select key --</option>
+                    @foreach (var key in Model.AvailableKeys)
+                    {
+                        <option value="@key.Id">@key.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="KeyId" class="field-validation"></span>
+            </label>
+
+            <label>
+                <span>Person</span>
+                <select asp-for="PersonId">
+                    <option value="">-- Select person --</option>
+                    @foreach (var person in Model.ActivePeople)
+                    {
+                        <option value="@person.Id">@person.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="PersonId" class="field-validation"></span>
+            </label>
+
+            <label class="full-width">
+                <span>Reason Issued</span>
+                <input asp-for="ReasonIssued" placeholder="Staff access, worship team, cleaning team, event setup, etc." />
+                <span asp-validation-for="ReasonIssued" class="field-validation"></span>
+            </label>
+
+            <label class="full-width">
+                <span>Notes</span>
+                <textarea asp-for="Notes" rows="4" placeholder="Optional notes about access approval, expectations, or special instructions."></textarea>
+                <span asp-validation-for="Notes" class="field-validation"></span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Assign Key</button>
+            <a class="btn-secondary" asp-controller="KeyAssignments" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,21 @@
+@model ChurchAssetTracker.Models.UserEditViewModel
+@{ ViewData["Title"] = "Edit User"; }
+<h2>Edit User</h2>
+<form asp-action="Edit" method="post" class="form-card">
+@Html.AntiForgeryToken()
+<input type="hidden" asp-for="UserId" />
+
+@if (!ViewData.ModelState.IsValid) { <div class="alert danger"><strong>Please fix the following:</strong><div asp-validation-summary="All"></div></div> }
+<div class="grid two"><div><label>Display Name</label><input asp-for="DisplayName" /></div><div><label>Username</label><input asp-for="Username" /></div></div>
+<label>Email</label><input asp-for="Email" type="email" />
+<label>Password</label><input asp-for="Password" type="password" autocomplete="new-password" />
+<small>Leave blank to email the user a password setup link.</small>
+<label class="checkbox-row"><input asp-for="IsActive" /> Active</label>
+<h3>Roles</h3><div class="roles-list">
+@foreach (var role in Model.AvailableRoles) {
+<label class="checkbox-row"><input type="checkbox" name="SelectedRoleIds" value="@role.RoleId" checked="@role.IsSelected" /> @role.RoleName</label>
+}
+</div>
+
+<div class="form-actions"><button class="btn primary" type="submit">Save User</button><a class="btn" asp-action="Index">Cancel</a></div></form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

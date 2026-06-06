@@ -1,0 +1,1 @@
+<a class="btn small" asp-controller="KeyAccess" asp-action="Manage" asp-route-keyId="@item.KeyId">Manage Access Areas</a>

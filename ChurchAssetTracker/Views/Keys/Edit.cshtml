@@ -1,0 +1,23 @@
+@model ChurchAssetTracker.Models.KeyEditViewModel
+@{
+    ViewData["Title"] = "Edit Key";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Edit Key</h1>
+        <p>Update key information and active status.</p>
+    </div>
+</div>
+
+<div class="card form-card">
+    <form asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="KeyId" />
+        <partial name="_KeyForm" model="Model" />
+        <div class="form-actions">
+            <button type="submit" class="button primary">Save Changes</button>
+            <a class="button" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,74 @@
+@model ChurchAssetTracker.Models.CheckoutCreateViewModel
+@{
+    ViewData["Title"] = "Check Out Asset";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Check Out Asset</h1>
+        <p>Select the church item being borrowed and who is responsible for returning it.</p>
+    </div>
+    <a class="btn-secondary" asp-controller="Checkouts" asp-action="Index">Back to Checkouts</a>
+</div>
+
+<div class="form-card">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+        <div class="form-grid">
+            <label>
+                <span>Asset</span>
+                <select asp-for="AssetId">
+                    <option value="">-- Select asset --</option>
+                    @foreach (var asset in Model.AvailableAssets)
+                    {
+                        <option value="@asset.Id">@asset.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="AssetId" class="field-validation"></span>
+            </label>
+
+            <label>
+                <span>Borrower</span>
+                <select asp-for="PersonId">
+                    <option value="">-- Select person --</option>
+                    @foreach (var person in Model.ActivePeople)
+                    {
+                        <option value="@person.Id">@person.Name</option>
+                    }
+                </select>
+                <span asp-validation-for="PersonId" class="field-validation"></span>
+            </label>
+
+            <label>
+                <span>Quantity Borrowed</span>
+                <input asp-for="QuantityOut" type="number" min="1" />
+                <span asp-validation-for="QuantityOut" class="field-validation"></span>
+            </label>
+
+            <label>
+                <span>Expected Return Date</span>
+                <input asp-for="ExpectedReturnDate" type="date" />
+                <span asp-validation-for="ExpectedReturnDate" class="field-validation"></span>
+            </label>
+
+            <label>
+                <span>Condition Out</span>
+                <input asp-for="ConditionOut" placeholder="Good, fair, damaged, missing cable, etc." />
+                <span asp-validation-for="ConditionOut" class="field-validation"></span>
+            </label>
+
+            <label class="full-width">
+                <span>Checkout Notes</span>
+                <textarea asp-for="CheckoutNotes" rows="4" placeholder="Optional notes about why it is being borrowed or any special instructions."></textarea>
+                <span asp-validation-for="CheckoutNotes" class="field-validation"></span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Save Checkout</button>
+            <a class="btn-secondary" asp-controller="Checkouts" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>

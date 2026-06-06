@@ -1,0 +1,184 @@
+@model ChurchAssetTracker.Data.ITSupportTicketDetailsViewModel
+@{
+    ViewData["Title"] = "IT Support Ticket Details";
+    var t = Model.Ticket;
+
+    var publicComments = Model.Comments.Where(c => !c.IsInternal).OrderBy(c => c.CreatedDate).ToList();
+    var internalComments = Model.Comments.Where(c => c.IsInternal).OrderByDescending(c => c.CreatedDate).ToList();
+
+    var isClosedLike = t.Status == "Closed" || t.Status == "Cancelled";
+    var isResolved = t.Status == "Resolved";
+    var isOverdue = t.DueDate.HasValue && t.DueDate.Value.Date < DateTime.Today && !isClosedLike && !isResolved;
+
+    var priorityClass = "priority-" + (t.Priority ?? "").Replace(" ", "-").ToLowerInvariant();
+    var statusClass = "status-" + (t.Status ?? "").Replace(" ", "-").ToLowerInvariant();
+}
+
+<div class="ticket-detail-hero">
+    <div class="ticket-detail-top">
+        <div>
+            <span class="eyebrow">IT Support Ticket</span>
+            <h2>@t.TicketNumber - @t.Title</h2>
+            <p>@(string.IsNullOrWhiteSpace(t.Category) ? "General IT Support" : t.Category)</p>
+        </div>
+
+        <div class="ticket-detail-actions">
+            <a class="btn" asp-action="Edit" asp-route-id="@t.TicketId">Edit Ticket</a>
+            <a class="btn" asp-action="Index">Back to Tickets</a>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;">
+        <span class="ticket-pill @priorityClass">@t.Priority Priority</span>
+        <span class="ticket-pill @statusClass">@t.Status</span>
+        @if (isOverdue) { <span class="ticket-pill priority-high">Overdue</span> }
+    </div>
+</div>
+
+@if (TempData["TicketError"] != null) { <div class="alert danger">@TempData["TicketError"]</div> }
+@if (TempData["SuccessMessage"] != null) { <div class="alert success">@TempData["SuccessMessage"]</div> }
+
+<div class="ticket-detail-grid">
+    <section class="ticket-info-panel">
+        <h3>Ticket Information</h3>
+
+        <div class="ticket-facts">
+            <div class="ticket-fact"><span>Status</span><strong>@t.Status</strong></div>
+            <div class="ticket-fact"><span>Priority</span><strong>@t.Priority</strong></div>
+            <div class="ticket-fact"><span>Assigned To</span><strong>@(t.AssignedToName ?? "Unassigned")</strong></div>
+            <div class="ticket-fact"><span>Requester</span><strong>@t.RequestedByName</strong></div>
+            <div class="ticket-fact"><span>Email</span><strong>@t.RequestedByEmail</strong></div>
+            <div class="ticket-fact"><span>Phone</span><strong>@t.RequestedByPhone</strong></div>
+            <div class="ticket-fact"><span>Asset</span><strong>@(t.ITAssetName ?? "None")</strong></div>
+            <div class="ticket-fact"><span>Room / Area</span><strong>@(t.AccessAreaName ?? "None")</strong></div>
+            <div class="ticket-fact"><span>Due Date</span><strong>@(t.DueDate.HasValue ? t.DueDate.Value.ToString("g") : "Not set")</strong></div>
+            <div class="ticket-fact"><span>Created</span><strong>@t.CreatedDate.ToString("g")</strong></div>
+            <div class="ticket-fact"><span>Resolved</span><strong>@(t.ResolvedDate.HasValue ? t.ResolvedDate.Value.ToString("g") : "Not resolved")</strong></div>
+            <div class="ticket-fact"><span>Closed</span><strong>@(t.ClosedDate.HasValue ? t.ClosedDate.Value.ToString("g") : "Not closed")</strong></div>
+        </div>
+
+        <h3 style="margin-top:20px;">Description</h3>
+        <p style="white-space:pre-wrap;">@t.Description</p>
+    </section>
+
+    <aside class="ticket-action-panel">
+        <h3>Workflow Actions</h3>
+        <p style="color:#64748b;">Move the ticket through the support workflow.</p>
+
+        <div class="workflow-action-grid">
+            @if (!isClosedLike)
+            {
+                @if (t.Status != "Assigned")
+                {
+                    <form asp-action="MarkAssigned" asp-route-id="@t.TicketId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button class="btn" type="submit">Mark Assigned</button>
+                    </form>
+                }
+
+                @if (t.Status != "In Progress")
+                {
+                    <form asp-action="MarkInProgress" asp-route-id="@t.TicketId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button class="btn" type="submit">In Progress</button>
+                    </form>
+                }
+
+                @if (t.Status != "Waiting on User")
+                {
+                    <form asp-action="WaitingOnUser" asp-route-id="@t.TicketId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button class="btn" type="submit">Waiting on User</button>
+                    </form>
+                }
+
+                @if (t.Status != "Resolved")
+                {
+                    <form asp-action="Resolve" asp-route-id="@t.TicketId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button class="btn primary" type="submit">Resolve</button>
+                    </form>
+                }
+
+                <form asp-action="Close" asp-route-id="@t.TicketId" method="post" class="inline-form">
+                    @Html.AntiForgeryToken()
+                    <button class="btn primary" type="submit">Close</button>
+                </form>
+
+                <form asp-action="Cancel" asp-route-id="@t.TicketId" method="post" class="inline-form">
+                    @Html.AntiForgeryToken()
+                    <button class="btn danger" type="submit">Cancel</button>
+                </form>
+            }
+            else
+            {
+                <form asp-action="Reopen" asp-route-id="@t.TicketId" method="post" class="inline-form">
+                    @Html.AntiForgeryToken()
+                    <button class="btn primary" type="submit">Reopen Ticket</button>
+                </form>
+            }
+        </div>
+    </aside>
+</div>
+
+<div class="conversation-split">
+    <section class="ticket-conversation-panel">
+        <h3>Requester Conversation</h3>
+        <p style="color:#64748b;">Visible to requester and IT staff.</p>
+
+        <form asp-controller="ITSupport" asp-action="AddComment" method="post" class="comment-box">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ticketId" value="@t.TicketId" />
+            <input type="hidden" name="isInternal" value="false" />
+            <label>Public reply</label>
+            <textarea name="commentText" placeholder="Ask a question or provide an update the requester should see."></textarea>
+            <div class="form-actions"><button class="btn primary" type="submit">Add Public Reply</button></div>
+        </form>
+
+        @if (!publicComments.Any())
+        {
+            <div class="it-empty-state"><strong>No public conversation yet</strong><span>Requester-visible replies will appear here.</span></div>
+        }
+        else
+        {
+            foreach (var c in publicComments)
+            {
+                <div class="comment-card public">
+                    <div class="comment-meta"><strong>@(c.CreatedByName ?? "Unknown")</strong><span>@c.CreatedDate.ToString("g")</span></div>
+                    <p>@c.CommentText</p>
+                </div>
+            }
+        }
+    </section>
+
+    <section class="ticket-conversation-panel">
+        <h3>Internal Technician Notes</h3>
+        <p style="color:#64748b;">Hidden from requesters.</p>
+
+        <form asp-controller="ITSupport" asp-action="AddComment" method="post" class="comment-box">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ticketId" value="@t.TicketId" />
+            <input type="hidden" name="isInternal" value="true" />
+            <label>Internal note</label>
+            <textarea name="commentText" placeholder="Document troubleshooting steps, escalation notes, or backend findings."></textarea>
+            <div class="form-actions"><button class="btn" type="submit">Add Internal Note</button></div>
+        </form>
+
+        @if (!internalComments.Any())
+        {
+            <div class="it-empty-state"><strong>No internal notes yet</strong><span>Technician-only notes will appear here.</span></div>
+        }
+        else
+        {
+            foreach (var c in internalComments)
+            {
+                <div class="comment-card internal">
+                    <div class="comment-meta"><strong>@(c.CreatedByName ?? "Unknown")</strong><span>@c.CreatedDate.ToString("g")</span></div>
+                    <p>@c.CommentText</p>
+                </div>
+            }
+        }
+    </section>
+</div>
+
+@await Html.PartialAsync("_ITSupportPolishStyles")

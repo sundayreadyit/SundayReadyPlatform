@@ -1,0 +1,132 @@
+@model List<ChurchAssetTracker.Data.ReservationRow>
+@{
+    ViewData["Title"] = "Reservations";
+    var status = Convert.ToString(ViewBag.Status ?? "Active");
+    var canManage = User.IsInRole("Admin") || User.IsInRole("ReservationManager");
+    var summary = ViewBag.Summary as ChurchAssetTracker.Data.ReservationDashboardSummary;
+}
+
+<div class="page-header">
+    <div>
+        <h2>Reservations</h2>
+        <p>Manage internal church building, room, and event reservations.</p>
+    </div>
+    <div>
+        <a class="btn" asp-action="Calendar">Calendar View</a>
+        @if (canManage)
+        {
+            <a class="btn primary" asp-action="Create">Add Reservation</a>
+        }
+    </div>
+</div>
+
+@if (TempData["ReservationError"] != null)
+{
+    <div class="alert danger">@TempData["ReservationError"]</div>
+}
+
+@if (summary != null)
+{
+    <div class="stats-grid">
+        <div class="stat-card"><span>Upcoming Approved</span><strong>@summary.UpcomingApproved</strong></div>
+        <div class="stat-card"><span>Pending Approval</span><strong>@summary.PendingApproval</strong></div>
+        <div class="stat-card"><span>Today</span><strong>@summary.TodayReservations</strong></div>
+        <div class="stat-card"><span>Public Upcoming</span><strong>@summary.PublicUpcoming</strong></div>
+    </div>
+
+    @if (summary.UpcomingItems.Any())
+    {
+        <div class="panel">
+            <h3>Next Reservations</h3>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Event</th><th>Room/Area</th><th>Start</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var item in summary.UpcomingItems)
+                {
+                    <tr>
+                        <td><a asp-action="Details" asp-route-id="@item.ReservationId">@item.EventName</a></td>
+                        <td>@item.AccessAreaName</td>
+                        <td>@item.StartDateTime.ToString("g")</td>
+                        <td>@item.Status</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+<form method="get" class="filter-bar">
+    <label>Status</label>
+    <select name="status" onchange="this.form.submit()">
+        <option value="Active" selected="@(status == "Active")">Active</option>
+        <option value="Pending" selected="@(status == "Pending")">Pending</option>
+        <option value="Approved" selected="@(status == "Approved")">Approved</option>
+        <option value="Denied" selected="@(status == "Denied")">Denied</option>
+        <option value="Cancelled" selected="@(status == "Cancelled")">Cancelled</option>
+        <option value="All" selected="@(status == "All")">All</option>
+    </select>
+</form>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Event</th>
+            <th>Room/Area</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Requested By</th>
+            <th>Status</th>
+            <th>Visibility</th>
+            <th class="actions">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td><strong>@item.EventName</strong></td>
+            <td>@(item.AccessAreaName ?? "Not selected")</td>
+            <td>@item.StartDateTime.ToString("g")</td>
+            <td>@item.EndDateTime.ToString("g")</td>
+            <td>@(string.IsNullOrWhiteSpace(item.RequestedByName) ? item.ContactName : item.RequestedByName)</td>
+            <td>
+                @if (item.Status == "Approved") { <span class="badge good">Approved</span> }
+                else if (item.Status == "Pending") { <span class="badge warning">Pending</span> }
+                else { <span class="badge muted">@item.Status</span> }
+            </td>
+            <td>
+                @if (item.IsPublicEvent) { <span class="badge good">Public</span> }
+                else { <span class="badge muted">Private</span> }
+            </td>
+            <td class="actions">
+                <a class="btn small" asp-action="Details" asp-route-id="@item.ReservationId">Details</a>
+                @if (canManage)
+                {
+                    <a class="btn small" asp-action="Edit" asp-route-id="@item.ReservationId">Edit</a>
+                    @if (item.Status == "Pending")
+                    {
+                        <form asp-action="Approve" asp-route-id="@item.ReservationId" method="post" class="inline-form">
+                            @Html.AntiForgeryToken()
+                            <button class="btn small" type="submit">Approve</button>
+                        </form>
+                        <form asp-action="Deny" asp-route-id="@item.ReservationId" method="post" class="inline-form">
+                            @Html.AntiForgeryToken()
+                            <button class="btn small danger" type="submit">Deny</button>
+                        </form>
+                    }
+                    @if (item.Status != "Cancelled")
+                    {
+                        <form asp-action="Cancel" asp-route-id="@item.ReservationId" method="post" class="inline-form">
+                            @Html.AntiForgeryToken()
+                            <button class="btn small danger" type="submit">Cancel</button>
+                        </form>
+                    }
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

@@ -1,0 +1,211 @@
+@model ChurchAssetTracker.Models.ITAssetRow
+@{
+    var isNew = true;
+    ViewData["Title"] = isNew ? "Add IT Asset" : "Edit IT Asset";
+}
+
+<div class="it-assets-page">
+    <div class="it-page-header">
+        <div>
+            <span class="eyebrow">IT Operations</span>
+            <h1>@ViewData["Title"]</h1>
+            <p>Store IT asset login, firmware, and lifecycle details for authorized IT users.</p>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert success">@TempData["SuccessMessage"]</div>
+    }
+
+    <form asp-action="@(isNew ? "Create" : "Edit")" asp-route-id="@Model.ITAssetId" method="post">
+        @Html.AntiForgeryToken()
+        <input asp-for="ITAssetId" type="hidden" />
+
+        <section class="it-card">
+            <div class="section-title">
+                <div class="section-icon">🧰</div>
+                <div>
+                    <h2>Asset Information</h2>
+                    <p>Name, type, hardware details, and inventory identifiers.</p>
+                </div>
+            </div>
+
+            <div asp-validation-summary="All" class="alert danger"></div>
+
+            <div class="it-form-grid">
+                <div class="it-field span-2">
+                    <label asp-for="AssetName"></label>
+                    <input asp-for="AssetName" />
+                    <span asp-validation-for="AssetName"></span>
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="AssetType"></label>
+                    <input asp-for="AssetType" placeholder="Switch, Router, AP, Server, Laptop, Phone" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="Make"></label>
+                    <input asp-for="Make" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="Model"></label>
+                    <input asp-for="Model" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="SerialNumber"></label>
+                    <input asp-for="SerialNumber" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="AssetTag"></label>
+                    <input asp-for="AssetTag" />
+                </div>
+            </div>
+        </section>
+
+        <section class="it-card">
+            <div class="section-title">
+                <div class="section-icon">🌐</div>
+                <div>
+                    <h2>Network & Assignment</h2>
+                    <p>Network identifiers, location, and ownership.</p>
+                </div>
+            </div>
+
+            <div class="it-form-grid">
+                <div class="it-field">
+                    <label asp-for="IPAddress"></label>
+                    <input asp-for="IPAddress" placeholder="Example: 192.168.1.10" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="MACAddress"></label>
+                    <input asp-for="MACAddress" placeholder="Example: 00-11-22-33-44-55" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="Location"></label>
+                    <input asp-for="Location" placeholder="Office, sanctuary, lab, rack, room..." />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="AssignedTo"></label>
+                    <input asp-for="AssignedTo" />
+                </div>
+            </div>
+        </section>
+
+        <section class="it-card">
+            <div class="section-title">
+                <div class="section-icon">🔐</div>
+                <div>
+                    <h2>Access & Lifecycle</h2>
+                    <p>Credential references, operating system, purchase, and warranty details.</p>
+                </div>
+            </div>
+
+            <div class="security-note">
+                <strong>Credential storage reminder:</strong>
+                Passwords entered here are restricted to authorized IT Asset users. Keep access limited and review permissions regularly.
+            </div>
+
+            <div class="it-form-grid">
+                <div class="it-field">
+                    <label asp-for="LoginUsername"></label>
+                    <input asp-for="LoginUsername" autocomplete="off" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="LoginPassword"></label>
+                    <div class="password-field-wrap">
+                        <input asp-for="LoginPassword" id="LoginPassword" name="LoginPassword" type="password" value="@Model.LoginPassword" autocomplete="off" />
+                        <button type="button" class="password-toggle" onclick="togglePasswordField('LoginPassword')">Show</button>
+                    </div>
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="CredentialReference"></label>
+                    <input asp-for="CredentialReference" placeholder="Optional credential notes or reference" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="OperatingSystem"></label>
+                    <input asp-for="OperatingSystem" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="FirmwareVersion"></label>
+                    <input asp-for="FirmwareVersion" placeholder="Example: 1.2.3, UniFi 8.0.24, iOS 17.5" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="PurchaseDate"></label>
+                    <input asp-for="PurchaseDate" type="date" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="WarrantyExpiration"></label>
+                    <input asp-for="WarrantyExpiration" type="date" />
+                </div>
+            </div>
+        </section>
+
+        <section class="it-card">
+            <div class="section-title">
+                <div class="section-icon">📝</div>
+                <div>
+                    <h2>Notes & Status</h2>
+                    <p>General notes and whether this asset is active.</p>
+                </div>
+            </div>
+
+            <div class="it-form-grid">
+                <div class="it-field span-full">
+                    <label asp-for="Notes"></label>
+                    <textarea asp-for="Notes" rows="5"></textarea>
+                </div>
+
+                <label class="it-checkbox span-full">
+                    <input asp-for="IsActive" />
+                    <span>Active asset</span>
+                </label>
+            </div>
+        </section>
+
+        <div class="sticky-actions">
+            <button type="submit" class="btn primary">Save IT Asset</button>
+            <a asp-action="Index" class="btn">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@await Html.PartialAsync("_ITAssetStyles")
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        function togglePasswordField(id) {
+            const input = document.getElementById(id);
+            if (!input) return;
+
+            const button = input.parentElement.querySelector("button");
+            const isHidden = input.type === "password";
+
+            input.type = isHidden ? "text" : "password";
+
+            if (button) {
+                button.textContent = isHidden ? "Hide" : "Show";
+            }
+        }
+    </script>
+}

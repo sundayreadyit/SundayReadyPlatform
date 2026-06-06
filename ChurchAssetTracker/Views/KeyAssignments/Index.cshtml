@@ -1,0 +1,204 @@
+@model IEnumerable<ChurchAssetTracker.Models.KeyAssignmentRow>
+@{
+    ViewData["Title"] = "Key Assignments";
+
+    var groupedAssignments = Model
+        .GroupBy(k => k.KeyHolder)
+        .OrderBy(g => g.Key);
+}
+
+<div class="page-header">
+    <div>
+        <h1>Key Assignments</h1>
+        <p>Track who has church keys, when they were issued, and when they are returned.</p>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn-primary"
+           asp-controller="KeyAssignments"
+           asp-action="Create">
+            Assign Key
+        </a>
+
+        <a class="btn-secondary"
+           asp-controller="KeyAssignmentsBulk"
+           asp-action="BulkCreate">
+            Assign Multiple Keys
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<div class="table-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Key Holder</th>
+                <th>Active Keys</th>
+                <th>Returned Keys</th>
+                <th>Issued</th>
+                <th>Status</th>
+                <th class="actions-col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var group in groupedAssignments)
+        {
+            var activeKeys = group
+                .Where(k => k.ReturnedDate == null)
+                .OrderBy(k => k.KeyName)
+                .ThenBy(k => k.KeyCode)
+                .ToList();
+
+            var returnedKeys = group
+                .Where(k => k.ReturnedDate != null)
+                .OrderBy(k => k.KeyName)
+                .ThenBy(k => k.KeyCode)
+                .ToList();
+
+            var hasActiveKeys = activeKeys.Any();
+
+            var issuedDates = activeKeys.Any()
+                ? activeKeys.Select(k => k.IssuedDate.Date).Distinct().OrderBy(d => d).ToList()
+                : returnedKeys.Select(k => k.IssuedDate.Date).Distinct().OrderBy(d => d).ToList();
+
+            <tr>
+                <td>
+                    <strong>@group.Key</strong>
+                </td>
+
+                <td>
+                    @if (activeKeys.Any())
+                    {
+                        <div class="key-chip-list">
+                            @foreach (var key in activeKeys)
+                            {
+                                <span class="key-chip active-key">
+                                    @key.KeyName
+                                    <small>@key.KeyCode</small>
+                                </span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="muted-text">No active keys</span>
+                    }
+                </td>
+
+                <td>
+                    @if (returnedKeys.Any())
+                    {
+                        <div class="key-chip-list">
+                            @foreach (var key in returnedKeys)
+                            {
+                                <span class="key-chip returned-key">
+                                    @key.KeyName
+                                    <small>@key.KeyCode returned @key.ReturnedDate?.ToShortDateString()</small>
+                                </span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="muted-text">None</span>
+                    }
+                </td>
+
+                <td>
+                    @if (issuedDates.Count == 1)
+                    {
+                        @issuedDates.First().ToShortDateString()
+                    }
+                    else if (issuedDates.Count > 1)
+                    {
+                        <span>@issuedDates.First().ToShortDateString() - @issuedDates.Last().ToShortDateString()</span>
+                    }
+                </td>
+
+                <td>
+                    @if (hasActiveKeys)
+                    {
+                        <span class="badge active">@activeKeys.Count active</span>
+                    }
+                    else
+                    {
+                        <span class="badge inactive">Returned</span>
+                    }
+                </td>
+
+                <td class="actions">
+                    @if (activeKeys.Any())
+                    {
+                        <div class="return-button-list">
+                            @foreach (var key in activeKeys)
+                            {
+                                <a class="btn-secondary"
+                                   asp-controller="KeyAssignments"
+                                   asp-action="Return"
+                                   asp-route-id="@key.KeyAssignmentId">
+                                    Return @key.KeyCode
+                                </a>
+                            }
+                        </div>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .key-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .key-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-weight: 700;
+        border: 1px solid #dbe3ea;
+        background: #fff;
+    }
+
+    .key-chip small {
+        font-weight: 600;
+        color: #64748b;
+    }
+
+    .active-key {
+        background: #ecfdf5;
+        border-color: #bbf7d0;
+        color: #14532d;
+    }
+
+    .returned-key {
+        background: #f8fafc;
+        color: #475569;
+    }
+
+    .muted-text {
+        color: #64748b;
+    }
+
+    .return-button-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+</style>

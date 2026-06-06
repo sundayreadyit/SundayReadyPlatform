@@ -1,0 +1,54 @@
+@model List<PersonRow>
+@{
+    ViewData["Title"] = "People";
+}
+
+<div class="page-header">
+    <div>
+        <h2>People</h2>
+        <p>Manage church members, staff, volunteers, and anyone who can borrow items or receive keys.</p>
+    </div>
+    <a class="button primary" asp-controller="People" asp-action="Create">Add Person</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string message)
+{
+    <div class="alert success">@message</div>
+}
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Ministry Team</th>
+                <th>Status</th>
+                <th class="actions">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.FullName</td>
+                <td>@p.Phone</td>
+                <td>@p.Email</td>
+                <td>@p.MinistryTeam</td>
+                <td><span class="status @(p.IsActive ? "active" : "inactive")">@(p.IsActive ? "Active" : "Inactive")</span></td>
+                <td class="actions">
+                    <a class="button small" asp-controller="People" asp-action="Edit" asp-route-id="@p.PersonId">Edit</a>
+                    @if (p.IsActive)
+                    {
+                        <form asp-controller="People" asp-action="Deactivate" asp-route-id="@p.PersonId" method="post" class="inline-form" onsubmit="return confirm('Deactivate this person? They will remain in history but will be marked inactive.');">
+                            @Html.AntiForgeryToken()
+                            <button class="button small danger" type="submit">Deactivate</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

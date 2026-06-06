@@ -1,0 +1,175 @@
+@model ChurchAssetTracker.Models.ITDocumentLibraryViewModel
+@{
+    ViewData["Title"] = "IT Documentation";
+}
+
+<div class="it-doc-header">
+    <div>
+        <span class="eyebrow">IT Operations</span>
+        <h2>IT Documentation Library</h2>
+        <p>Store network drawings, spreadsheets, PDFs, photos, configuration documents, and procedures.</p>
+    </div>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert success">@TempData["SuccessMessage"]</div>
+}
+
+<section class="it-doc-card">
+    <h3>Upload IT Document</h3>
+    <p>Add documentation files used by IT operations.</p>
+
+    <form asp-action="Upload" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <div class="it-doc-upload-grid">
+            <div class="it-doc-field">
+                <label>Category</label>
+                <select name="category">
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category">@category</option>
+                    }
+                </select>
+            </div>
+
+            <div class="it-doc-field">
+                <label>Title</label>
+                <input type="text" name="title" placeholder="Example: Main building network diagram" />
+            </div>
+
+            <div class="it-doc-field">
+                <label>File</label>
+                <input type="file" name="documentFile" />
+                <small>PDF, images, Word, Excel, CSV, TXT, Visio, draw.io, ZIP. Max 25 MB.</small>
+            </div>
+        </div>
+
+        <div class="it-doc-field" style="margin-top:14px;">
+            <label>Description</label>
+            <textarea name="description" rows="3" placeholder="Optional details, location, device group, version, or notes."></textarea>
+        </div>
+
+        <div class="it-doc-actions">
+            <button class="btn primary" type="submit">Upload Document</button>
+        </div>
+    </form>
+</section>
+
+<section class="it-doc-card">
+    <div class="it-doc-list-header">
+        <div>
+            <h3>Document Library</h3>
+            <p>Search and filter IT documentation.</p>
+        </div>
+    </div>
+
+    <form asp-action="Index" method="get" class="it-doc-filter">
+        <div class="it-doc-field">
+            <label>Search</label>
+            <input type="text" name="search" value="@Model.Search" placeholder="Search title, description, filename, category..." />
+        </div>
+
+        <div class="it-doc-field">
+            <label>Category</label>
+            <select name="category">
+                <option value="All" selected="@(Model.Category == "All")">All</option>
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category" selected="@(Model.Category == category)">@category</option>
+                }
+            </select>
+        </div>
+
+        <button class="btn primary" type="submit">Filter</button>
+        <a class="btn" asp-action="Index">Clear</a>
+    </form>
+
+    <div class="it-doc-list">
+        @if (Model.Documents == null || !Model.Documents.Any())
+        {
+            <div class="it-doc-empty">
+                <strong>No IT documents found</strong>
+                <span>Uploaded IT documentation will appear here.</span>
+            </div>
+        }
+        else
+        {
+            foreach (var doc in Model.Documents)
+            {
+                <div class="it-doc-row">
+                    <div class="it-doc-icon">@GetIcon(doc.Category, doc.OriginalFileName)</div>
+
+                    <div class="it-doc-info">
+                        <strong>@doc.Title</strong>
+                        <span>@doc.Category • @doc.OriginalFileName • @doc.FileSizeDisplay</span>
+
+                        @if (!string.IsNullOrWhiteSpace(doc.Description))
+                        {
+                            <small>@doc.Description</small>
+                        }
+
+                        <small>Uploaded @doc.UploadedDate.ToString("g") by @(doc.UploadedBy ?? "Unknown")</small>
+                    </div>
+
+                    <div class="it-doc-row-actions">
+                        <a class="btn" asp-action="Download" asp-route-id="@doc.ITDocumentId">Download</a>
+
+                        <form asp-action="Delete" asp-route-id="@doc.ITDocumentId" method="post" onsubmit="return confirm('Remove this IT document?');">
+                            @Html.AntiForgeryToken()
+                            <button class="btn danger" type="submit">Remove</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+@functions {
+    private string GetIcon(string category, string fileName)
+    {
+        var ext = System.IO.Path.GetExtension(fileName ?? "").ToLowerInvariant();
+
+        if (category.Contains("Network", StringComparison.OrdinalIgnoreCase)) return "🕸️";
+        if (category.Contains("Spreadsheet", StringComparison.OrdinalIgnoreCase) || ext is ".xls" or ".xlsx" or ".csv") return "📊";
+        if (category.Contains("Photo", StringComparison.OrdinalIgnoreCase) || ext is ".jpg" or ".jpeg" or ".png" or ".gif" or ".webp") return "🖼️";
+        if (ext == ".pdf") return "📕";
+        if (ext is ".vsd" or ".vsdx" or ".drawio") return "🗺️";
+        if (ext == ".zip") return "🗜️";
+        return "📄";
+    }
+}
+
+<style>
+.it-doc-header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:20px}
+.it-doc-header h2{margin:4px 0;font-size:2rem}.it-doc-header p{margin:0;color:#64748b}
+.it-doc-card{background:#fff;border:1px solid #dbe3ea;border-radius:22px;padding:22px;margin-bottom:20px;box-shadow:0 10px 28px rgba(15,23,42,.06)}
+.it-doc-card h3{margin:0 0 6px}.it-doc-card>p,.it-doc-list-header p{margin-top:0;color:#64748b}
+.it-doc-upload-grid{display:grid;grid-template-columns:minmax(190px,.6fr) minmax(240px,1fr) minmax(260px,1fr);gap:14px}
+.it-doc-field{display:flex;flex-direction:column;gap:6px}.it-doc-field label{font-weight:900}
+.it-doc-field input,.it-doc-field select,.it-doc-field textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:14px;padding:12px 13px;background:#fff;color:#0f172a}
+.it-doc-field textarea{resize:vertical}.it-doc-field small{color:#64748b}
+.it-doc-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid #e2e8f0}
+.it-doc-list-header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.it-doc-filter{display:grid;grid-template-columns:minmax(260px,1fr) minmax(190px,.45fr) auto auto;gap:12px;align-items:end;background:#f8fafc;border:1px solid #dbe3ea;border-radius:18px;padding:16px;margin:14px 0 18px}
+.it-doc-list{display:flex;flex-direction:column;gap:12px}
+.it-doc-row{display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;background:#fff;border:1px solid #dbe3ea;border-radius:18px;padding:16px}
+.it-doc-icon{width:52px;height:52px;border-radius:16px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:1.55rem}
+.it-doc-info strong,.it-doc-info span,.it-doc-info small{display:block}.it-doc-info span{color:#64748b;margin-top:4px}.it-doc-info small{color:#64748b;margin-top:5px}
+.it-doc-row-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.it-doc-row-actions form{margin:0}
+.it-doc-empty{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:18px;padding:22px;color:#64748b}.it-doc-empty strong,.it-doc-empty span{display:block}.it-doc-empty strong{color:#0f172a}
+html.dark-mode .it-doc-card,html.dark-mode .it-doc-row{background:#111827!important;border-color:#334155!important;color:#e5e7eb!important;box-shadow:0 12px 28px rgba(0,0,0,.32)!important}
+html.dark-mode .it-doc-filter,html.dark-mode .it-doc-empty{background:#020617!important;border-color:#334155!important;color:#94a3b8!important}
+html.dark-mode .it-doc-header p,html.dark-mode .it-doc-card>p,html.dark-mode .it-doc-list-header p,html.dark-mode .it-doc-field small,html.dark-mode .it-doc-info span,html.dark-mode .it-doc-info small{color:#94a3b8!important}
+html.dark-mode .it-doc-field input,html.dark-mode .it-doc-field select,html.dark-mode .it-doc-field textarea{background:#020617!important;border-color:#475569!important;color:#e5e7eb!important}
+html.dark-mode .it-doc-icon{background:#1e3a8a!important}
+html.dark-mode .it-doc-empty strong{color:#f8fafc!important}
+@@media(max-width:950px){.it-doc-upload-grid,.it-doc-filter,.it-doc-row{grid-template-columns:1fr}.it-doc-row-actions{justify-content:flex-start}}
+</style>

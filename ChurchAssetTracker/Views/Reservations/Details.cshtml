@@ -1,0 +1,81 @@
+@model ChurchAssetTracker.Data.ReservationRow
+@{
+    ViewData["Title"] = "Reservation Details";
+    var canManage = User.IsInRole("Admin") || User.IsInRole("ReservationManager");
+}
+
+<div class="page-header">
+    <div>
+        <h2>@Model.EventName</h2>
+        <p>Reservation details</p>
+    </div>
+    <div>
+        @if (canManage)
+        {
+            <a class="btn" asp-action="Edit" asp-route-id="@Model.ReservationId">Edit</a>
+        }
+        <a class="btn" asp-action="Index">Back</a>
+    </div>
+</div>
+
+<div class="detail-card">
+    <dl>
+        <dt>Status</dt>
+        <dd>@Model.Status</dd>
+
+        <dt>Room / Area</dt>
+        <dd>@(Model.AccessAreaName ?? "Not selected")</dd>
+
+        <dt>Start</dt>
+        <dd>@Model.StartDateTime.ToString("f")</dd>
+
+        <dt>End</dt>
+        <dd>@Model.EndDateTime.ToString("f")</dd>
+
+        <dt>Recurring</dt>
+        <dd>
+            @if (Model.IsRecurring)
+            {
+                <span>Yes — @Model.RecurrencePattern through @(Model.RecurrenceEndDate.HasValue ? Model.RecurrenceEndDate.Value.ToString("d") : "")</span>
+            }
+            else
+            {
+                <span>No</span>
+            }
+        </dd>
+
+        <dt>Requested By</dt>
+        <dd>@(string.IsNullOrWhiteSpace(Model.RequestedByName) ? "Not selected" : Model.RequestedByName)</dd>
+
+        <dt>Contact</dt>
+        <dd>
+            @Model.ContactName<br />
+            @Model.ContactPhone<br />
+            @Model.ContactEmail
+        </dd>
+
+        <dt>Public Event</dt>
+        <dd>@(Model.IsPublicEvent ? "Yes" : "No")</dd>
+
+        <dt>Purpose</dt>
+        <dd>@Model.Purpose</dd>
+
+        <dt>Setup Notes</dt>
+        <dd>@Model.SetupNotes</dd>
+
+        <dt>Access / Key Needs</dt>
+        <dd>@Model.AccessKeyNeeds</dd>
+
+        <dt>Internal Notes</dt>
+        <dd>@Model.Notes</dd>
+
+        <dt>Approved By</dt>
+        <dd>@Model.ApprovedByName</dd>
+
+        <dt>Approved Date</dt>
+        <dd>@(Model.ApprovedDate.HasValue ? Model.ApprovedDate.Value.ToString("g") : "")</dd>
+
+        <dt>Created</dt>
+        <dd>@Model.CreatedDate.ToString("g")</dd>
+    </dl>
+</div>

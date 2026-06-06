@@ -1,0 +1,69 @@
+@model IEnumerable<ChurchAssetTracker.Models.CheckoutRow>
+@{
+    ViewData["Title"] = "Asset Checkouts";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Asset Checkouts</h1>
+        <p>Track borrowed church items, due dates, returns, and overdue items.</p>
+    </div>
+    <a class="btn-primary" asp-controller="Checkouts" asp-action="Create">Check Out Asset</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<div class="table-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Asset</th>
+                <th>Borrower</th>
+                <th>Qty</th>
+                <th>Checked Out</th>
+                <th>Expected Return</th>
+                <th>Actual Return</th>
+                <th>Status</th>
+                <th class="actions-col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var c in Model)
+        {
+            var isOpen = c.ActualReturnDate == null;
+            var isOverdue = isOpen && c.ExpectedReturnDate.HasValue && c.ExpectedReturnDate.Value.Date < DateTime.Today;
+            <tr class="@(isOverdue ? "overdue-row" : "")">
+                <td>@c.AssetName</td>
+                <td>@c.Borrower</td>
+                <td>@c.QuantityOut</td>
+                <td>@c.CheckoutDate.ToShortDateString()</td>
+                <td>@(c.ExpectedReturnDate?.ToShortDateString() ?? "")</td>
+                <td>@(c.ActualReturnDate?.ToShortDateString() ?? "")</td>
+                <td>
+                    @if (isOverdue)
+                    {
+                        <span class="badge overdue">Overdue</span>
+                    }
+                    else if (isOpen)
+                    {
+                        <span class="badge active">Checked Out</span>
+                    }
+                    else
+                    {
+                        <span class="badge inactive">Returned</span>
+                    }
+                </td>
+                <td class="actions">
+                    @if (isOpen)
+                    {
+                        <a class="btn-secondary" asp-controller="Checkouts" asp-action="Return" asp-route-id="@c.CheckoutId">Return</a>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

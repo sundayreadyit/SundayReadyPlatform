@@ -1,0 +1,13 @@
+@model ChurchAssetTracker.Models.AssetEditViewModel
+@{
+    ViewData["Title"] = "Edit Asset";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Edit Asset</h1>
+        <p>Update equipment information, tag numbers, serial numbers, and condition.</p>
+    </div>
+</div>
+
+@await Html.PartialAsync("_AssetForm", Model)

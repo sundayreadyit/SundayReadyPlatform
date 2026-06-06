@@ -1,0 +1,32 @@
+@model ChurchAssetTracker.Data.AccessAreaForm
+@{
+    ViewData["Title"] = "Edit Access Area";
+}
+
+<h2>Edit Access Area</h2>
+
+<form asp-action="Edit" method="post" class="form-card">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="AccessAreaId" />
+
+    <label>Area Name</label>
+    <input asp-for="AreaName" />
+    <span asp-validation-for="AreaName" class="validation"></span>
+
+    <label>Description</label>
+    <textarea asp-for="Description"></textarea>
+
+    <label class="checkbox-row">
+        <input asp-for="IsActive" />
+        Active
+    </label>
+
+    <div class="form-actions">
+        <button class="btn primary" type="submit">Save</button>
+        <a class="btn" asp-action="Index">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

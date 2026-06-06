@@ -1,0 +1,33 @@
+@model ChurchAssetTracker.Models.KeyEditViewModel
+
+<div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+<div class="form-grid">
+    <div class="form-field">
+        <label asp-for="KeyCode"></label>
+        <input asp-for="KeyCode" />
+        <span asp-validation-for="KeyCode"></span>
+    </div>
+
+    <div class="form-field">
+        <label asp-for="KeyName"></label>
+        <input asp-for="KeyName" />
+        <span asp-validation-for="KeyName"></span>
+    </div>
+
+    <div class="form-field full-width">
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" rows="4"></textarea>
+        <span asp-validation-for="Description"></span>
+    </div>
+
+    <div class="form-check">
+        <input asp-for="IsMasterKey" />
+        <label asp-for="IsMasterKey"></label>
+    </div>
+
+    <div class="form-check">
+        <input asp-for="IsActive" />
+        <label asp-for="IsActive"></label>
+    </div>
+</div>

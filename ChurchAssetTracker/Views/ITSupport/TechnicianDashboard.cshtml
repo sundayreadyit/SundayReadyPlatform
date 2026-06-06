@@ -1,0 +1,48 @@
+@model ChurchAssetTracker.Data.ITSupportTechnicianDashboardViewModel
+@{
+    ViewData["Title"] = "Technician Dashboard";
+}
+
+<div class="it-page-header">
+    <div>
+        <span class="eyebrow">Technician Workspace</span>
+        <h2>Technician Dashboard</h2>
+        <p>Focused IT support workload for @Model.TechnicianName.</p>
+    </div>
+
+    <div class="it-header-actions">
+        <a class="btn primary" asp-controller="ITSupport" asp-action="Create">+ Create Ticket</a>
+        <a class="btn" asp-controller="ITSupport" asp-action="Index">All Tickets</a>
+    </div>
+</div>
+
+<div class="it-metric-grid">
+    <div class="it-metric-card"><span>My Open Tickets</span><strong>@Model.MyOpenTickets</strong><small>Assigned to me</small></div>
+    <div class="it-metric-card danger"><span>Overdue</span><strong>@Model.MyOverdueTickets</strong><small>Past due and unresolved</small></div>
+    <div class="it-metric-card warning"><span>Critical</span><strong>@Model.MyCriticalTickets</strong><small>Critical priority</small></div>
+    <div class="it-metric-card info"><span>Waiting on User</span><strong>@Model.MyWaitingOnUserTickets</strong><small>Needs requester response</small></div>
+</div>
+
+<section class="ticket-info-panel">
+    <h3>My Assigned Tickets</h3>
+    @await Html.PartialAsync("_TechnicianTicketCardList", Model.MyAssignedTickets)
+</section>
+
+<div class="conversation-split">
+    <section class="ticket-info-panel">
+        <h3>Overdue Tickets</h3>
+        @await Html.PartialAsync("_TechnicianTicketCardList", Model.OverdueTickets)
+    </section>
+
+    <section class="ticket-info-panel">
+        <h3>Critical Tickets</h3>
+        @await Html.PartialAsync("_TechnicianTicketCardList", Model.CriticalTickets)
+    </section>
+</div>
+
+<section class="ticket-info-panel" style="margin-top:20px;">
+    <h3>Waiting on User</h3>
+    @await Html.PartialAsync("_TechnicianTicketCardList", Model.WaitingOnUserTickets)
+</section>
+
+@await Html.PartialAsync("_ITSupportPolishStyles")

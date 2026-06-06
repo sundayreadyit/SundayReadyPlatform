@@ -1,0 +1,90 @@
+@model List<ChurchAssetTracker.Data.ITSupportTicketRow>
+@{
+    ViewData["Title"] = "IT Support";
+    var status = Convert.ToString(ViewBag.Status ?? "Open");
+    var total = Model?.Count ?? 0;
+    var critical = Model?.Count(t => string.Equals(t.Priority, "Critical", StringComparison.OrdinalIgnoreCase)) ?? 0;
+    var high = Model?.Count(t => string.Equals(t.Priority, "High", StringComparison.OrdinalIgnoreCase)) ?? 0;
+    var waiting = Model?.Count(t => string.Equals(t.Status, "Waiting on User", StringComparison.OrdinalIgnoreCase)) ?? 0;
+}
+
+<div class="it-page-header">
+    <div>
+        <span class="eyebrow">Helpdesk</span>
+        <h2>IT Support Tickets</h2>
+        <p>Track requests, assignments, priorities, and ticket progress.</p>
+    </div>
+
+    <div class="it-header-actions">
+        <a class="btn" asp-action="TechnicianDashboard">Technician Dashboard</a>
+        <a class="btn primary" asp-action="Create">+ Create Ticket</a>
+    </div>
+</div>
+
+<div class="it-metric-grid">
+    <div class="it-metric-card"><span>Total in View</span><strong>@total</strong><small>Current filter: @status</small></div>
+    <div class="it-metric-card danger"><span>Critical</span><strong>@critical</strong><small>High urgency issues</small></div>
+    <div class="it-metric-card warning"><span>High Priority</span><strong>@high</strong><small>Needs attention</small></div>
+    <div class="it-metric-card info"><span>Waiting on User</span><strong>@waiting</strong><small>Paused for response</small></div>
+</div>
+
+<div class="it-toolbar">
+    <div class="it-filter-pills">
+        <a class="filter-pill @(status == "Open" ? "active" : "")" asp-action="Index" asp-route-status="Open">Open</a>
+        <a class="filter-pill @(status == "New" ? "active" : "")" asp-action="Index" asp-route-status="New">New</a>
+        <a class="filter-pill @(status == "Assigned" ? "active" : "")" asp-action="Index" asp-route-status="Assigned">Assigned</a>
+        <a class="filter-pill @(status == "In Progress" ? "active" : "")" asp-action="Index" asp-route-status="In Progress">In Progress</a>
+        <a class="filter-pill @(status == "Waiting on User" ? "active" : "")" asp-action="Index" asp-route-status="Waiting on User">Waiting</a>
+        <a class="filter-pill @(status == "Resolved" ? "active" : "")" asp-action="Index" asp-route-status="Resolved">Resolved</a>
+        <a class="filter-pill @(status == "Closed" ? "active" : "")" asp-action="Index" asp-route-status="Closed">Closed</a>
+        <a class="filter-pill @(status == "All" ? "active" : "")" asp-action="Index" asp-route-status="All">All</a>
+    </div>
+</div>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="it-empty-state">
+        <strong>No tickets found</strong>
+        <span>There are no IT tickets matching the current filter.</span>
+        <a class="btn primary" asp-action="Create">Create Ticket</a>
+    </div>
+}
+else
+{
+    <div class="ticket-card-list">
+        @foreach (var ticket in Model)
+        {
+            var isOverdue = ticket.DueDate.HasValue && ticket.DueDate.Value.Date < DateTime.Today && ticket.Status != "Closed" && ticket.Status != "Cancelled" && ticket.Status != "Resolved";
+            var priorityClass = "priority-" + (ticket.Priority ?? "").Replace(" ", "-").ToLowerInvariant();
+            var statusClass = "status-" + (ticket.Status ?? "").Replace(" ", "-").ToLowerInvariant();
+
+            <a class="ticket-card @(isOverdue ? "is-overdue" : "")" asp-action="Details" asp-route-id="@ticket.TicketId">
+                <div class="ticket-card-main">
+                    <div class="ticket-title-line">
+                        <strong>@(ticket.TicketNumber ?? $"IT-{ticket.TicketId:00000}")</strong>
+                        <h3>@ticket.Title</h3>
+                    </div>
+
+                    <div class="ticket-meta-row">
+                        @if (!string.IsNullOrWhiteSpace(ticket.Category)) { <span>@ticket.Category</span> }
+                        @if (!string.IsNullOrWhiteSpace(ticket.RequestedByName)) { <span>Requested by @ticket.RequestedByName</span> }
+                        <span>Created @ticket.CreatedDate.ToString("MMM d, yyyy")</span>
+                        @if (!string.IsNullOrWhiteSpace(ticket.AccessAreaName)) { <span>@ticket.AccessAreaName</span> }
+                    </div>
+                </div>
+
+                <div class="ticket-card-side">
+                    <div class="ticket-pill-row">
+                        <span class="ticket-pill @priorityClass">@ticket.Priority</span>
+                        <span class="ticket-pill @statusClass">@ticket.Status</span>
+                    </div>
+
+                    <div class="ticket-side-detail"><span>Assigned</span><strong>@(ticket.AssignedToName ?? "Unassigned")</strong></div>
+                    <div class="ticket-side-detail"><span>Due</span><strong>@(ticket.DueDate.HasValue ? ticket.DueDate.Value.ToString("MMM d") : "Not set")</strong></div>
+                </div>
+            </a>
+        }
+    </div>
+}
+
+@await Html.PartialAsync("_ITSupportPolishStyles")

@@ -1,0 +1,129 @@
+@model ChurchAssetTracker.Models.AssetEditViewModel
+
+<div class="form-card">
+    <form method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="AssetId" />
+
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+
+        @{
+            var assetPhotoUrl = string.IsNullOrWhiteSpace(Model.PhotoPath) ? null : Url.Content("~" + Model.PhotoPath);
+            var assetInitial = string.IsNullOrWhiteSpace(Model.AssetName) ? "A" : Model.AssetName.Substring(0, 1).ToUpperInvariant();
+        }
+
+        <div class="asset-photo-card">
+            <div class="asset-photo-preview">
+                @if (!string.IsNullOrWhiteSpace(assetPhotoUrl))
+                {
+                    <img src="@assetPhotoUrl" alt="@Model.AssetName photo" />
+                }
+                else
+                {
+                    <div class="asset-photo-placeholder">@assetInitial</div>
+                }
+            </div>
+
+            <div class="asset-photo-upload">
+                <h3>Asset Photo</h3>
+                <p>Add a photo so staff and volunteers can quickly identify this item.</p>
+
+                <label>Upload Photo</label>
+                <input type="file" name="photoFile" accept="image/png,image/jpeg,image/gif,image/webp" />
+                <small>JPG, PNG, GIF, or WEBP. Max 2 MB.</small>
+
+                @if (!string.IsNullOrWhiteSpace(Model.PhotoPath))
+                {
+                    <label class="checkbox-row" style="margin-top:12px;">
+                        <input type="checkbox" name="removePhoto" value="true" />
+                        <span>Remove current photo</span>
+                    </label>
+                }
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-field full-width">
+                <label asp-for="AssetName"></label>
+                <input asp-for="AssetName" />
+                <span asp-validation-for="AssetName"></span>
+            </div>
+
+            <div class="form-field">
+                <label asp-for="Category"></label>
+                <input asp-for="Category" placeholder="Audio/Visual, Kitchen, Office, etc." />
+                <span asp-validation-for="Category"></span>
+            </div>
+
+            <div class="form-field">
+                <label asp-for="CurrentCondition"></label>
+                <select asp-for="CurrentCondition">
+                    <option value="">Select condition</option>
+                    <option>Excellent</option>
+                    <option>Good</option>
+                    <option>Fair</option>
+                    <option>Poor</option>
+                    <option>Damaged</option>
+                    <option>Missing</option>
+                </select>
+                <span asp-validation-for="CurrentCondition"></span>
+            </div>
+
+            <div class="form-field">
+                <label asp-for="TotalQuantity"></label>
+                <input asp-for="TotalQuantity" type="number" min="1" />
+                <span asp-validation-for="TotalQuantity"></span>
+                <small>Use 1 for unique items, or a higher number for bulk items like chairs/tables.</small>
+            </div>
+
+            <div class="form-field">
+                <label asp-for="AssetTag"></label>
+                <input asp-for="AssetTag" placeholder="AV-001" />
+                <span asp-validation-for="AssetTag"></span>
+            </div>
+
+            <div class="form-field">
+                <label asp-for="SerialNumber"></label>
+                <input asp-for="SerialNumber" />
+                <span asp-validation-for="SerialNumber"></span>
+            </div>
+
+            <div class="form-field full-width">
+                <label asp-for="Description"></label>
+                <textarea asp-for="Description" rows="4"></textarea>
+                <span asp-validation-for="Description"></span>
+            </div>
+
+            <label class="checkbox-row full-width">
+                <input asp-for="IsActive" />
+                <span>Active asset</span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Save Asset</button>
+            <a class="btn-secondary" asp-controller="Assets" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>
+
+
+<style>
+.asset-photo-card{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center;background:#f8fafc;border:1px solid #dbe3ea;border-radius:18px;padding:16px;margin-bottom:18px}
+.asset-photo-preview img,.asset-photo-placeholder{width:124px;height:124px;border-radius:18px;object-fit:cover;border:4px solid #fff;box-shadow:0 10px 24px rgba(15,23,42,.14);background:#e2e8f0}
+.asset-photo-placeholder{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:2.4rem;color:#174c2f}
+.asset-photo-upload h3{margin:0 0 6px}
+.asset-photo-upload p{margin:0 0 12px;color:#64748b}
+.asset-photo-upload label{display:block;font-weight:800;margin-bottom:6px}
+.asset-photo-upload small{display:block;margin-top:6px;color:#64748b}
+.asset-list-cell{display:flex;align-items:center;gap:12px}
+.asset-thumb,.asset-thumb-placeholder{width:48px;height:48px;border-radius:12px;object-fit:cover;background:#e2e8f0;flex:0 0 auto;border:2px solid rgba(255,255,255,.7)}
+.asset-thumb-placeholder{display:flex;align-items:center;justify-content:center;font-weight:900;color:#174c2f}
+.asset-name-block strong{display:block}
+.asset-name-block span{display:block;color:#94a3b8;font-size:.85rem;margin-top:3px}
+html.dark-mode .asset-photo-card{background:#020617!important;border-color:#334155!important}
+html.dark-mode .asset-photo-upload p,html.dark-mode .asset-photo-upload small{color:#94a3b8!important}
+html.dark-mode .asset-photo-placeholder,html.dark-mode .asset-thumb-placeholder{background:#020617!important;color:#86efac!important;border-color:#334155!important}
+@@media(max-width:700px){.asset-photo-card{grid-template-columns:1fr}.asset-photo-preview img,.asset-photo-placeholder{width:96px;height:96px}}
+</style>

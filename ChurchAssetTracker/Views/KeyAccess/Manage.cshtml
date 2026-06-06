@@ -1,0 +1,44 @@
+@model ChurchAssetTracker.Data.KeyAccessManageViewModel
+@{
+    ViewData["Title"] = "Manage Key Access Areas";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Manage Access Areas</h2>
+        <p><strong>@Model.KeyName</strong> (@Model.KeyCode)</p>
+    </div>
+    <a class="btn" asp-controller="Keys" asp-action="Index">Back to Keys</a>
+</div>
+
+<form asp-action="Manage" method="post" class="form-card">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="KeyId" />
+
+    <p>Select each area this key opens.</p>
+
+    <div class="checkbox-list">
+        @foreach (var area in Model.AllAccessAreas)
+        {
+            var isChecked = Model.SelectedAccessAreaIds.Contains(area.AccessAreaId);
+            <label class="checkbox-row">
+                <input type="checkbox"
+                       name="SelectedAccessAreaIds"
+                       value="@area.AccessAreaId"
+                       checked="@isChecked" />
+                <span>
+                    <strong>@area.AreaName</strong>
+                    @if (!string.IsNullOrWhiteSpace(area.Description))
+                    {
+                        <small>@area.Description</small>
+                    }
+                </span>
+            </label>
+        }
+    </div>
+
+    <div class="form-actions">
+        <button class="btn primary" type="submit">Save Access Areas</button>
+        <a class="btn" asp-controller="Keys" asp-action="Index">Cancel</a>
+    </div>
+</form>

@@ -1,0 +1,57 @@
+@model ChurchAssetTracker.Models.UserEditViewModel
+
+<div class="card form-card">
+    <form method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="UserId" />
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+        <div class="form-grid">
+            <div>
+                <label asp-for="Username"></label>
+                <input asp-for="Username" />
+                <span asp-validation-for="Username" class="field-validation"></span>
+            </div>
+            <div>
+                <label asp-for="DisplayName"></label>
+                <input asp-for="DisplayName" />
+                <span asp-validation-for="DisplayName" class="field-validation"></span>
+            </div>
+            <div>
+                <label asp-for="Email"></label>
+                <input asp-for="Email" />
+                <span asp-validation-for="Email" class="field-validation"></span>
+            </div>
+            <div>
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password" autocomplete="new-password" />
+                <span asp-validation-for="Password" class="field-validation"></span>
+                @if (Model.UserId > 0)
+                {
+                    <small>Leave blank to keep the current password. Enter a new password to reset it.</small>
+                }
+            </div>
+        </div>
+
+        <div class="checkbox-row">
+            <input asp-for="IsActive" />
+            <label asp-for="IsActive">Active account</label>
+        </div>
+
+        <h3>Roles</h3>
+        <div class="role-grid">
+            @foreach (var role in Model.AvailableRoles)
+            {
+                <label class="checkbox-card">
+                    <input type="checkbox" name="SelectedRoleIds" value="@role.RoleId" @(role.IsSelected ? "checked" : "") />
+                    <span>@role.RoleName</span>
+                </label>
+            }
+        </div>
+
+        <div class="form-actions">
+            <button class="button" type="submit">Save User</button>
+            <a class="button secondary" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>

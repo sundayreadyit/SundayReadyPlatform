@@ -1,0 +1,111 @@
+@model ChurchAssetTracker.Models.KeyAssignmentBulkViewModel
+@{
+    ViewData["Title"] = "Assign Multiple Keys";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Assign Multiple Keys</h2>
+        <p>Select one person and assign multiple keys at the same time.</p>
+    </div>
+    <a class="btn" asp-controller="KeyAssignments" asp-action="Index">Back to Key Assignments</a>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert danger">
+        <strong>Please fix the following:</strong>
+        <div asp-validation-summary="All"></div>
+    </div>
+}
+
+<form method="get" asp-controller="KeyAssignmentsBulk" asp-action="BulkCreate" class="form-card">
+    <label>Person</label>
+    <select name="personId" onchange="this.form.submit()">
+        <option value="">-- Select person --</option>
+        @foreach (var person in Model.People)
+        {
+            <option value="@person.PersonId" selected="@(Model.PersonId == person.PersonId)">
+                @person.FullName
+            </option>
+        }
+    </select>
+    <small>Selecting a person refreshes the key list and marks keys already assigned to them.</small>
+</form>
+
+<form asp-controller="KeyAssignmentsBulk" asp-action="BulkCreate" method="post" class="form-card">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="PersonId" />
+
+    <label>Issued Date</label>
+    <input asp-for="IssuedDate" type="date" />
+
+    <label>Notes</label>
+    <textarea asp-for="Notes"></textarea>
+
+    <h3>Keys</h3>
+
+    @if (Model.PersonId <= 0)
+    {
+        <p>Select a person first.</p>
+    }
+    else if (!Model.Keys.Any())
+    {
+        <p>No active keys are available.</p>
+    }
+    else
+    {
+        <div class="key-checkbox-list">
+            @foreach (var key in Model.Keys)
+            {
+                <label class="key-option @(key.IsAlreadyAssignedToSelectedPerson ? "already-assigned" : "")">
+                    <input type="checkbox"
+                           name="SelectedKeyIds"
+                           value="@key.KeyId"
+                           disabled="@key.IsAlreadyAssignedToSelectedPerson" />
+
+                    <span>@key.DisplayName</span>
+
+                    @if (key.IsAlreadyAssignedToSelectedPerson)
+                    {
+                        <small>Already assigned to this person</small>
+                    }
+                </label>
+            }
+        </div>
+    }
+
+    <div class="form-actions">
+        <button class="btn primary" type="submit" disabled="@(Model.PersonId <= 0)">Assign Selected Keys</button>
+        <a class="btn" asp-controller="KeyAssignments" asp-action="Index">Cancel</a>
+    </div>
+</form>
+
+<style>
+    .key-checkbox-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .key-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid #dbe3ea;
+        background: #fff;
+        border-radius: 12px;
+        padding: 12px;
+    }
+
+    .key-option small {
+        margin-left: auto;
+        color: #64748b;
+    }
+
+    .key-option.already-assigned {
+        background: #f8fafc;
+        color: #64748b;
+    }
+</style>

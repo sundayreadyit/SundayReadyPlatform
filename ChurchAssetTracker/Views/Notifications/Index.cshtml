@@ -1,0 +1,74 @@
+@model List<ChurchAssetTracker.Data.NotificationRow>
+@{
+    ViewData["Title"] = "Notifications";
+    var unreadOnly = Convert.ToBoolean(ViewBag.UnreadOnly ?? false);
+}
+
+<div class="page-header">
+    <div>
+        <h2>Notifications</h2>
+        <p>Review system alerts, ticket updates, assignments, and other portal notifications.</p>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn @(unreadOnly ? "primary" : "")" asp-action="Index" asp-route-unreadOnly="true">Unread Only</a>
+        <a class="btn @(!unreadOnly ? "primary" : "")" asp-action="Index">All</a>
+
+        <form asp-action="MarkAllRead" method="post" class="inline-form">
+            @Html.AntiForgeryToken()
+            <button class="btn" type="submit">Mark All Read</button>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="panel">
+        <h3>No notifications</h3>
+        <p>You do not have any notifications to display.</p>
+    </div>
+}
+else
+{
+    <div class="notification-page-list">
+        @foreach (var item in Model)
+        {
+            <div class="notification-page-item @(item.IsRead ? "read" : "unread")">
+                <div class="notification-status-dot"></div>
+
+                <div class="notification-page-content">
+                    <div class="notification-title-line">
+                        <strong>@item.Title</strong>
+                        <span>@item.CreatedDate.ToString("g")</span>
+                    </div>
+
+                    <p>@item.Message</p>
+
+                    <div class="notification-actions">
+                        <a class="btn small" asp-action="Open" asp-route-id="@item.NotificationId">Open</a>
+
+                        @if (!item.IsRead)
+                        {
+                            <form asp-action="MarkRead" asp-route-id="@item.NotificationId" method="post" class="inline-form">
+                                @Html.AntiForgeryToken()
+                                <button class="btn small" type="submit">Mark Read</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<style>
+.notification-page-list{display:flex;flex-direction:column;gap:12px}
+.notification-page-item{display:grid;grid-template-columns:14px 1fr;gap:12px;background:#fff;border:1px solid #dbe3ea;border-radius:16px;padding:16px;box-shadow:0 8px 22px rgba(15,23,42,.05)}
+.notification-page-item.unread{border-color:#86efac;background:#f0fdf4}
+.notification-status-dot{width:10px;height:10px;margin-top:7px;border-radius:999px;background:#94a3b8}
+.notification-page-item.unread .notification-status-dot{background:#16a34a}
+.notification-title-line{display:flex;justify-content:space-between;gap:12px}
+.notification-title-line span{color:#64748b;font-size:.9rem}
+.notification-page-content p{margin:6px 0 12px;color:#475569}
+.notification-actions{display:flex;gap:8px;flex-wrap:wrap}
+</style>

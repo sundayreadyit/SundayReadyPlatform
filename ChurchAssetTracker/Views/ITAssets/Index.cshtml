@@ -1,0 +1,143 @@
+@model IEnumerable<ChurchAssetTracker.Models.ITAssetRow>
+@{
+    ViewData["Title"] = "IT Assets";
+    var canEdit = ViewBag.CanEdit as bool? ?? false;
+    var search = Convert.ToString(ViewBag.Search ?? "");
+    var includeInactive = ViewBag.IncludeInactive == true;
+}
+
+<div class="it-assets-page">
+    <div class="it-page-header">
+        <div>
+            <span class="eyebrow">IT Operations</span>
+            <h1>IT Assets</h1>
+            <p>Restricted inventory for network, computer, phone, wireless, and server assets.</p>
+        </div>
+
+        @if (canEdit)
+        {
+            <a class="btn primary" asp-action="Create">Add IT Asset</a>
+        }
+    </div>
+
+    <section class="it-card">
+        <form method="get" class="it-filter-grid">
+            <div class="it-field">
+                <label>Search</label>
+                <input name="search"
+                       value="@search"
+                       placeholder="Search name, type, make, model, IP, location, assigned to..." />
+            </div>
+
+            <label class="it-checkbox">
+                <input type="checkbox" name="includeInactive" value="true" checked="@includeInactive" />
+                <span>Include inactive</span>
+            </label>
+
+            <div class="it-filter-actions">
+                <button class="btn primary" type="submit">Search</button>
+                <a class="btn" asp-action="Index">Clear</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="it-table-card">
+        <table class="it-table">
+            <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th>Type</th>
+                    <th>Make / Model</th>
+                    <th>Network</th>
+                    <th>Location</th>
+                    <th>Assigned To</th>
+                    <th>Status</th>
+                    <th style="width:150px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model == null || !Model.Any())
+            {
+                <tr>
+                    <td colspan="8">No IT assets found.</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model)
+                {
+                    var icon = GetAssetIcon(item.AssetType);
+
+                    <tr class="@(item.IsActive ? "" : "inactive-row")">
+                        <td>
+                            <div class="it-asset-name">
+                                <div class="it-asset-icon">@icon</div>
+                                <div>
+                                    <strong>@item.AssetName</strong>
+                                    @if (!string.IsNullOrWhiteSpace(item.AssetTag))
+                                    {
+                                        <span>@item.AssetTag</span>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td>@item.AssetType</td>
+                        <td>
+                            <strong>@item.Make</strong>
+                            @if (!string.IsNullOrWhiteSpace(item.Model))
+                            {
+                                <span class="muted-block">@item.Model</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(item.IPAddress))
+                            {
+                                <strong>@item.IPAddress</strong>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(item.MACAddress))
+                            {
+                                <span class="muted-block">@item.MACAddress</span>
+                            }
+                        </td>
+                        <td>@item.Location</td>
+                        <td>@item.AssignedTo</td>
+                        <td>
+                            <span class="status-pill @(item.IsActive ? "active" : "inactive")">
+                                @(item.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="it-row-actions">
+                                <a class="btn small" asp-action="Details" asp-route-id="@item.ITAssetId">View</a>
+                                @if (canEdit)
+                                {
+                                    <a class="btn small" asp-action="Edit" asp-route-id="@item.ITAssetId">Edit</a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </section>
+</div>
+
+@functions {
+    private string GetAssetIcon(string? assetType)
+    {
+        var value = assetType?.ToLowerInvariant() ?? "";
+
+        if (value.Contains("switch")) return "🔀";
+        if (value.Contains("router")) return "📡";
+        if (value.Contains("ap") || value.Contains("wireless") || value.Contains("wifi")) return "📶";
+        if (value.Contains("server")) return "🖥️";
+        if (value.Contains("laptop")) return "💻";
+        if (value.Contains("phone")) return "☎️";
+        if (value.Contains("printer")) return "🖨️";
+
+        return "🧰";
+    }
+}
+
+@await Html.PartialAsync("_ITAssetStyles")

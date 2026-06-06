@@ -1,0 +1,80 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Keys";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Keys</h2>
+        <p>Manage physical church keys and the areas they can access.</p>
+    </div>
+    <a class="btn primary" asp-action="Create">Add Key</a>
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Key Code</th>
+            <th>Key Name</th>
+            <th>Access Areas</th>
+            <th>Master</th>
+            <th>Status</th>
+            <th class="actions">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.KeyCode</td>
+            <td>@item.KeyName</td>
+            <td>
+                @if (string.IsNullOrWhiteSpace(Convert.ToString(item.AccessAreas)))
+                {
+                    <span>Not mapped yet</span>
+                }
+                else
+                {
+                    <span>@item.AccessAreas</span>
+                }
+            </td>
+            <td>@(item.IsMasterKey ? "Yes" : "No")</td>
+            <td>
+                @if (item.IsActive)
+                {
+                    <span class="badge good">Active</span>
+                }
+                else
+                {
+                    <span class="badge muted">Inactive</span>
+                }
+            </td>
+            <td class="actions">
+                <a class="btn small" asp-action="Edit" asp-route-id="@item.KeyId">Edit</a>
+
+                <a class="btn small"
+                   asp-controller="KeyAccess"
+                   asp-action="Manage"
+                   asp-route-keyId="@item.KeyId">
+                    Access Areas
+                </a>
+
+                @if (item.IsActive)
+                {
+                    <form asp-action="Deactivate" asp-route-id="@item.KeyId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button class="btn small danger" type="submit">Deactivate</button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-action="Activate" asp-route-id="@item.KeyId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button class="btn small" type="submit">Activate</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

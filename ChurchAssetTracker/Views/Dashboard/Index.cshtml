@@ -1,0 +1,352 @@
+@model ChurchAssetTracker.Data.DashboardEnhancedViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var studentSearch = Convert.ToString(ViewBag.StudentSearch ?? "");
+    var assetSearch = Convert.ToString(ViewBag.AssetSearch ?? "");
+
+    var isAdmin = User.IsInRole("Admin");
+
+    var canReservations = isAdmin || User.IsInRole("ReservationManager") || User.IsInRole("Pastor");
+    var canAssets = isAdmin || User.IsInRole("AssetManager");
+    var canKeys = isAdmin || User.IsInRole("KeyManager");
+
+    var canSchool = isAdmin || User.IsInRole("SchoolAdmin") || User.IsInRole("SchoolStaff");
+
+    var canITAssets = isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITAssetManager") || User.IsInRole("ITAssetViewer");
+    var canITSupport = isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITSupportManager") || User.IsInRole("ITSupportTech");
+
+    var canAudit = isAdmin || User.IsInRole("Pastor");
+}
+
+<div class="dashboard-hero">
+    <div>
+        <h2>Operations Dashboard</h2>
+        <p>Church and school operations at a glance.</p>
+    </div>
+
+    <div class="quick-actions">
+
+        @if (canReservations)
+        {
+            <a class="qa-button" asp-controller="Reservations" asp-action="Create">+ Reservation</a>
+        }
+
+        @if (canITSupport)
+        {
+            <a class="qa-button" asp-controller="ITSupport" asp-action="Create">+ IT Ticket</a>
+        }
+
+        @if (canAssets)
+        {
+            <a class="qa-button" asp-controller="Assets" asp-action="Create">+ Asset</a>
+        }
+
+        @if (canSchool)
+        {
+            <a class="qa-button" asp-controller="Students" asp-action="Create">+ Student</a>
+        }
+    </div>
+</div>
+
+<div class="metric-grid">
+
+    @if (canReservations)
+    {
+        <a class="metric-card" asp-controller="Reservations" asp-action="Index">
+            <div class="metric-icon">📅</div>
+            <div>
+                <span>Upcoming Reservations</span>
+                <strong>@Model.ReservationSummary.UpcomingReservations</strong>
+                <small>Scheduled future events</small>
+            </div>
+        </a>
+
+        <a class="metric-card attention" asp-controller="Reservations" asp-action="Index" asp-route-status="Pending">
+            <div class="metric-icon">⏳</div>
+            <div>
+                <span>Pending Reservations</span>
+                <strong>@Model.ReservationSummary.PendingReservations</strong>
+                <small>Awaiting approval</small>
+            </div>
+        </a>
+    }
+
+    @if (canITSupport)
+    {
+        <a class="metric-card" asp-controller="ITSupport" asp-action="Index">
+            <div class="metric-icon">🎫</div>
+            <div>
+                <span>Open IT Tickets</span>
+                <strong>@Model.ITSupportSummary.OpenTickets</strong>
+                <small>Active support requests</small>
+            </div>
+        </a>
+
+        <a class="metric-card danger-card" asp-controller="ITSupport" asp-action="Index">
+            <div class="metric-icon">🚨</div>
+            <div>
+                <span>Critical Tickets</span>
+                <strong>@Model.ITSupportSummary.CriticalTickets</strong>
+                <small>High urgency issues</small>
+            </div>
+        </a>
+    }
+
+</div>
+
+<div class="dashboard-layout">
+
+    @if (canReservations)
+    {
+        <section class="dash-panel">
+            <div class="panel-title-row">
+                <div>
+                    <h3>Upcoming Reservations</h3>
+                    <p>Next scheduled church/school events.</p>
+                </div>
+                <a asp-controller="Reservations" asp-action="Calendar">Calendar</a>
+            </div>
+
+            @if (!Model.UpcomingReservations.Any())
+            {
+                <div class="empty-state">
+                    <strong>No upcoming reservations</strong>
+                    <span>New reservations will appear here automatically.</span>
+                </div>
+            }
+            else
+            {
+                <div class="item-list">
+                    @foreach (var item in Model.UpcomingReservations)
+                    {
+                        <a class="list-item" asp-controller="Reservations" asp-action="Details" asp-route-id="@item.ReservationId">
+                            <div>
+                                <strong>@item.EventName</strong>
+                                <span>@item.AccessAreaName</span>
+                            </div>
+
+                            <div class="list-meta">
+                                <span>@item.StartDateTime.ToString("MMM d")</span>
+                                <small>@item.StartDateTime.ToString("h:mm tt")</small>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </section>
+    }
+
+    @if (canAssets)
+    {
+        <section class="dash-panel">
+            <div class="panel-title-row">
+                <div>
+                    <h3>Overdue Assets</h3>
+                    <p>Borrowed items past their return date.</p>
+                </div>
+
+                <a asp-controller="Checkouts" asp-action="Index">Checkouts</a>
+            </div>
+
+            @if (!Model.OverdueCheckouts.Any())
+            {
+                <div class="empty-state success">
+                    <strong>No overdue assets</strong>
+                    <span>Everything currently looks good.</span>
+                </div>
+            }
+            else
+            {
+                <div class="item-list">
+                    @foreach (var item in Model.OverdueCheckouts)
+                    {
+                        <div class="list-item overdue">
+                            <div>
+                                <strong>@item.AssetName</strong>
+                                <span>@item.BorrowerName</span>
+                            </div>
+
+                            <div class="list-meta">
+                                <span>Due</span>
+                                <small>@item.DueDate.ToString("MMM d")</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+    }
+
+    @if (canSchool)
+    {
+        <section class="dash-panel">
+            <div class="panel-title-row">
+                <div>
+                    <h3>Student Quick Search</h3>
+                    <p>Find student records quickly.</p>
+                </div>
+
+                <a asp-controller="Students" asp-action="Index">Students</a>
+            </div>
+
+            <form method="get" class="quick-search-form">
+                <input type="text" name="studentSearch" value="@studentSearch" placeholder="Search student name..." />
+                <input type="hidden" name="assetSearch" value="@assetSearch" />
+                <button class="search-button" type="submit">Search</button>
+            </form>
+
+            @if (Model.StudentResults.Any())
+            {
+                <div class="mini-results">
+                    @foreach (var s in Model.StudentResults)
+                    {
+                        <div class="mini-result">
+                            <strong>@s.FullName</strong>
+                            <span>@s.GradeLevel @s.Classroom</span>
+                        </div>
+                    }
+                </div>
+            }
+            else if (!string.IsNullOrWhiteSpace(studentSearch))
+            {
+                <div class="empty-state">
+                    <strong>No students found</strong>
+                    <span>Try a different name.</span>
+                </div>
+            }
+        </section>
+    }
+
+    @if (canITAssets)
+    {
+        <section class="dash-panel">
+            <div class="panel-title-row">
+                <div>
+                    <h3>IT Asset Quick Search</h3>
+                    <p>Find devices, IPs, and hardware.</p>
+                </div>
+
+                <a asp-controller="ITAssets" asp-action="Index">IT Assets</a>
+            </div>
+
+            <form method="get" class="quick-search-form">
+                <input type="hidden" name="studentSearch" value="@studentSearch" />
+                <input type="text" name="assetSearch" value="@assetSearch" placeholder="Search asset, make, model, IP..." />
+                <button class="search-button" type="submit">Search</button>
+            </form>
+
+            @if (Model.ITAssetResults.Any())
+            {
+                <div class="mini-results">
+                    @foreach (var a in Model.ITAssetResults)
+                    {
+                        <div class="mini-result">
+                            <strong>@a.AssetName</strong>
+                            <span>@a.Make @a.Model @a.IPAddress</span>
+                        </div>
+                    }
+                </div>
+            }
+            else if (!string.IsNullOrWhiteSpace(assetSearch))
+            {
+                <div class="empty-state">
+                    <strong>No IT assets found</strong>
+                    <span>Try a different search.</span>
+                </div>
+            }
+        </section>
+    }
+
+    @if (canAudit)
+    {
+        <section class="dash-panel full-width">
+            <div class="panel-title-row">
+                <div>
+                    <h3>Recent Activity</h3>
+                    <p>Latest changes recorded in the audit log.</p>
+                </div>
+
+                <a asp-controller="Audit" asp-action="Index">Audit Log</a>
+            </div>
+
+            @if (!Model.RecentAuditItems.Any())
+            {
+                <div class="empty-state">
+                    <strong>No recent activity</strong>
+                    <span>System activity will appear here.</span>
+                </div>
+            }
+            else
+            {
+                <div class="activity-feed">
+                    @foreach (var item in Model.RecentAuditItems)
+                    {
+                        <div class="activity-row">
+                            <div class="activity-dot"></div>
+
+                            <div>
+                                <strong>@item.ActionType @item.EntityType</strong>
+                                <p>@item.Description</p>
+                                <small>@item.Username — @item.ActionDate.ToString("g")</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+    }
+
+</div>
+
+<style>
+.dashboard-hero { display:flex; justify-content:space-between; gap:24px; align-items:flex-start; margin-bottom:24px; }
+.dashboard-hero h2 { margin:0; font-size:2rem; }
+.dashboard-hero p { margin:.5rem 0 0; color:#475569; }
+.quick-actions { display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
+.qa-button { text-decoration:none; border:1px solid #cbd5e1; background:#174c2f; color:#fff; border-radius:999px; padding:10px 14px; font-weight:700; box-shadow:0 4px 12px rgba(15,23,42,.06); }
+.qa-button:hover { opacity:.92; }
+.metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; margin-bottom:24px; }
+.metric-card { display:flex; gap:16px; align-items:center; text-decoration:none; color:#0f172a; background:#fff; border:1px solid #dbe3ea; border-radius:18px; padding:20px; box-shadow:0 10px 28px rgba(15,23,42,.07); }
+.metric-card:hover { transform:translateY(-1px); box-shadow:0 14px 32px rgba(15,23,42,.10); }
+.metric-card span { display:block; color:#475569; font-size:.9rem; }
+.metric-card strong { display:block; font-size:2.3rem; line-height:1; margin:8px 0; }
+.metric-card small { color:#64748b; }
+.metric-icon { width:52px; height:52px; display:flex; align-items:center; justify-content:center; border-radius:16px; background:#eef2ff; font-size:1.7rem; }
+.attention .metric-icon { background:#fef3c7; }
+.danger-card .metric-icon { background:#fee2e2; }
+.dashboard-layout { display:grid; grid-template-columns:repeat(auto-fit,minmax(420px,1fr)); gap:20px; }
+.dash-panel { background:#fff; border:1px solid #dbe3ea; border-radius:18px; padding:22px; box-shadow:0 10px 28px rgba(15,23,42,.06); }
+.full-width { grid-column:1 / -1; }
+.panel-title-row { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom:16px; }
+.panel-title-row h3 { margin:0; }
+.panel-title-row p { margin:.35rem 0 0; color:#64748b; }
+.panel-title-row a { font-weight:700; }
+.empty-state { border:1px dashed #cbd5e1; border-radius:14px; padding:18px; background:#f8fafc; color:#475569; }
+.empty-state strong, .empty-state span { display:block; }
+.empty-state.success { background:#f0fdf4; border-color:#bbf7d0; }
+.item-list { display:flex; flex-direction:column; gap:10px; }
+.list-item { display:flex; justify-content:space-between; gap:16px; text-decoration:none; color:#0f172a; border:1px solid #e2e8f0; border-radius:14px; padding:14px; background:#fff; }
+.list-item:hover { background:#f8fafc; }
+.list-item strong, .list-item span, .list-meta small { display:block; }
+.list-item span, .list-meta small { color:#64748b; }
+.list-meta { text-align:right; white-space:nowrap; }
+.overdue { border-color:#fecaca; background:#fff7f7; }
+.quick-search-form { display:flex; gap:10px; margin-bottom:14px; }
+.quick-search-form input { flex:1; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; }
+.search-button { border:0; border-radius:10px; padding:10px 14px; background:#174c2f; color:#fff; font-weight:700; }
+.mini-results { display:flex; flex-direction:column; gap:8px; }
+.mini-result { border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px; }
+.mini-result strong, .mini-result span { display:block; }
+.mini-result span { color:#64748b; font-size:.9rem; }
+.activity-feed { display:flex; flex-direction:column; gap:14px; }
+.activity-row { display:grid; grid-template-columns:14px 1fr; gap:12px; align-items:start; }
+.activity-dot { width:10px; height:10px; margin-top:6px; border-radius:50%; background:#174c2f; }
+.activity-row p { margin:.15rem 0 .35rem; color:#475569; }
+.activity-row small { color:#64748b; }
+
+@@media (max-width:900px){
+.dashboard-hero{flex-direction:column}
+.quick-actions{justify-content:flex-start}
+.dashboard-layout{grid-template-columns:1fr}
+}
+</style>

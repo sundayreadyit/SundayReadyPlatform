@@ -1,0 +1,85 @@
+@model ChurchAssetTracker.Data.ReservationForm
+@{ ViewData["Title"] = "Add Reservation"; }
+<h2>Add Reservation</h2>
+<form asp-action="Create" method="post" class="form-card">
+@Html.AntiForgeryToken()
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert danger"><strong>Please fix the following:</strong><div asp-validation-summary="All"></div></div>
+}
+@if (Model.Conflicts.Any())
+{
+    <div class="alert warning">
+        <strong>Conflict blocked:</strong>
+        <p>One or more occurrences conflict with another pending or approved reservation.</p>
+        <ul>
+        @foreach (var conflict in Model.Conflicts)
+        {
+            <li>@conflict.EventName — @conflict.StartDateTime.ToString("g") to @conflict.EndDateTime.ToString("g") (@conflict.Status)</li>
+        }
+        </ul>
+    </div>
+}
+
+<label>Event Name</label>
+<input asp-for="EventName" />
+
+<label>Requested By</label>
+<select asp-for="RequestedByPersonId">
+    <option value="">-- Select person if applicable --</option>
+    @foreach (var person in Model.People) { <option value="@person.PersonId">@person.FullName</option> }
+</select>
+
+<label>Room / Access Area</label>
+<select asp-for="AccessAreaId">
+    <option value="">-- Select room or area --</option>
+    @foreach (var area in Model.AccessAreas) { <option value="@area.AccessAreaId">@area.AreaName</option> }
+</select>
+
+<div class="grid two">
+    <div><label>Start Date/Time</label><input asp-for="StartDateTime" type="datetime-local" /></div>
+    <div><label>End Date/Time</label><input asp-for="EndDateTime" type="datetime-local" /></div>
+</div>
+
+<div class="grid two">
+    <div>
+        <label>Recurrence</label>
+        <select asp-for="RecurrencePattern">
+            <option value="None">Does not repeat</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Biweekly">Every 2 weeks</option>
+            <option value="Monthly">Monthly</option>
+        </select>
+    </div>
+    <div>
+        <label>Recurrence End Date</label>
+        <input asp-for="RecurrenceEndDate" type="date" />
+        <small>Required only for recurring reservations.</small>
+    </div>
+</div>
+
+<label>Status</label>
+<select asp-for="Status">
+    <option value="Pending">Pending</option>
+    <option value="Approved">Approved</option>
+    <option value="Denied">Denied</option>
+    <option value="Cancelled">Cancelled</option>
+</select>
+
+<label>Purpose</label><textarea asp-for="Purpose"></textarea>
+<label>Setup Notes</label><textarea asp-for="SetupNotes"></textarea>
+<label>Access / Key Needs</label><textarea asp-for="AccessKeyNeeds"></textarea>
+
+<div class="grid three">
+    <div><label>Contact Name</label><input asp-for="ContactName" /></div>
+    <div><label>Contact Phone</label><input asp-for="ContactPhone" /></div>
+    <div><label>Contact Email</label><input asp-for="ContactEmail" /></div>
+</div>
+
+<label class="checkbox-row"><input asp-for="IsPublicEvent" /> Public event</label>
+<label>Internal Notes</label><textarea asp-for="Notes"></textarea>
+
+<div class="form-actions"><button class="btn primary" type="submit">Save</button><a class="btn" asp-action="Index">Cancel</a></div>
+</form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

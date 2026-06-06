@@ -1,0 +1,42 @@
+@model ChurchAssetTracker.Data.NotificationCenterViewModel
+
+<div class="notification-menu">
+    <button type="button" class="notification-button" onclick="toggleNotificationMenu()" title="Notifications">
+        <span class="notification-icon">🔔</span>
+        @if (Model.UnreadCount > 0)
+        {
+            <span class="notification-count">@Model.UnreadCount</span>
+        }
+    </button>
+
+    <div id="notificationDropdown" class="notification-dropdown">
+        <div class="notification-header">
+            <strong>Notifications</strong>
+            <a asp-controller="Notifications" asp-action="Index">View All</a>
+        </div>
+
+        @if (!Model.RecentNotifications.Any())
+        {
+            <div class="notification-empty">
+                <strong>No notifications</strong>
+                <span>You’re all caught up.</span>
+            </div>
+        }
+        else
+        {
+            <div class="notification-list">
+                @foreach (var item in Model.RecentNotifications)
+                {
+                    <a class="notification-item @(item.IsRead ? "read" : "unread")"
+                       asp-controller="Notifications"
+                       asp-action="Open"
+                       asp-route-id="@item.NotificationId">
+                        <strong>@item.Title</strong>
+                        <p>@item.Message</p>
+                        <small>@item.CreatedDate.ToString("g")</small>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</div>

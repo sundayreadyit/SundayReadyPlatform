@@ -1,0 +1,99 @@
+@model IEnumerable<ChurchAssetTracker.Models.AssetRow>
+@{
+    ViewData["Title"] = "Assets";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Assets</h1>
+        <p>Track church equipment, tags, serial numbers, and condition.</p>
+    </div>
+    <a class="btn-primary" asp-controller="Assets" asp-action="Create">Add Asset</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<div class="table-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Asset</th>
+                <th>Category</th>
+                <th>Tag</th>
+                <th>Serial Number</th>
+                <th>Condition</th>
+                <th>Total</th>
+                <th>Checked Out</th>
+                <th>Available</th>
+                <th>Status</th>
+                <th class="actions-col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var asset in Model)
+        {
+            <tr class="@(asset.IsActive ? "" : "inactive-row")">
+                <td>
+                    @{
+                        var photoUrl = string.IsNullOrWhiteSpace(asset.PhotoPath) ? null : Url.Content("~" + asset.PhotoPath);
+                        var initial = string.IsNullOrWhiteSpace(asset.AssetName) ? "A" : asset.AssetName.Substring(0, 1).ToUpperInvariant();
+                    }
+                    <div class="asset-list-cell">
+                        @if (!string.IsNullOrWhiteSpace(photoUrl))
+                        {
+                            <img class="asset-thumb" src="@photoUrl" alt="@asset.AssetName photo" />
+                        }
+                        else
+                        {
+                            <div class="asset-thumb-placeholder">@initial</div>
+                        }
+
+                        <div class="asset-name-block">
+                            <strong>@asset.AssetName</strong>
+                        </div>
+                    </div>
+                </td>
+                <td>@asset.Category</td>
+                <td>@asset.AssetTag</td>
+                <td>@asset.SerialNumber</td>
+                <td>@asset.CurrentCondition</td>
+                <td>@asset.TotalQuantity</td>
+                <td>@asset.QuantityCheckedOut</td>
+                <td><strong>@asset.QuantityAvailable</strong></td>
+                <td>
+                    @if (asset.IsActive)
+                    {
+                        <span class="badge active">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge inactive">Inactive</span>
+                    }
+                </td>
+                <td class="actions">
+                    <a class="btn-secondary" asp-controller="Assets" asp-action="Edit" asp-route-id="@asset.AssetId">Edit</a>
+                    @if (asset.IsActive)
+                    {
+                        <form asp-controller="Assets" asp-action="Deactivate" asp-route-id="@asset.AssetId" method="post" class="inline-form" onsubmit="return confirm('Deactivate this asset?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-danger">Deactivate</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+
+<style>
+.asset-list-cell{display:flex;align-items:center;gap:12px}
+.asset-thumb,.asset-thumb-placeholder{width:48px;height:48px;border-radius:12px;object-fit:cover;background:#e2e8f0;flex:0 0 auto;border:2px solid rgba(255,255,255,.7)}
+.asset-thumb-placeholder{display:flex;align-items:center;justify-content:center;font-weight:900;color:#174c2f}
+.asset-name-block strong{display:block}
+html.dark-mode .asset-thumb-placeholder{background:#020617!important;color:#86efac!important;border-color:#334155!important}
+</style>

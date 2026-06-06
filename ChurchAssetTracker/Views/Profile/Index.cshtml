@@ -1,0 +1,169 @@
+@model ChurchAssetTracker.Models.UserProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+
+    var profilePictureUrl = "";
+    if (!string.IsNullOrWhiteSpace(Model.ProfilePicturePath))
+    {
+        profilePictureUrl = Url.Content(Model.ProfilePicturePath);
+    }
+
+    var initial = !string.IsNullOrWhiteSpace(Model.DisplayName)
+        ? Model.DisplayName.Substring(0, 1).ToUpper()
+        : "U";
+}
+
+<div class="page-header">
+    <div>
+        <h2>My Profile</h2>
+        <p>Update your profile information and profile picture.</p>
+    </div>
+
+    <a class="btn" asp-controller="Profile" asp-action="ChangePassword">Change Password</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert success">@TempData["SuccessMessage"]</div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert danger">
+        <strong>Please fix the following:</strong>
+        <div asp-validation-summary="All"></div>
+    </div>
+}
+
+<div class="profile-grid">
+    <section class="profile-card">
+        <div class="profile-picture-wrap">
+            @if (!string.IsNullOrWhiteSpace(profilePictureUrl))
+            {
+                <img src="@profilePictureUrl" alt="Profile picture" class="profile-picture-large" />
+            }
+            else
+            {
+                <div class="profile-picture-placeholder">@initial</div>
+            }
+        </div>
+
+        <h3>@Model.DisplayName</h3>
+        <p>@Model.Username</p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ProfilePicturePath))
+        {
+            <form asp-action="RemoveProfilePicture" method="post">
+                @Html.AntiForgeryToken()
+                <button class="btn danger" type="submit">Remove Picture</button>
+            </form>
+        }
+    </section>
+
+    <section class="form-card profile-form-card">
+        <form asp-action="Index" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="UserId" />
+            <input type="hidden" asp-for="Username" />
+            <input type="hidden" asp-for="ProfilePicturePath" />
+
+            <div class="form-row">
+                <label>Display Name</label>
+                <input asp-for="DisplayName" />
+            </div>
+
+            <div class="form-row">
+                <label>Username</label>
+                <input asp-for="Username" disabled />
+            </div>
+
+            <div class="form-row">
+                <label>Email</label>
+                <input asp-for="Email" type="email" />
+            </div>
+
+            <div class="form-row">
+                <label>Profile Picture</label>
+                <input type="file" name="profilePicture" accept=".jpg,.jpeg,.png,.gif,.webp" />
+                <small>JPG, PNG, GIF, or WEBP. Max 2 MB.</small>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn primary" type="submit">Save Profile</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+<style>
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .profile-card {
+        background: #fff;
+        border: 1px solid #dbe3ea;
+        border-radius: 18px;
+        padding: 24px;
+        text-align: center;
+        box-shadow: 0 10px 28px rgba(15,23,42,.06);
+    }
+
+    .profile-picture-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 16px;
+    }
+
+    .profile-picture-large,
+    .profile-picture-placeholder {
+        width: 128px;
+        height: 128px;
+        border-radius: 50%;
+        border: 4px solid #e2e8f0;
+    }
+
+    .profile-picture-large {
+        object-fit: cover;
+        display: block;
+        background: #f8fafc;
+    }
+
+    .profile-picture-placeholder {
+        background: #174c2f;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 800;
+    }
+
+    .profile-form-card form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .form-row {
+        display: grid;
+        gap: 6px;
+    }
+
+    .form-row label {
+        font-weight: 700;
+    }
+
+    .form-row input {
+        max-width: 520px;
+    }
+
+    @@media (max-width: 800px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

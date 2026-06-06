@@ -1,0 +1,4 @@
+@if (User.IsInRole("Admin") || User.IsInRole("KeyManager"))
+{
+    <a asp-controller="AccessAreas" asp-action="Index">Access Areas</a>
+}

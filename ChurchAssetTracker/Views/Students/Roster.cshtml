@@ -1,0 +1,221 @@
+@model ChurchAssetTracker.Data.StudentRosterViewModel
+@{
+    ViewData["Title"] = "Student Roster";
+}
+
+<div class="roster-screen-header">
+    <div>
+        <span class="eyebrow">CWCA Printable Roster</span>
+        <h2>Student Roster</h2>
+        <p>Filter by teacher or grade level, then print a simple student list.</p>
+    </div>
+
+    <button class="btn primary" onclick="window.print()">Print Roster</button>
+</div>
+
+<form asp-action="Roster" method="get" class="roster-filter-card">
+    <div>
+        <label>Teacher</label>
+        <select name="teacherFacultyStaffId">
+            <option value="">All Teachers</option>
+            @foreach (var teacher in Model.Teachers)
+            {
+                <option value="@teacher.FacultyStaffId" selected="@(Model.TeacherFacultyStaffId == teacher.FacultyStaffId)">
+                    @teacher.DisplayName
+                </option>
+            }
+        </select>
+    </div>
+
+    <div>
+        <label>Grade Level</label>
+        <select name="gradeLevel">
+            <option value="">All Grades</option>
+            @foreach (var grade in Model.GradeLevels)
+            {
+                <option value="@grade" selected="@(Model.GradeLevel == grade)">@grade</option>
+            }
+        </select>
+    </div>
+
+    <button class="btn" type="submit">Apply Filter</button>
+    <a class="btn" asp-action="Roster">Clear</a>
+</form>
+
+<section class="print-roster">
+    <div class="print-roster-header">
+        <h1>@Model.HeaderTitle</h1>
+        <p>CWC Academy Student Roster</p>
+        <small>Printed @DateTime.Now.ToString("MMMM d, yyyy")</small>
+    </div>
+
+    @if (!Model.Students.Any())
+    {
+        <p>No students found for the selected filter.</p>
+    }
+    else
+    {
+        <table class="roster-table">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Grade</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var student in Model.Students)
+                {
+                    var name = string.IsNullOrWhiteSpace(student.PreferredName)
+                        ? $"{student.FirstName} {student.LastName}"
+                        : $"{student.PreferredName} {student.LastName}";
+
+                    <tr>
+                        <td>@name</td>
+                        <td>@student.GradeLevel</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+<style>
+.roster-screen-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+}
+
+.roster-screen-header h2 {
+    margin: 4px 0;
+}
+
+.roster-filter-card {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(180px, .6fr) auto auto;
+    gap: 12px;
+    align-items: end;
+    background: #fff;
+    border: 1px solid #dbe3ea;
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 28px rgba(15,23,42,.06);
+}
+
+.roster-filter-card label {
+    display: block;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.roster-filter-card select {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+.print-roster {
+    background: #fff;
+    border: 1px solid #dbe3ea;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 10px 28px rgba(15,23,42,.06);
+}
+
+.print-roster-header {
+    text-align: center;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+}
+
+.print-roster-header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.print-roster-header p {
+    margin: 5px 0;
+}
+
+.roster-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.roster-table th,
+.roster-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #dbe3ea;
+    text-align: left;
+}
+
+.roster-table th {
+    background: #f8fafc;
+    font-weight: 900;
+}
+
+html.dark-mode .roster-filter-card,
+html.dark-mode .print-roster {
+    background: #111827 !important;
+    border-color: #334155 !important;
+    color: #e5e7eb !important;
+}
+
+html.dark-mode .roster-table th {
+    background: #020617 !important;
+}
+
+@@media(max-width: 800px) {
+    .roster-filter-card {
+        grid-template-columns: 1fr;
+    }
+
+    .roster-screen-header {
+        display: grid;
+    }
+}
+
+@@media print {
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    .sidebar,
+    .topbar,
+    .footer,
+    .roster-screen-header,
+    .roster-filter-card,
+    .toast-container {
+        display: none !important;
+    }
+
+    .content-area,
+    .main-content,
+    .main-shell {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+    }
+
+    .print-roster {
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        color: black !important;
+        background: white !important;
+    }
+
+    .roster-table th,
+    .roster-table td {
+        color: black !important;
+        border-color: #333 !important;
+    }
+}
+</style>

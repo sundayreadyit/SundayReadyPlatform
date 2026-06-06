@@ -1,0 +1,223 @@
+@model ChurchAssetTracker.Data.ReservationCalendarUpdate1ViewModel
+@{
+    ViewData["Title"] = "Reservations Calendar";
+    var canManage = User.IsInRole("Admin") || User.IsInRole("ReservationManager");
+}
+
+<div class="page-header no-print">
+    <div>
+        <h2>Reservations Calendar</h2>
+        <p>@Model.MonthName</p>
+    </div>
+    <div>
+        <a class="btn" asp-action="Calendar" asp-route-year="@Model.PreviousMonth.Year" asp-route-month="@Model.PreviousMonth.Month" asp-route-visibility="@Model.Visibility" asp-route-accessAreaId="@Model.AccessAreaId">Previous</a>
+        <a class="btn" asp-action="Calendar">Today</a>
+        <a class="btn" asp-action="Calendar" asp-route-year="@Model.NextMonth.Year" asp-route-month="@Model.NextMonth.Month" asp-route-visibility="@Model.Visibility" asp-route-accessAreaId="@Model.AccessAreaId">Next</a>
+        <button class="btn" onclick="window.print()">Print</button>
+        <a class="btn" asp-action="Index">List View</a>
+        @if (canManage)
+        {
+            <a class="btn primary" asp-action="Create">Add Reservation</a>
+        }
+    </div>
+</div>
+
+@if (canManage)
+{
+    <form id="dragDropTokenForm" class="no-print">
+        @Html.AntiForgeryToken()
+    </form>
+    <div class="alert warning no-print">
+        Drag/drop is enabled. Move a reservation to another day to reschedule it. The system will block conflicting moves.
+    </div>
+}
+
+<div class="print-title">
+    <h2>Church Reservations Calendar</h2>
+    <p>@Model.MonthName</p>
+</div>
+
+<form method="get" class="filter-bar no-print">
+    <input type="hidden" name="year" value="@Model.Year" />
+    <input type="hidden" name="month" value="@Model.Month" />
+
+    <label>Visibility</label>
+    <select name="visibility">
+        <option value="All" selected="@(Model.Visibility == "All")">All</option>
+        <option value="Public" selected="@(Model.Visibility == "Public")">Public Only</option>
+        <option value="Private" selected="@(Model.Visibility == "Private")">Private Only</option>
+    </select>
+
+    <label>Room/Area</label>
+    <select name="accessAreaId">
+        <option value="">All Rooms/Areas</option>
+        @foreach (var area in Model.AccessAreas)
+        {
+            <option value="@area.AccessAreaId" selected="@(Model.AccessAreaId == area.AccessAreaId)">@area.AreaName</option>
+        }
+    </select>
+
+    <button class="btn" type="submit">Apply</button>
+</form>
+
+<div class="calendar-legend">
+    @foreach (var area in Model.AccessAreas)
+    {
+        <span class="legend-item">
+            <span class="legend-dot" style="background-color:@area.CalendarColor"></span>
+            @area.AreaName
+        </span>
+    }
+</div>
+
+<div class="calendar-grid calendar-header-row">
+    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+</div>
+
+<div class="calendar-grid">
+@foreach (var day in Model.Days)
+{
+    var dayClass = "calendar-day";
+    if (!day.IsCurrentMonth) dayClass += " muted-day";
+    if (day.IsToday) dayClass += " today";
+
+    <div class="@dayClass" data-date="@day.Date.ToString("yyyy-MM-dd")">
+        <div class="calendar-date">@day.Date.Day</div>
+        @foreach (var reservation in day.Reservations)
+        {
+            var statusClass = reservation.Status.ToLowerInvariant();
+            <a class="calendar-event @statusClass"
+               style="border-left-color:@reservation.CalendarColor"
+               asp-action="Details"
+               asp-route-id="@reservation.ReservationId"
+               title="@reservation.EventName"
+               data-reservation-id="@reservation.ReservationId"
+               draggable="@(canManage ? "true" : "false")">
+                <span class="calendar-time">@reservation.StartDateTime.ToString("h:mm tt")</span>
+                <span class="calendar-title">@reservation.EventName</span>
+                <small>
+                    @reservation.AccessAreaName
+                    —
+                    @(reservation.IsPublicEvent ? "Public" : "Private")
+                </small>
+            </a>
+        }
+    </div>
+}
+</div>
+
+<style>
+    .print-title { display: none; }
+    .calendar-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0 18px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: .9rem; }
+    .legend-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+    .calendar-header-row { margin-bottom: 8px; font-weight: 700; text-align: center; }
+    .calendar-header-row div { padding: 8px; background: #f3f4f6; border-radius: 8px; }
+    .calendar-day { min-height: 125px; border: 1px solid #d1d5db; border-radius: 10px; padding: 8px; background: #fff; overflow: hidden; }
+    .calendar-day.muted-day { background: #f9fafb; color: #9ca3af; }
+    .calendar-day.today { outline: 3px solid #2563eb; }
+    .calendar-day.drag-over { outline: 3px dashed #16a34a; background: #f0fdf4; }
+    .calendar-date { font-weight: 700; margin-bottom: 6px; }
+    .calendar-event { display: block; text-decoration: none; padding: 6px; border-radius: 8px; margin-bottom: 6px; background: #f1f5f9; color: #111827; font-size: .85rem; line-height: 1.2; border-left: 6px solid #475569; cursor: pointer; }
+    .calendar-event[draggable="true"] { cursor: grab; }
+    .calendar-event.dragging { opacity: .45; }
+    .calendar-event.approved { background: #dcfce7; }
+    .calendar-event.pending { background: #fef3c7; }
+    .calendar-event.denied, .calendar-event.cancelled { background: #fee2e2; }
+    .calendar-time { display: block; font-weight: 700; }
+    .calendar-title { display: block; }
+    .calendar-event small { display: block; opacity: .8; }
+
+    @@media print {
+        .no-print, .topbar, .nav { display: none !important; }
+        .print-title { display: block; text-align: center; margin-bottom: 12px; }
+        body { background: white !important; }
+        .container { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+        .calendar-grid { gap: 4px; }
+        .calendar-day { min-height: 95px; border-radius: 0; page-break-inside: avoid; }
+        .calendar-event { font-size: .72rem; padding: 4px; margin-bottom: 3px; }
+        .calendar-legend { font-size: .75rem; margin-bottom: 8px; }
+    }
+</style>
+
+@if (canManage)
+{
+<script>
+(function () {
+    let draggedReservationId = null;
+
+    document.querySelectorAll('.calendar-event[draggable="true"]').forEach(function (eventEl) {
+        eventEl.addEventListener('dragstart', function (e) {
+            draggedReservationId = eventEl.dataset.reservationId;
+            eventEl.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', draggedReservationId);
+        });
+
+        eventEl.addEventListener('dragend', function () {
+            eventEl.classList.remove('dragging');
+            document.querySelectorAll('.calendar-day.drag-over').forEach(function (d) {
+                d.classList.remove('drag-over');
+            });
+        });
+
+        eventEl.addEventListener('click', function (e) {
+            if (eventEl.classList.contains('dragging')) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    document.querySelectorAll('.calendar-day[data-date]').forEach(function (dayEl) {
+        dayEl.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dayEl.classList.add('drag-over');
+        });
+
+        dayEl.addEventListener('dragleave', function () {
+            dayEl.classList.remove('drag-over');
+        });
+
+        dayEl.addEventListener('drop', async function (e) {
+            e.preventDefault();
+            dayEl.classList.remove('drag-over');
+
+            const reservationId = draggedReservationId || e.dataTransfer.getData('text/plain');
+            const newDate = dayEl.dataset.date;
+
+            if (!reservationId || !newDate) {
+                alert('Unable to determine reservation or target date.');
+                return;
+            }
+
+            const tokenInput = document.querySelector('#dragDropTokenForm input[name="__RequestVerificationToken"]');
+            const token = tokenInput ? tokenInput.value : '';
+
+            const formData = new FormData();
+            formData.append('ReservationId', reservationId);
+            formData.append('NewDate', newDate);
+            formData.append('__RequestVerificationToken', token);
+
+            try {
+                const response = await fetch('@Url.Action("Move", "Reservations")', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    alert(result.message || 'Move was blocked.');
+                    return;
+                }
+
+                window.location.reload();
+            } catch (err) {
+                alert('Move failed. Please refresh and try again.');
+            }
+        });
+    });
+})();
+</script>
+}

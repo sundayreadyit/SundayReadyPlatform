@@ -1,0 +1,61 @@
+@model List<ChurchAssetTracker.Data.ITSupportTicketRow>
+@{
+    ViewData["Title"] = "My IT Tickets";
+}
+
+<div class="it-page-header">
+    <div>
+        <span class="eyebrow">Requester Portal</span>
+        <h2>My IT Tickets</h2>
+        <p>View and update IT support requests you submitted.</p>
+    </div>
+
+    <div class="it-header-actions">
+        <a class="btn primary" asp-action="RequesterCreate">+ Submit IT Ticket</a>
+    </div>
+</div>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="it-empty-state">
+        <strong>No IT tickets yet</strong>
+        <span>You have not submitted any IT support requests.</span>
+        <a class="btn primary" asp-action="RequesterCreate">Submit IT Ticket</a>
+    </div>
+}
+else
+{
+    <div class="ticket-card-list">
+        @foreach (var ticket in Model)
+        {
+            var priorityClass = "priority-" + (ticket.Priority ?? "").Replace(" ", "-").ToLowerInvariant();
+            var statusClass = "status-" + (ticket.Status ?? "").Replace(" ", "-").ToLowerInvariant();
+
+            <a class="ticket-card" asp-action="RequesterDetails" asp-route-id="@ticket.TicketId">
+                <div class="ticket-card-main">
+                    <div class="ticket-title-line">
+                        <strong>@(ticket.TicketNumber ?? $"IT-{ticket.TicketId:00000}")</strong>
+                        <h3>@ticket.Title</h3>
+                    </div>
+
+                    <div class="ticket-meta-row">
+                        <span>Created @ticket.CreatedDate.ToString("MMM d, yyyy")</span>
+                        <span>Assigned to @(ticket.AssignedToName ?? "Unassigned")</span>
+                        @if (!string.IsNullOrWhiteSpace(ticket.Category)) { <span>@ticket.Category</span> }
+                    </div>
+                </div>
+
+                <div class="ticket-card-side">
+                    <div class="ticket-pill-row">
+                        <span class="ticket-pill @priorityClass">@ticket.Priority</span>
+                        <span class="ticket-pill @statusClass">@ticket.Status</span>
+                    </div>
+                    <div class="ticket-side-detail"><span>Status</span><strong>@ticket.Status</strong></div>
+                    <div class="ticket-side-detail"><span>Created</span><strong>@ticket.CreatedDate.ToString("MMM d")</strong></div>
+                </div>
+            </a>
+        }
+    </div>
+}
+
+@await Html.PartialAsync("_ITSupportPolishStyles")

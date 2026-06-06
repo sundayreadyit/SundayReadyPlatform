@@ -1,0 +1,248 @@
+using Microsoft.Data.SqlClient;
+
+namespace ChurchAssetTracker.Data;
+
+public partial class SqlDataService
+{
+    public async Task<List<AccessAreaRow>> GetAccessAreasAsync(bool includeInactive = false)
+    {
+        var list = new List<AccessAreaRow>();
+        await using var conn = CreateConnection();
+
+        var sql = @"SELECT AccessAreaId, AreaName, Description, IsActive
+                    FROM dbo.AccessAreas
+                    WHERE (@includeInactive = 1 OR IsActive = 1)
+                    ORDER BY AreaName";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@includeInactive", includeInactive ? 1 : 0);
+
+        await conn.OpenAsync();
+        await using var r = await cmd.ExecuteReaderAsync();
+
+        while (await r.ReadAsync())
+        {
+            list.Add(new AccessAreaRow
+            {
+                AccessAreaId = r.GetInt32(0),
+                AreaName = r.GetString(1),
+                Description = r.IsDBNull(2) ? null : r.GetString(2),
+                IsActive = r.GetBoolean(3)
+            });
+        }
+
+        return list;
+    }
+
+    public async Task<AccessAreaRow?> GetAccessAreaAsync(int id)
+    {
+        await using var conn = CreateConnection();
+
+        const string sql = @"SELECT AccessAreaId, AreaName, Description, IsActive
+                             FROM dbo.AccessAreas
+                             WHERE AccessAreaId = @id";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+
+        await conn.OpenAsync();
+        await using var r = await cmd.ExecuteReaderAsync();
+
+        if (!await r.ReadAsync()) return null;
+
+        return new AccessAreaRow
+        {
+            AccessAreaId = r.GetInt32(0),
+            AreaName = r.GetString(1),
+            Description = r.IsDBNull(2) ? null : r.GetString(2),
+            IsActive = r.GetBoolean(3)
+        };
+    }
+
+    public async Task CreateAccessAreaAsync(AccessAreaForm model, string username)
+    {
+        await using var conn = CreateConnection();
+
+        const string sql = @"INSERT INTO dbo.AccessAreas (AreaName, Description, IsActive)
+                             VALUES (@AreaName, @Description, 1);
+                             SELECT CAST(SCOPE_IDENTITY() AS int);";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@AreaName", model.AreaName.Trim());
+        cmd.Parameters.AddWithValue("@Description", string.IsNullOrWhiteSpace(model.Description) ? DBNull.Value : model.Description.Trim());
+
+        await conn.OpenAsync();
+        var newId = (int)await cmd.ExecuteScalarAsync();
+
+        await WriteKeyAccessAuditLogAsync(username, "Create", "AccessArea", newId, $"Created access area: {model.AreaName}");
+    }
+
+    public async Task UpdateAccessAreaAsync(AccessAreaForm model, string username)
+    {
+        await using var conn = CreateConnection();
+
+        const string sql = @"UPDATE dbo.AccessAreas
+                             SET AreaName = @AreaName,
+                                 Description = @Description,
+                                 IsActive = @IsActive
+                             WHERE AccessAreaId = @AccessAreaId";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@AccessAreaId", model.AccessAreaId);
+        cmd.Parameters.AddWithValue("@AreaName", model.AreaName.Trim());
+        cmd.Parameters.AddWithValue("@Description", string.IsNullOrWhiteSpace(model.Description) ? DBNull.Value : model.Description.Trim());
+        cmd.Parameters.AddWithValue("@IsActive", model.IsActive);
+
+        await conn.OpenAsync();
+        await cmd.ExecuteNonQueryAsync();
+
+        await WriteKeyAccessAuditLogAsync(username, "Update", "AccessArea", model.AccessAreaId, $"Updated access area: {model.AreaName}");
+    }
+
+    public async Task SetAccessAreaActiveAsync(int id, bool isActive, string username)
+    {
+        await using var conn = CreateConnection();
+
+        const string sql = @"UPDATE dbo.AccessAreas
+                             SET IsActive = @IsActive
+                             WHERE AccessAreaId = @AccessAreaId";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@AccessAreaId", id);
+        cmd.Parameters.AddWithValue("@IsActive", isActive);
+
+        await conn.OpenAsync();
+        await cmd.ExecuteNonQueryAsync();
+
+        await WriteKeyAccessAuditLogAsync(username, isActive ? "Activate" : "Deactivate", "AccessArea", id, isActive ? "Activated access area" : "Deactivated access area");
+    }
+
+    public async Task<KeyAccessManageViewModel?> GetKeyAccessManageAsync(int keyId)
+    {
+        await using var conn = CreateConnection();
+
+        const string keySql = @"SELECT KeyId, KeyCode, KeyName
+                                FROM dbo.Keys
+                                WHERE KeyId = @KeyId";
+
+        await using var keyCmd = new SqlCommand(keySql, conn);
+        keyCmd.Parameters.AddWithValue("@KeyId", keyId);
+
+        await conn.OpenAsync();
+
+        KeyAccessManageViewModel? model = null;
+
+        await using (var r = await keyCmd.ExecuteReaderAsync())
+        {
+            if (await r.ReadAsync())
+            {
+                model = new KeyAccessManageViewModel
+                {
+                    KeyId = r.GetInt32(0),
+                    KeyCode = r.GetString(1),
+                    KeyName = r.GetString(2)
+                };
+            }
+        }
+
+        if (model == null) return null;
+
+        const string areasSql = @"SELECT AccessAreaId, AreaName, Description, IsActive
+                                  FROM dbo.AccessAreas
+                                  WHERE IsActive = 1
+                                  ORDER BY AreaName";
+
+        await using (var areasCmd = new SqlCommand(areasSql, conn))
+        await using (var r = await areasCmd.ExecuteReaderAsync())
+        {
+            while (await r.ReadAsync())
+            {
+                model.AllAccessAreas.Add(new AccessAreaRow
+                {
+                    AccessAreaId = r.GetInt32(0),
+                    AreaName = r.GetString(1),
+                    Description = r.IsDBNull(2) ? null : r.GetString(2),
+                    IsActive = r.GetBoolean(3)
+                });
+            }
+        }
+
+        const string selectedSql = @"SELECT AccessAreaId
+                                     FROM dbo.KeyAccessAreas
+                                     WHERE KeyId = @KeyId";
+
+        await using (var selectedCmd = new SqlCommand(selectedSql, conn))
+        {
+            selectedCmd.Parameters.AddWithValue("@KeyId", keyId);
+
+            await using var r = await selectedCmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                model.SelectedAccessAreaIds.Add(r.GetInt32(0));
+            }
+        }
+
+        return model;
+    }
+
+    public async Task UpdateKeyAccessAreasAsync(int keyId, List<int> selectedAccessAreaIds, string username)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+
+        try
+        {
+            const string deleteSql = @"DELETE FROM dbo.KeyAccessAreas WHERE KeyId = @KeyId";
+            await using (var deleteCmd = new SqlCommand(deleteSql, conn, tx))
+            {
+                deleteCmd.Parameters.AddWithValue("@KeyId", keyId);
+                await deleteCmd.ExecuteNonQueryAsync();
+            }
+
+            const string insertSql = @"INSERT INTO dbo.KeyAccessAreas (KeyId, AccessAreaId)
+                                       VALUES (@KeyId, @AccessAreaId)";
+
+            foreach (var areaId in selectedAccessAreaIds.Distinct())
+            {
+                await using var insertCmd = new SqlCommand(insertSql, conn, tx);
+                insertCmd.Parameters.AddWithValue("@KeyId", keyId);
+                insertCmd.Parameters.AddWithValue("@AccessAreaId", areaId);
+                await insertCmd.ExecuteNonQueryAsync();
+            }
+
+            await tx.CommitAsync();
+
+            await WriteKeyAccessAuditLogAsync(username, "Update", "KeyAccessAreas", keyId, $"Updated access areas for key ID {keyId}");
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
+    }
+
+    private async Task WriteKeyAccessAuditLogAsync(string username, string actionType, string entityType, int entityId, string description)
+    {
+        await using var conn = CreateConnection();
+
+        const string sql = @"INSERT INTO dbo.AuditLog (UserId, ActionType, EntityType, EntityId, Description)
+                             SELECT TOP 1 UserId, @ActionType, @EntityType, @EntityId, @Description
+                             FROM dbo.Users
+                             WHERE Username = @Username
+                             UNION ALL
+                             SELECT NULL, @ActionType, @EntityType, @EntityId, @Description
+                             WHERE NOT EXISTS (SELECT 1 FROM dbo.Users WHERE Username = @Username);";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@Username", username);
+        cmd.Parameters.AddWithValue("@ActionType", actionType);
+        cmd.Parameters.AddWithValue("@EntityType", entityType);
+        cmd.Parameters.AddWithValue("@EntityId", entityId);
+        cmd.Parameters.AddWithValue("@Description", description);
+
+        await conn.OpenAsync();
+        await cmd.ExecuteNonQueryAsync();
+    }
+}

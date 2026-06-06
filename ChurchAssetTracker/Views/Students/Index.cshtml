@@ -1,0 +1,130 @@
+@model List<ChurchAssetTracker.Data.StudentRow>
+@{
+    ViewData["Title"] = "Students";
+    var search = Convert.ToString(ViewBag.Search ?? "");
+    var includeInactive = Convert.ToBoolean(ViewBag.IncludeInactive ?? false);
+}
+
+<div class="directory-header">
+    <div>
+        <span class="eyebrow">CWCA Student Directory</span>
+        <h2>Students</h2>
+        <p>Restricted school student directory.</p>
+    </div>
+
+    <div class="directory-actions">
+        <a class="btn" asp-action="Roster">Printable Roster</a>
+        <a class="btn primary" asp-action="Create">Add Student</a>
+    </div>
+</div>
+
+<form method="get" class="directory-filter-card">
+    <div>
+        <label>Search</label>
+        <input type="text" name="search" value="@search" placeholder="Search students, grade, classroom, guardian..." />
+    </div>
+
+    <label class="checkbox-row" style="margin-bottom:10px;">
+        <input type="checkbox" name="includeInactive" value="true" checked="@includeInactive" />
+        Include inactive
+    </label>
+
+    <button class="btn primary" type="submit">Search</button>
+</form>
+
+<div class="directory-table-card">
+    <table class="directory-table">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Grade</th>
+                <th>Classroom</th>
+                <th>Teacher</th>
+                <th>Guardian</th>
+                <th>Status</th>
+                <th style="width:150px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model == null || !Model.Any())
+            {
+                <tr>
+                    <td colspan="7">No students found.</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var student in Model)
+                {
+                    var displayName = string.IsNullOrWhiteSpace(student.PreferredName)
+                        ? $"{student.LastName}, {student.FirstName}"
+                        : $"{student.LastName}, {student.PreferredName}";
+
+                    var initials = $"{(string.IsNullOrWhiteSpace(student.FirstName) ? "S" : student.FirstName[0])}{(string.IsNullOrWhiteSpace(student.LastName) ? "" : student.LastName[0])}";
+                    var photoUrl = string.IsNullOrWhiteSpace(student.PhotoPath) ? null : Url.Content("~" + student.PhotoPath);
+
+                    <tr>
+                        <td>
+                            <a class="directory-person-cell directory-record-link" asp-action="Details" asp-route-id="@student.StudentId" title="View student record">
+                                @if (!string.IsNullOrWhiteSpace(photoUrl))
+                                {
+                                    <img class="directory-avatar" src="@photoUrl" alt="@displayName photo" />
+                                }
+                                else
+                                {
+                                    <div class="directory-avatar initials">@initials</div>
+                                }
+
+                                <div class="directory-name-block">
+                                    <strong>@displayName</strong>
+                                    @if (!string.IsNullOrWhiteSpace(student.PreferredName))
+                                    {
+                                        <span>Preferred: @student.PreferredName</span>
+                                    }
+                                </div>
+                            </a>
+                        </td>
+                        <td>@student.GradeLevel</td>
+                        <td>@student.Classroom</td>
+                        <td>@student.TeacherName</td>
+                        <td>
+                            <strong>@student.ParentGuardian1Name</strong>
+                            @if (!string.IsNullOrWhiteSpace(student.ParentGuardian1Phone))
+                            {
+                                <span style="display:block;color:#94a3b8;">@student.ParentGuardian1Phone</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="status-pill @(student.IsActive ? "" : "inactive")">
+                                @(student.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="directory-row-actions">
+                                <a class="btn" asp-action="Edit" asp-route-id="@student.StudentId">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@await Html.PartialAsync("_DirectoryThumbnailStyles")
+
+<style>
+.directory-record-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.directory-record-link:hover .directory-name-block strong {
+    color: #174c2f;
+    text-decoration: underline;
+}
+
+html.dark-mode .directory-record-link:hover .directory-name-block strong {
+    color: #86efac !important;
+}
+</style>

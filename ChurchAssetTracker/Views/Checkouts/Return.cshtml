@@ -1,0 +1,50 @@
+@model ChurchAssetTracker.Models.CheckoutReturnViewModel
+@{
+    ViewData["Title"] = "Return Asset";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Return Asset</h1>
+        <p>Close out the borrowed item and record its return condition.</p>
+    </div>
+    <a class="btn-secondary" asp-controller="Checkouts" asp-action="Index">Back to Checkouts</a>
+</div>
+
+<div class="details-card">
+    <p><strong>Asset:</strong> @Model.AssetName</p>
+    <p><strong>Borrower:</strong> @Model.Borrower</p>
+        <p><strong>Quantity:</strong> @Model.QuantityOut</p>
+    <p><strong>Checked Out:</strong> @Model.CheckoutDate.ToShortDateString()</p>
+    <p><strong>Expected Return:</strong> @(Model.ExpectedReturnDate?.ToShortDateString() ?? "")</p>
+</div>
+
+<div class="form-card">
+    <form asp-action="Return" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="CheckoutId" />
+        <input type="hidden" asp-for="AssetName" />
+        <input type="hidden" asp-for="Borrower" />
+        <input type="hidden" asp-for="CheckoutDate" />
+        <input type="hidden" asp-for="ExpectedReturnDate" />
+
+        <div class="form-grid">
+            <label class="full-width">
+                <span>Condition Returned</span>
+                <input asp-for="ConditionReturned" placeholder="Good, damaged, missing parts, etc." />
+                <span asp-validation-for="ConditionReturned" class="field-validation"></span>
+            </label>
+
+            <label class="full-width">
+                <span>Return Notes</span>
+                <textarea asp-for="ReturnNotes" rows="4" placeholder="Optional return notes."></textarea>
+                <span asp-validation-for="ReturnNotes" class="field-validation"></span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Mark Returned</button>
+            <a class="btn-secondary" asp-controller="Checkouts" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>

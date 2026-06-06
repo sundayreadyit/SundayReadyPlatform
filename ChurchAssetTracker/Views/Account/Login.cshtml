@@ -1,0 +1,351 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Login";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>Login - CWC Operations Portal</title>
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(23,76,47,.18), transparent 34%),
+                radial-gradient(circle at bottom right, rgba(34,197,94,.12), transparent 28%),
+                #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0f172a;
+        }
+
+        .login-shell {
+            width: min(100%, 1040px);
+            display: grid;
+            grid-template-columns: 1fr .9fr;
+            gap: 26px;
+            padding: 28px;
+        }
+
+        .brand-card {
+            background:
+                linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)),
+                #174c2f;
+            color: white;
+            border-radius: 28px;
+            padding: 42px;
+            box-shadow: 0 24px 70px rgba(15,23,42,.20);
+            border: 1px solid rgba(255,255,255,.14);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 460px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-card::after {
+            content: "";
+            position: absolute;
+            right: -80px;
+            bottom: -80px;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.08);
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,.13);
+            border: 1px solid rgba(255,255,255,.22);
+            border-radius: 999px;
+            padding: 9px 15px;
+            width: fit-content;
+            font-weight: 700;
+            margin-bottom: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-card h1 {
+            margin: 0;
+            font-size: 3rem;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-card p {
+            margin-top: 18px;
+            color: rgba(255,255,255,.88);
+            font-size: 1.08rem;
+            line-height: 1.6;
+            max-width: 560px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-list {
+            margin-top: 30px;
+            display: grid;
+            gap: 12px;
+            color: rgba(255,255,255,.9);
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-list span {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 14px;
+            padding: 10px 12px;
+        }
+
+        .login-card {
+            background: white;
+            border: 1px solid #dbe3ea;
+            border-radius: 28px;
+            padding: 38px;
+            box-shadow: 0 24px 70px rgba(15,23,42,.14);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-card h2 {
+            margin: 0;
+            color: #174c2f;
+            font-size: 1.9rem;
+        }
+
+        .login-card .subtitle {
+            margin: 8px 0 26px;
+            color: #64748b;
+            line-height: 1.45;
+        }
+
+        .login-form {
+            display: grid;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: grid;
+            gap: 7px;
+        }
+
+        .form-group label {
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .form-group input {
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 13px 14px;
+            font-size: 1rem;
+            outline: none;
+            background: #fff;
+        }
+
+        .form-group input:focus {
+            border-color: #174c2f;
+            box-shadow: 0 0 0 4px rgba(23,76,47,.12);
+        }
+
+        .login-button {
+            margin-top: 6px;
+            border: 0;
+            border-radius: 12px;
+            padding: 13px 16px;
+            background: #174c2f;
+            color: white;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(23,76,47,.20);
+        }
+
+        .login-button:hover {
+            background: #14532d;
+        }
+
+        .internal-note {
+            margin-top: 22px;
+            border: 1px solid #dbe3ea;
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 14px;
+            color: #475569;
+            font-size: .92rem;
+            line-height: 1.45;
+        }
+
+        .validation-summary-errors {
+            color: #b91c1c;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .footer-text {
+            margin-top: 18px;
+            text-align: center;
+            color: #64748b;
+            font-size: .86rem;
+        }
+
+        @@media (max-width: 900px) {
+            body {
+                align-items: flex-start;
+            }
+
+            .login-shell {
+                grid-template-columns: 1fr;
+                padding: 18px;
+            }
+
+            .brand-card {
+                min-height: auto;
+                padding: 30px;
+            }
+
+            .brand-card h1 {
+                font-size: 2.25rem;
+            }
+
+            .feature-list {
+                grid-template-columns: 1fr;
+            }
+
+            .login-card {
+                padding: 28px;
+            }
+        }
+
+        @@media (max-width: 560px) {
+            .brand-card,
+            .login-card {
+                border-radius: 20px;
+            }
+
+            .brand-card {
+                padding: 24px;
+            }
+
+            .brand-card h1 {
+                font-size: 2rem;
+            }
+
+            .brand-card p {
+                font-size: 1rem;
+            }
+
+            .feature-list {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-shell">
+
+        <section class="brand-card">
+            <div class="brand-badge">
+                <span>🏠</span>
+                <span>Internal Portal</span>
+            </div>
+
+            <h1>CWC Operations Portal</h1>
+
+            <p>
+                Centralized church and school operations management for reservations,
+                assets, keys, IT support, school records, and administrative workflows.
+            </p>
+
+            <div class="feature-list">
+                <span>📅 Reservations and scheduling</span>
+                <span>🎫 IT support and asset tracking</span>
+                <span>👨‍🎓 School directory access</span>
+                <span>📝 Audited internal activity</span>
+            </div>
+        </section>
+
+        <section class="login-card">
+            <h2>Sign in</h2>
+            <p class="subtitle">
+                Use your assigned portal account to continue.
+            </p>
+
+            <form method="post" class="login-form">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"></div>
+
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input id="username"
+                           type="text"
+                           name="username"
+                           autocomplete="username"
+                           required />
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input id="password"
+                           type="password"
+                           name="password"
+                           autocomplete="current-password"
+                           required />
+                </div>
+
+                <button type="submit" class="login-button">
+                    Sign In
+                </button>
+
+                <div style="margin-top:12px;text-align:center;">
+                    <a asp-controller="ForgotPassword"
+                       asp-action="Index"
+                       style="color:#174c2f;font-weight:800;text-decoration:none;">
+                        Forgot your password?
+                    </a>
+                </div>
+
+            </form>
+
+            <div class="internal-note">
+                <strong>Internal Use Only.</strong><br />
+                This system is intended for authorized CWC church and school operations users.
+            </div>
+
+            <div class="footer-text">
+                CWC Operations Portal
+            </div>
+        </section>
+
+    </div>
+</body>
+</html>

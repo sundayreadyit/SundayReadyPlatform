@@ -1,0 +1,41 @@
+@model List<ChurchAssetTracker.Data.ITSupportTicketRow>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="it-empty-state">
+        <strong>No tickets found</strong>
+        <span>Nothing needs attention in this queue.</span>
+    </div>
+}
+else
+{
+    <div class="ticket-card-list">
+        @foreach (var ticket in Model)
+        {
+            var priorityClass = "priority-" + (ticket.Priority ?? "").Replace(" ", "-").ToLowerInvariant();
+            var statusClass = "status-" + (ticket.Status ?? "").Replace(" ", "-").ToLowerInvariant();
+
+            <a class="ticket-card" asp-controller="ITSupport" asp-action="Details" asp-route-id="@ticket.TicketId">
+                <div class="ticket-card-main">
+                    <div class="ticket-title-line">
+                        <strong>@(ticket.TicketNumber ?? $"IT-{ticket.TicketId:00000}")</strong>
+                        <h3>@ticket.Title</h3>
+                    </div>
+
+                    <div class="ticket-meta-row">
+                        <span>@(ticket.Category ?? "IT Support")</span>
+                        <span>Requested by @(ticket.RequestedByName ?? "Unknown")</span>
+                        @if (ticket.DueDate.HasValue) { <span>Due @ticket.DueDate.Value.ToString("MMM d")</span> }
+                    </div>
+                </div>
+
+                <div class="ticket-card-side">
+                    <div class="ticket-pill-row">
+                        <span class="ticket-pill @priorityClass">@ticket.Priority</span>
+                        <span class="ticket-pill @statusClass">@ticket.Status</span>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+}

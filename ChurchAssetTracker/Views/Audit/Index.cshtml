@@ -1,0 +1,37 @@
+@model List<ChurchAssetTracker.Models.AuditLogRow>
+@{ ViewData["Title"] = "Audit Log"; }
+
+<section class="page-header">
+    <div>
+        <h2>Audit Log</h2>
+        <p>Recent system activity for people, assets, checkouts, keys, and assignments.</p>
+    </div>
+</section>
+
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Date/Time</th>
+                <th>Action</th>
+                <th>Record Type</th>
+                <th>Record ID</th>
+                <th>User</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var row in Model)
+        {
+            <tr>
+                <td>@row.CreatedDate.ToString("g")</td>
+                <td><span class="badge">@row.ActionType</span></td>
+                <td>@row.EntityType</td>
+                <td>@(row.EntityId?.ToString() ?? "-")</td>
+                <td>@(row.UserDisplayName ?? "System")</td>
+                <td>@row.Description</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

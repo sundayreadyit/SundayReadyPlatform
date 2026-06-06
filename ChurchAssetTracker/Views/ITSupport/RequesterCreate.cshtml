@@ -1,0 +1,135 @@
+@model ChurchAssetTracker.Data.ITSupportTicketForm
+@{
+    ViewData["Title"] = "Submit IT Ticket";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Submit IT Support Ticket</h2>
+        <p>Send a technology support request to the IT team.</p>
+    </div>
+
+    <a class="btn" asp-action="MyTickets">My Tickets</a>
+</div>
+
+<form asp-action="RequesterCreate" method="post" class="form-card">
+    @Html.AntiForgeryToken()
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert danger">
+            <strong>Please fix the following:</strong>
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+
+    <label>Title</label>
+    <input asp-for="Title" placeholder="Brief summary of the issue" />
+
+    <label>Description</label>
+    <textarea asp-for="Description" placeholder="Describe what is happening, where it is happening, and when it started."></textarea>
+
+    <div class="grid two">
+        <div>
+            <label>Category</label>
+            <select asp-for="Category">
+                <option value="">-- Select category --</option>
+                <option value="IT Support">IT Support</option>
+                <option value="Classroom Technology">Classroom Technology</option>
+                <option value="Network">Network</option>
+                <option value="Audio/Visual">Audio/Visual</option>
+                <option value="Printer">Printer</option>
+                <option value="Phone">Phone</option>
+                <option value="Software">Software</option>
+                <option value="Account Access">Account Access</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Priority</label>
+            <select asp-for="Priority">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="workflow-note">
+        <strong>Your contact information</strong>
+        <span>This is used by IT if they need to follow up. You can update it for this ticket.</span>
+    </div>
+
+    <input type="hidden" asp-for="RequestedByPersonId" />
+
+    <div class="grid three">
+        <div>
+            <label>Your Name</label>
+            <input asp-for="RequestedByName" />
+        </div>
+
+        <div>
+            <label>Email</label>
+            <input asp-for="RequestedByEmail" />
+        </div>
+
+        <div>
+            <label>Phone</label>
+            <input asp-for="RequestedByPhone" />
+        </div>
+    </div>
+
+    <div class="grid two">
+        <div>
+            <label>Related IT Asset</label>
+            <select asp-for="ITAssetId">
+                <option value="">-- None / Not sure --</option>
+                @foreach (var asset in Model.ITAssets)
+                {
+                    <option value="@asset.ITAssetId">@asset.DisplayName</option>
+                }
+            </select>
+        </div>
+
+        <div>
+            <label>Room / Area</label>
+            <select asp-for="AccessAreaId">
+                <option value="">-- None / Not sure --</option>
+                @foreach (var area in Model.AccessAreas)
+                {
+                    <option value="@area.AccessAreaId">@area.AreaName</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button class="btn primary" type="submit">Submit Ticket</button>
+        <a class="btn" asp-action="MyTickets">Cancel</a>
+    </div>
+</form>
+
+<style>
+    .workflow-note {
+        background: #f8fafc;
+        border: 1px solid #dbe3ea;
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin: 14px 0;
+    }
+
+    .workflow-note strong,
+    .workflow-note span {
+        display: block;
+    }
+
+    .workflow-note span {
+        color: #64748b;
+        margin-top: 4px;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

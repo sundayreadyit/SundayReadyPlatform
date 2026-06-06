@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CWC Operations Portal</title>
+
+    <script>
+
+function toggleDarkMode(){
+    var root = document.documentElement;
+    var isDark = root.classList.toggle('dark-mode');
+    try { localStorage.setItem('cwc.theme', isDark ? 'dark' : 'light'); } catch(e) {}
+}
+
+        (function () {
+            try {
+                if (localStorage.getItem('cwc.theme') === 'dark') {
+                    document.documentElement.classList.add('dark-mode');
+                }
+            } catch (e) { }
+        })();
+    </script>
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f1f5f9;color:#0f172a}
+        .app-shell{display:flex;min-height:100vh}
+        .sidebar{width:280px;background:#174c2f;color:white;display:flex;flex-direction:column;box-shadow:4px 0 18px rgba(0,0,0,.12);z-index:20;transition:width .2s ease}
+        .sidebar-header{padding:24px;border-bottom:1px solid rgba(255,255,255,.12)}
+        .sidebar-header-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+        .sidebar-brand h1{margin:0;font-size:1.5rem;line-height:1.2}
+        .sidebar-brand p{margin:10px 0 0;font-size:.9rem;color:rgba(255,255,255,.78);line-height:1.4}
+        .sidebar-toggle{border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:white;border-radius:10px;padding:8px 10px;cursor:pointer;font-weight:800;line-height:1}
+        .sidebar-toggle:hover{background:rgba(255,255,255,.14)}
+        .sidebar-close{display:none;margin-top:14px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:white;border-radius:10px;padding:8px 12px;cursor:pointer}
+        .nav-section{padding:20px 18px 8px}
+        .nav-section-title{font-size:.8rem;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.65);text-transform:uppercase;margin-bottom:10px}
+        .nav-links{display:flex;flex-direction:column;gap:4px}
+        .nav-link{display:flex;align-items:center;gap:12px;text-decoration:none;color:white;padding:12px 14px;border-radius:12px;transition:background .15s ease;white-space:nowrap}
+        .nav-link:hover{background:rgba(255,255,255,.10)}
+        .nav-icon{width:24px;text-align:center;font-size:1.1rem;flex-shrink:0}
+        .nav-label{overflow:hidden;text-overflow:ellipsis}
+        .main-shell{flex:1;display:flex;flex-direction:column;min-width:0}
+        .topbar{background:white;border-bottom:1px solid #dbe3ea;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 10px rgba(15,23,42,.04);gap:16px}
+        .mobile-menu-button{display:none;border:0;background:#174c2f;color:white;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+        .topbar-title{display:flex;flex-direction:column;flex:1}
+        .topbar-title strong{font-size:1.2rem;color:#174c2f}
+        .topbar-title span{color:#64748b;font-size:.92rem}
+        .content-area{padding:28px}
+        .footer{margin-top:auto;padding:16px 28px;border-top:1px solid #dbe3ea;background:white;color:#64748b;font-size:.9rem}
+        .sidebar-backdrop{display:none}
+        .profile-menu{position:relative}
+        .profile-menu-button{display:flex;align-items:center;gap:10px;border:1px solid #dbe3ea;background:#fff;border-radius:999px;padding:6px 10px 6px 6px;cursor:pointer;font-weight:700;color:#334155}
+        .profile-avatar{width:34px;height:34px;border-radius:50%;background:#174c2f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;object-fit:cover;flex-shrink:0}
+        .profile-dropdown{display:none;position:absolute;right:0;top:48px;min-width:220px;background:#fff;border:1px solid #dbe3ea;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.14);z-index:50;overflow:hidden}
+        .profile-dropdown.open{display:block}
+        .profile-dropdown-header{padding:14px;border-bottom:1px solid #e2e8f0}
+        .profile-dropdown-header strong,.profile-dropdown-header span{display:block}
+        .profile-dropdown-header span{color:#64748b;font-size:.9rem;margin-top:4px}
+        .profile-dropdown a,.profile-dropdown button{width:100%;display:block;box-sizing:border-box;padding:12px 14px;border:0;background:#fff;text-align:left;text-decoration:none;color:#0f172a;cursor:pointer;font:inherit}
+        .profile-dropdown a:hover,.profile-dropdown button:hover{background:#f8fafc}
+        .delete-injected,.bulk-key-injected{margin-left:4px;display:inline-block}
+
+        body.sidebar-collapsed .sidebar{width:86px}
+        body.sidebar-collapsed .sidebar-header{padding:20px 14px}
+        body.sidebar-collapsed .sidebar-header-top{justify-content:center}
+        body.sidebar-collapsed .sidebar-brand{display:none}
+        body.sidebar-collapsed .sidebar-toggle{padding:9px 11px}
+        body.sidebar-collapsed .nav-section{padding:16px 12px 4px}
+        body.sidebar-collapsed .nav-section-title{display:none}
+        body.sidebar-collapsed .nav-link{justify-content:center;padding:12px 10px}
+        body.sidebar-collapsed .nav-label{display:none}
+        body.sidebar-collapsed .nav-icon{width:auto;font-size:1.25rem}
+
+        @@media(max-width:1000px){.sidebar{width:248px}}
+        @@media(max-width:800px){
+            body.sidebar-collapsed .sidebar{width:290px}
+            body.sidebar-collapsed .sidebar-brand{display:block}
+            body.sidebar-collapsed .nav-section-title{display:block}
+            body.sidebar-collapsed .nav-link{justify-content:flex-start;padding:12px 14px}
+            body.sidebar-collapsed .nav-label{display:inline}
+            body.sidebar-collapsed .nav-icon{width:24px;font-size:1.1rem}
+            .app-shell{display:block}
+            .sidebar{position:fixed;top:0;left:0;bottom:0;width:290px;max-width:86vw;transform:translateX(-105%);transition:transform .2s ease;overflow-y:auto}
+            .sidebar.open{transform:translateX(0)}
+            .sidebar-toggle{display:none}
+            .sidebar-close{display:inline-block}
+            .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:10}
+            .sidebar-backdrop.open{display:block}
+            .mobile-menu-button{display:inline-block}
+            .topbar{align-items:flex-start;padding:14px 18px}
+            .topbar-title span{display:none}
+            .content-area{padding:18px}
+        }
+    
+        .notification-menu{position:relative}
+        .notification-button{position:relative;border:1px solid #dbe3ea;background:#fff;border-radius:999px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem}
+        .notification-button:hover{background:#f8fafc}
+        .notification-count{position:absolute;top:-5px;right:-5px;background:#dc2626;color:#fff;border-radius:999px;min-width:20px;height:20px;padding:0 5px;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+        .notification-dropdown{display:none;position:absolute;right:0;top:50px;width:360px;max-width:calc(100vw - 32px);background:#fff;border:1px solid #dbe3ea;border-radius:16px;box-shadow:0 18px 40px rgba(15,23,42,.16);z-index:60;overflow:hidden}
+        .notification-dropdown.open{display:block}
+        .notification-header{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid #e2e8f0}
+        .notification-header a{font-weight:700}
+        .notification-empty{padding:18px;color:#64748b}
+        .notification-empty strong,.notification-empty span{display:block}
+        .notification-list{max-height:420px;overflow-y:auto}
+        .notification-item{display:block;text-decoration:none;color:#0f172a;padding:13px 16px;border-bottom:1px solid #f1f5f9}
+        .notification-item:hover{background:#f8fafc}
+        .notification-item.unread{background:#f0fdf4}
+        .notification-item strong{display:block}
+        .notification-item p{margin:4px 0;color:#475569;font-size:.92rem;line-height:1.35}
+        .notification-item small{color:#64748b}
+
+
+        .topbar-global-search{min-width:260px;max-width:420px;flex:0 1 360px}
+        .topbar-global-search input{width:100%;border:1px solid #cbd5e1;border-radius:999px;padding:10px 14px;background:#f8fafc;color:#0f172a}
+        .topbar-global-search input:focus{outline:none;border-color:#174c2f;background:#fff;box-shadow:0 0 0 3px rgba(23,76,47,.12)}
+
+
+        :root {
+            color-scheme: light;
+        }
+
+        html.dark-mode {
+            color-scheme: dark;
+        }
+
+        html.dark-mode body {
+            background: #0f172a !important;
+            color: #e5e7eb !important;
+        }
+
+        html.dark-mode .main-shell,
+        html.dark-mode .content-area {
+            background: #0f172a !important;
+            color: #e5e7eb !important;
+        }
+
+        html.dark-mode .topbar,
+        html.dark-mode .footer,
+        html.dark-mode .profile-dropdown,
+        html.dark-mode .notification-dropdown,
+        html.dark-mode .dash-panel,
+        html.dark-mode .metric-card,
+        html.dark-mode .tech-card,
+        html.dark-mode .tech-panel,
+        html.dark-mode .panel,
+        html.dark-mode .detail-card,
+        html.dark-mode .form-card,
+        html.dark-mode .search-group,
+        html.dark-mode .search-result-item,
+        html.dark-mode .notification-page-item,
+        html.dark-mode .conversation-item,
+        html.dark-mode .list-item,
+        html.dark-mode .mini-result,
+        html.dark-mode .stat-card {
+            background: #111827 !important;
+            color: #e5e7eb !important;
+            border-color: #334155 !important;
+            box-shadow: 0 12px 28px rgba(0,0,0,.32) !important;
+        }
+
+        html.dark-mode .sidebar {
+            background: #052e1a !important;
+            box-shadow: 4px 0 18px rgba(0,0,0,.38) !important;
+        }
+
+        html.dark-mode .sidebar-header {
+            border-bottom-color: rgba(255,255,255,.12) !important;
+        }
+
+        html.dark-mode .topbar-title strong,
+        html.dark-mode .dashboard-hero h2,
+        html.dark-mode h1,
+        html.dark-mode h2,
+        html.dark-mode h3,
+        html.dark-mode h4,
+        html.dark-mode strong,
+        html.dark-mode dt,
+        html.dark-mode label,
+        html.dark-mode .nav-link {
+            color: #f8fafc !important;
+        }
+
+        html.dark-mode .topbar-title span,
+        html.dark-mode .dashboard-hero p,
+        html.dark-mode p,
+        html.dark-mode small,
+        html.dark-mode .muted,
+        html.dark-mode .panel-title-row p,
+        html.dark-mode .section-heading p,
+        html.dark-mode .metric-card span,
+        html.dark-mode .metric-card small,
+        html.dark-mode .search-result-item span,
+        html.dark-mode .search-result-item small,
+        html.dark-mode .notification-item p,
+        html.dark-mode .notification-item small,
+        html.dark-mode .notification-title-line span,
+        html.dark-mode .comment-meta,
+        html.dark-mode dd,
+        html.dark-mode .footer {
+            color: #94a3b8 !important;
+        }
+
+        html.dark-mode input,
+        html.dark-mode select,
+        html.dark-mode textarea,
+        html.dark-mode .topbar-global-search input,
+        html.dark-mode .global-search-page-form input {
+            background: #020617 !important;
+            color: #e5e7eb !important;
+            border-color: #475569 !important;
+        }
+
+        html.dark-mode input::placeholder,
+        html.dark-mode textarea::placeholder {
+            color: #64748b !important;
+        }
+
+        html.dark-mode input:focus,
+        html.dark-mode select:focus,
+        html.dark-mode textarea:focus,
+        html.dark-mode .topbar-global-search input:focus {
+            border-color: #22c55e !important;
+            box-shadow: 0 0 0 3px rgba(34,197,94,.16) !important;
+            outline: none !important;
+        }
+
+        html.dark-mode .data-table,
+        html.dark-mode table {
+            background: #111827 !important;
+            color: #e5e7eb !important;
+            border-color: #334155 !important;
+        }
+
+        html.dark-mode .data-table th,
+        html.dark-mode table th {
+            background: #1f2937 !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+
+        html.dark-mode .data-table td,
+        html.dark-mode table td {
+            border-color: #334155 !important;
+        }
+
+        html.dark-mode .data-table tr,
+        html.dark-mode table tr {
+            background: #111827 !important;
+        }
+
+        html.dark-mode .data-table tr:hover,
+        html.dark-mode table tr:hover,
+        html.dark-mode .search-result-item:hover,
+        html.dark-mode .notification-item:hover,
+        html.dark-mode .profile-dropdown a:hover,
+        html.dark-mode .profile-dropdown button:hover,
+        html.dark-mode .list-item:hover {
+            background: #1f2937 !important;
+        }
+
+        html.dark-mode .btn,
+        html.dark-mode button.btn,
+        html.dark-mode a.btn {
+            background: #1f2937;
+            color: #e5e7eb !important;
+            border-color: #475569 !important;
+        }
+
+        html.dark-mode .btn.primary,
+        html.dark-mode .qa-button,
+        html.dark-mode .search-button,
+        html.dark-mode button.primary,
+        html.dark-mode a.primary {
+            background: #15803d !important;
+            color: #ffffff !important;
+            border-color: #166534 !important;
+        }
+
+        html.dark-mode .btn.danger,
+        html.dark-mode button.danger {
+            background: #991b1b !important;
+            color: #ffffff !important;
+            border-color: #7f1d1d !important;
+        }
+
+        html.dark-mode .empty-state,
+        html.dark-mode .empty-ticket-state,
+        html.dark-mode .empty-attachments,
+        html.dark-mode .notification-empty {
+            background: #020617 !important;
+            border-color: #334155 !important;
+            color: #94a3b8 !important;
+        }
+
+        html.dark-mode .empty-state.success,
+        html.dark-mode .good-stat,
+        html.dark-mode .notification-page-item.unread,
+        html.dark-mode .notification-item.unread {
+            background: #052e1a !important;
+            border-color: #166534 !important;
+        }
+
+        html.dark-mode .workflow-banner,
+        html.dark-mode .requester-status-card {
+            background: #111827 !important;
+            border-color: #334155 !important;
+            color: #e5e7eb !important;
+            box-shadow: 0 12px 28px rgba(0,0,0,.32) !important;
+        }
+
+        html.dark-mode .overdue-banner,
+        html.dark-mode .overdue-row,
+        html.dark-mode .overdue-ticket,
+        html.dark-mode .internal-item,
+        html.dark-mode .internal-empty {
+            background: #3b2604 !important;
+            border-color: #92400e !important;
+        }
+
+        html.dark-mode .profile-menu-button,
+        html.dark-mode .notification-button {
+            background: #111827 !important;
+            color: #e5e7eb !important;
+            border-color: #334155 !important;
+        }
+
+        html.dark-mode .notification-count {
+            border-color: #111827 !important;
+        }
+
+        html.dark-mode .toast-item {
+            background: #111827 !important;
+            color: #e5e7eb !important;
+            border-color: #334155 !important;
+            box-shadow: 0 18px 40px rgba(0,0,0,.46) !important;
+        }
+
+        html.dark-mode .toast-content strong {
+            color: #f8fafc !important;
+        }
+
+        html.dark-mode .toast-content span {
+            color: #cbd5e1 !important;
+        }
+
+        html.dark-mode .toast-close {
+            color: #94a3b8 !important;
+        }
+
+        html.dark-mode .toast-close:hover {
+            background: #1f2937 !important;
+            color: #f8fafc !important;
+        }
+
+        html.dark-mode a {
+            color: #93c5fd;
+        }
+
+        html.dark-mode .search-result-item em,
+        html.dark-mode .pill,
+        html.dark-mode .status-pill,
+        html.dark-mode .priority-pill {
+            background: #1e3a8a !important;
+            color: #dbeafe !important;
+            border-color: #1d4ed8 !important;
+        }
+
+        .theme-toggle-button {
+            width: 100%;
+            display: block;
+            box-sizing: border-box;
+            padding: 12px 14px;
+            border: 0;
+            background: #fff;
+            text-align: left;
+            color: #0f172a;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .theme-toggle-button:hover {
+            background: #f8fafc;
+        }
+
+        html.dark-mode .theme-toggle-button {
+            background: #111827 !important;
+            color: #e5e7eb !important;
+        }
+
+        html.dark-mode .theme-toggle-button:hover {
+            background: #1f2937 !important;
+        }
+
+
+        .brand-logo-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,.96);
+            border-radius: 16px;
+            padding: 8px;
+            margin-bottom: 14px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.14);
+        }
+
+        .sidebar-brand-logo {
+            width: 100%;
+            max-width: 205px;
+            max-height: 82px;
+            object-fit: contain;
+            display: block;
+        }
+
+        html.dark-mode .brand-logo-card {
+            background: #ffffff !important;
+            border-color: rgba(255,255,255,.18) !important;
+            box-shadow: 0 10px 26px rgba(0,0,0,.36) !important;
+        }
+
+        html.dark-mode .sidebar-brand-logo {
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,.35));
+        }
+
+        @@media (max-width: 900px) {
+            .brand-logo-card {
+                padding: 6px;
+                margin-bottom: 10px;
+            }
+
+            .sidebar-brand-logo {
+                max-height: 64px;
+            }
+        }
+
+</style>
+
+    <link rel="icon" type="image/png" href="~/images/branding/cwc-app-icon-192.png" />
+    <link rel="apple-touch-icon" href="~/images/branding/cwc-app-icon-192.png" />
+
+</head>
+<body>
+@{
+    var isAdmin = User.IsInRole("Admin");
+    var canPeople = isAdmin;
+    var canSchool = isAdmin || User.IsInRole("SchoolAdmin") || User.IsInRole("SchoolStaff");
+    var canAssets = isAdmin || User.IsInRole("AssetManager");
+    var canKeys = isAdmin || User.IsInRole("KeyManager");
+    var canReservations = isAdmin || User.IsInRole("ReservationManager") || User.IsInRole("Pastor");
+    var canITAssets = isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITAssetManager") || User.IsInRole("ITAssetViewer");
+    var canITSupport = isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITSupportManager") || User.IsInRole("ITSupportTech");
+    
+    var canITRequester = User.IsInRole("ITRequester");
+var canAudit = isAdmin || User.IsInRole("Pastor");
+    var canUsers = isAdmin;
+}
+<div class="app-shell">
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <form id="globalAntiForgeryForm" style="display:none">@Html.AntiForgeryToken()</form>
+    <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="closeSidebar()"></div>
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+                <div class="brand-logo-card">
+                    <img src="~/images/branding/cwc-church-logo.png" alt="Christian Worship Center" class="sidebar-brand-logo" />
+                </div>
+            <div class="sidebar-header-top">
+                <div class="sidebar-brand">
+                    <h1>CWC Operations Portal</h1>
+                    <p>Centralized church and school operations management</p>
+                </div>
+                <button type="button" class="sidebar-toggle" onclick="toggleSidebarCollapse()" title="Collapse sidebar">☰</button>
+            </div>
+            <button type="button" class="sidebar-close" onclick="closeSidebar()">Close Menu</button>
+        </div>
+
+        <div class="nav-section"><div class="nav-section-title">Main</div><div class="nav-links"><a class="nav-link" asp-controller="Dashboard" asp-action="Index" title="Dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a></div></div>
+
+        @if (canReservations || canAssets || canKeys)
+        {
+            <div class="nav-section"><div class="nav-section-title">Church Operations</div><div class="nav-links">
+            @if(canReservations){<a class="nav-link" asp-controller="Reservations" asp-action="Index" title="Reservations"><span class="nav-icon">📅</span><span class="nav-label">Reservations</span></a>}
+            @if(canAssets){<a class="nav-link" asp-controller="Assets" asp-action="Index" title="Assets"><span class="nav-icon">📦</span><span class="nav-label">Assets</span></a><a class="nav-link" asp-controller="Checkouts" asp-action="Index" title="Checkouts"><span class="nav-icon">📋</span><span class="nav-label">Checkouts</span></a>}
+            @if(canKeys){<a class="nav-link" asp-controller="Keys" asp-action="Index" title="Keys"><span class="nav-icon">🔑</span><span class="nav-label">Keys</span></a><a class="nav-link" asp-controller="KeyAssignments" asp-action="Index" title="Key Assignments"><span class="nav-icon">🗝️</span><span class="nav-label">Key Assignments</span></a><a class="nav-link" asp-controller="AccessAreas" asp-action="Index" title="Access Areas"><span class="nav-icon">🚪</span><span class="nav-label">Access Areas</span></a>}
+            </div></div>
+        }
+
+        @if (canSchool)
+        {
+            <div class="nav-section"><div class="nav-section-title">School</div><div class="nav-links">
+                <a class="nav-link" asp-controller="Students" asp-action="Index" title="Students"><span class="nav-icon">👨‍🎓</span><span class="nav-label">Students</span></a>
+                <a class="nav-link" asp-controller="FacultyStaff" asp-action="Index" title="Faculty / Staff"><span class="nav-icon">👩‍🏫</span><span class="nav-label">Faculty / Staff</span></a>
+            </div></div>
+        }
+
+        @if (canITAssets || canITSupport || canITRequester)
+        {
+            <div class="nav-section"><div class="nav-section-title">IT Operations</div><div class="nav-links">
+            @if(canITAssets){<a class="nav-link" asp-controller="ITAssets" asp-action="Index" title="IT Assets"><span class="nav-icon">💻</span><span class="nav-label">IT Assets</span></a>}
+            @if(canITSupport){<a class="nav-link" asp-controller="ITSupport" asp-action="Index" title="IT Support"><span class="nav-icon">🎫</span><span class="nav-label">IT Support</span></a>
+                    <a class="nav-link" asp-controller="ITDocuments" asp-action="Index" title="IT Documentation">
+                        <span class="nav-icon">📚</span>
+                        <span class="nav-label">IT Documentation</span>
+                    </a>
+
+                    <a class="nav-link" asp-controller="ITSupport" asp-action="TechnicianDashboard" title="Technician Dashboard">
+                        <span class="nav-icon">🧰</span>
+                        <span class="nav-label">IT Dashboard</span>
+                    </a>
+
+            @if (canITRequester && !canITSupport)
+            {
+                <a class="nav-link" asp-controller="ITSupport" asp-action="RequesterCreate" title="Submit IT Ticket">
+                    <span class="nav-icon">🆘</span>
+                    <span class="nav-label">Submit IT Ticket</span>
+                </a>
+
+                <a class="nav-link" asp-controller="ITSupport" asp-action="MyTickets" title="My IT Tickets">
+                    <span class="nav-icon">🎫</span>
+                    <span class="nav-label">My IT Tickets</span>
+                </a>
+            }
+}
+            </div></div>
+        }
+
+        @if (canPeople || canAudit || canUsers)
+        {
+            <div class="nav-section"><div class="nav-section-title">Administration</div><div class="nav-links">
+            @if(canPeople){<a class="nav-link" asp-controller="People" asp-action="Index" title="People"><span class="nav-icon">👥</span><span class="nav-label">People</span></a>}
+            @if(canAudit){<a class="nav-link" asp-controller="Audit" asp-action="Index" title="Audit Log"><span class="nav-icon">📝</span><span class="nav-label">Audit Log</span></a>}
+            @if(canUsers){<a class="nav-link" asp-controller="AdminUsers" asp-action="Index" title="Users"><span class="nav-icon">⚙️</span><span class="nav-label">Users</span></a>}
+            </div></div>
+        }
+    </aside>
+}
+<div class="main-shell">
+<header class="topbar">
+@if (User.Identity?.IsAuthenticated == true){<button type="button" class="mobile-menu-button" onclick="openSidebar()">☰ Menu</button>}
+<div class="topbar-title"><strong>CWC Operations Portal</strong><span>Centralized church and school operations management</span></div>
+@if (User.Identity?.IsAuthenticated == true)
+{
+
+<form class="topbar-global-search" asp-controller="Search" asp-action="Index" method="get">
+    <input type="search" name="query" placeholder="Search..." value="@Context.Request.Query["query"]" />
+</form>
+
+@await Component.InvokeAsync("NotificationBell")
+<div class="profile-menu">
+<button type="button" class="profile-menu-button" onclick="toggleProfileMenu()">
+@await Component.InvokeAsync("UserAvatar")
+<span>@User.Identity.Name</span><span>▾</span></button>
+<div id="profileDropdown" class="profile-dropdown">
+<div class="profile-dropdown-header"><strong>@User.Identity.Name</strong><span>CWC Operations Portal</span></div>
+<a asp-controller="Profile" asp-action="Index">Profile</a>
+<a asp-controller="Profile" asp-action="ChangePassword">Change Password</a>
+<button type="button" class="theme-toggle-button" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+
+<form asp-controller="Account" asp-action="Logout" method="post">@Html.AntiForgeryToken()<button type="submit">Logout</button></form>
+</div></div>}
+</header>
+<main class="content-area">@RenderBody()</main>
+<footer class="footer">CWC Operations Portal • Internal Use Only</footer>
+</div></div>
+<script>
+
+function toggleNotificationMenu(){var m=document.getElementById('notificationDropdown');if(m)m.classList.toggle('open');}
+document.addEventListener('click',function(e){var m=document.getElementById('notificationDropdown');var p=document.querySelector('.notification-menu');if(m&&p&&!p.contains(e.target)){m.classList.remove('open');}});
+
+(function initializeSidebarState(){
+    try {
+        var isCollapsed = localStorage.getItem('cwc.sidebar.collapsed') === 'true';
+        if (isCollapsed && window.innerWidth > 800) {
+            document.body.classList.add('sidebar-collapsed');
+        }
+    } catch (e) {}
+})();
+
+function toggleSidebarCollapse(){
+    document.body.classList.toggle('sidebar-collapsed');
+    try {
+        localStorage.setItem('cwc.sidebar.collapsed', document.body.classList.contains('sidebar-collapsed') ? 'true' : 'false');
+    } catch (e) {}
+}
+
+function openSidebar(){var s=document.getElementById('sidebar');var b=document.getElementById('sidebarBackdrop');if(s)s.classList.add('open');if(b)b.classList.add('open');}
+function closeSidebar(){var s=document.getElementById('sidebar');var b=document.getElementById('sidebarBackdrop');if(s)s.classList.remove('open');if(b)b.classList.remove('open');}
+function toggleProfileMenu(){var m=document.getElementById('profileDropdown');if(m)m.classList.toggle('open');}
+document.addEventListener('click',function(e){var m=document.getElementById('profileDropdown');var p=document.querySelector('.profile-menu');if(m&&p&&!p.contains(e.target)){m.classList.remove('open');}});
+
+(function addBulkKeyAssignmentButton(){var path=window.location.pathname.toLowerCase();if(!(path.endsWith('/keyassignments')||path.endsWith('/keyassignments/index')))return;var appBase='@Url.Content("~/")';if(appBase.endsWith('/'))appBase=appBase.slice(0,-1);if(document.querySelector('.bulk-key-injected'))return;var bulkLink=document.createElement('a');bulkLink.className='btn primary bulk-key-injected';bulkLink.href=appBase+'/KeyAssignments/BulkCreate';bulkLink.textContent='Assign Multiple Keys';var pageHeader=document.querySelector('.page-header');if(pageHeader){var existingButton=pageHeader.querySelector('a.btn, a.btn-primary, button.btn, button.btn-primary');if(existingButton&&existingButton.parentElement){existingButton.parentElement.appendChild(bulkLink);return;}pageHeader.appendChild(bulkLink);}})();
+
+(function addDeleteButtons(){var path=window.location.pathname.toLowerCase();var appBase='@Url.Content("~/")';if(appBase.endsWith('/'))appBase=appBase.slice(0,-1);var config=null;if(path.endsWith('/adminusers')||path.endsWith('/adminusers/index')){config={editPath:appBase+'/AdminUsers/Edit',deletePath:appBase+'/AdminDelete/DeleteUser/',label:'Delete User',message:'Permanently delete this user? Use this only for test or accidental users.'};}else if(path.endsWith('/people')||path.endsWith('/people/index')){config={editPath:appBase+'/People/Edit',deletePath:appBase+'/AdminDelete/DeletePerson/',label:'Delete',message:'Permanently delete this person? If they have history, use inactive instead.'};}else if(path.endsWith('/students')||path.endsWith('/students/index')){config={editPath:appBase+'/Students/Edit',deletePath:appBase+'/AdminDelete/DeleteStudent/',label:'Delete',message:'Permanently delete this student? Use this only for test or accidental records.'};}else if(path.endsWith('/facultystaff')||path.endsWith('/facultystaff/index')){config={editPath:appBase+'/FacultyStaff/Edit',deletePath:appBase+'/AdminDelete/DeleteFacultyStaff/',label:'Delete',message:'Permanently delete this faculty/staff record? Use this only for test or accidental records.'};}if(!config)return;var token=document.querySelector('#globalAntiForgeryForm input[name="__RequestVerificationToken"]');var tokenValue=token?token.value:'';var editPathNoBase=config.editPath.replace(appBase,'');var links=Array.from(document.querySelectorAll('a[href*="'+config.editPath+'"], a[href*="'+editPathNoBase+'"]'));links.forEach(function(link){var href=link.getAttribute('href')||'';var id=extractId(href);if(!id)return;var parent=link.parentElement;if(!parent||parent.querySelector('.delete-injected')||parent.querySelector('form[action*="Delete"], a[href*="Delete"], button.danger'))return;var form=document.createElement('form');form.method='post';form.action=config.deletePath+id;form.className='inline-form delete-injected';form.onsubmit=function(){return confirm(config.message);};var hidden=document.createElement('input');hidden.type='hidden';hidden.name='__RequestVerificationToken';hidden.value=tokenValue;form.appendChild(hidden);var button=document.createElement('button');button.type='submit';button.className='btn small danger';button.textContent=config.label;form.appendChild(button);parent.appendChild(form);});function extractId(href){var m=href.match(/\/Edit\/(\d+)/i);if(m&&m[1])return m[1];var q=href.match(/[?&]id=(\d+)/i);if(q&&q[1])return q[1];return null;}})();
+</script>
+
+<partial name="_ToastNotifications" />
+
+@RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,135 @@
+@model List<ChurchAssetTracker.Data.FacultyStaffRow>
+@{
+    ViewData["Title"] = "Faculty/Staff";
+    var search = Convert.ToString(ViewBag.Search ?? "");
+    var includeInactive = Convert.ToBoolean(ViewBag.IncludeInactive ?? false);
+}
+
+<div class="directory-header">
+    <div>
+        <span class="eyebrow">CWCA Staff Directory</span>
+        <h2>Faculty/Staff</h2>
+        <p>Restricted school faculty and staff directory.</p>
+    </div>
+
+    <div class="directory-actions">
+        <a class="btn primary" asp-action="Create">Add Faculty/Staff</a>
+    </div>
+</div>
+
+<form method="get" class="directory-filter-card">
+    <div>
+        <label>Search</label>
+        <input type="text" name="search" value="@search" placeholder="Search staff, role, department, classroom, extension..." />
+    </div>
+
+    <label class="checkbox-row" style="margin-bottom:10px;">
+        <input type="checkbox" name="includeInactive" value="true" checked="@includeInactive" />
+        Include inactive
+    </label>
+
+    <button class="btn primary" type="submit">Search</button>
+</form>
+
+<div class="directory-table-card">
+    <table class="directory-table">
+        <thead>
+            <tr>
+                <th>Faculty/Staff</th>
+                <th>Role/Title</th>
+                <th>Ext</th>
+                <th>Department</th>
+                <th>Classroom</th>
+                <th>Contact</th>
+                <th>Status</th>
+                <th style="width:150px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model == null || !Model.Any())
+            {
+                <tr>
+                    <td colspan="8">No faculty/staff records found.</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var member in Model)
+                {
+                    var displayName = $"{member.LastName}, {(string.IsNullOrWhiteSpace(member.PreferredName) ? member.FirstName : member.PreferredName)}";
+                    var initials = $"{(string.IsNullOrWhiteSpace(member.FirstName) ? "F" : member.FirstName[0])}{(string.IsNullOrWhiteSpace(member.LastName) ? "" : member.LastName[0])}";
+                    var photoUrl = string.IsNullOrWhiteSpace(member.PhotoPath) ? null : Url.Content("~" + member.PhotoPath);
+
+                    <tr>
+                        <td>
+                            <a class="directory-person-cell directory-record-link" asp-action="Details" asp-route-id="@member.FacultyStaffId" title="View faculty/staff record">
+                                @if (!string.IsNullOrWhiteSpace(photoUrl))
+                                {
+                                    <img class="directory-avatar" src="@photoUrl" alt="@displayName photo" />
+                                }
+                                else
+                                {
+                                    <div class="directory-avatar initials">@initials</div>
+                                }
+
+                                <div class="directory-name-block">
+                                    <strong>@displayName</strong>
+                                    @if (!string.IsNullOrWhiteSpace(member.PreferredName))
+                                    {
+                                        <span>Preferred: @member.PreferredName</span>
+                                    }
+                                </div>
+                            </a>
+                        </td>
+                        <td>@member.RoleTitle</td>
+                        <td>@member.Extension</td>
+                        <td>@member.Department</td>
+                        <td>@member.Classroom</td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(member.Phone))
+                            {
+                                <strong>@member.Phone</strong>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(member.Email))
+                            {
+                                <span style="display:block;color:#94a3b8;">@member.Email</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="status-pill @(member.IsActive ? "" : "inactive")">
+                                @(member.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td>
+                            <div class="directory-row-actions">
+                                <a class="btn" asp-action="Edit" asp-route-id="@member.FacultyStaffId">Edit</a>
+                                <form asp-action="Delete" asp-route-id="@member.FacultyStaffId" method="post" onsubmit="return confirm('Delete this faculty/staff record?');">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn danger" type="submit">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@await Html.PartialAsync("_DirectoryThumbnailStyles")
+
+<style>
+.directory-record-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.directory-record-link:hover .directory-name-block strong {
+    color: #174c2f;
+    text-decoration: underline;
+}
+
+html.dark-mode .directory-record-link:hover .directory-name-block strong {
+    color: #86efac !important;
+}
+</style>

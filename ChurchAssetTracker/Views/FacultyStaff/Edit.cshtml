@@ -1,0 +1,219 @@
+@model ChurchAssetTracker.Data.FacultyStaffEditViewModel
+@{
+    ViewData["Title"] = "Edit Faculty / Staff";
+    var photoUrl = string.IsNullOrWhiteSpace(Model.FacultyStaff.PhotoPath) ? null : Url.Content("~" + Model.FacultyStaff.PhotoPath);
+    var initials = $"{(string.IsNullOrWhiteSpace(Model.FacultyStaff.FirstName) ? "F" : Model.FacultyStaff.FirstName[0])}{(string.IsNullOrWhiteSpace(Model.FacultyStaff.LastName) ? "" : Model.FacultyStaff.LastName[0])}";
+}
+
+<div class="school-form-hero">
+    <span class="eyebrow">CWCA Faculty Management</span>
+    <h2>@ViewData["Title"]</h2>
+    <p>Maintain faculty/staff records, contact information, classroom details, and staff photo.</p>
+</div>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="FacultyStaff.FacultyStaffId" />
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="school-validation">
+            <strong>Please fix the following:</strong>
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+
+    <section class="school-form-card" style="margin-bottom:22px;">
+        <h3>Faculty / Staff Photo</h3>
+        <div class="photo-upload-grid">
+            <div class="record-photo-card">
+                @if (!string.IsNullOrWhiteSpace(photoUrl))
+                {
+                    <img class="record-photo" src="@photoUrl" alt="Faculty/staff photo" />
+                }
+                else
+                {
+                    <div class="record-photo placeholder">@initials</div>
+                }
+                <div class="photo-help">JPG, PNG, GIF, or WEBP. Max 2 MB.</div>
+            </div>
+
+            <div class="school-field">
+                <label>Upload Photo</label>
+                <input type="file" name="photoFile" accept="image/png,image/jpeg,image/gif,image/webp" />
+                <small>Uploading a new photo will replace the current photo.</small>
+
+                @if (!string.IsNullOrWhiteSpace(Model.FacultyStaff.PhotoPath))
+                {
+                    <label class="checkbox-row" style="margin-top:12px;">
+                        <input type="checkbox" name="removePhoto" value="true" />
+                        Remove current photo
+                    </label>
+                }
+            </div>
+        </div>
+    </section>
+
+    <div class="school-form-shell">
+        <section class="school-form-card">
+            <h3>Faculty / Staff Information</h3>
+            <div class="school-grid">
+                <div class="school-field"><label>First Name</label><input asp-for="FacultyStaff.FirstName" /></div>
+                <div class="school-field"><label>Last Name</label><input asp-for="FacultyStaff.LastName" /></div>
+                <div class="school-field"><label>Preferred Name</label><input asp-for="FacultyStaff.PreferredName" /></div>
+            </div>
+
+            <div class="school-grid" style="margin-top:16px;">
+                <div class="school-field"><label>Role / Title</label><input asp-for="FacultyStaff.RoleTitle" /></div>
+                <div class="school-field"><label>Department</label><input asp-for="FacultyStaff.Department" /></div>
+                <div class="school-field"><label>Classroom</label><input asp-for="FacultyStaff.Classroom" /></div>
+            </div>
+
+            <div class="school-grid two" style="margin-top:16px;">
+                <div class="school-field"><label>Phone</label><input asp-for="FacultyStaff.Phone" /></div>
+                <div class="school-field"><label>Extension</label><input asp-for="FacultyStaff.Extension" placeholder="Example: 204" /></div>
+                <div class="school-field"><label>Email</label><input asp-for="FacultyStaff.Email" /></div>
+            </div>
+
+            <div class="school-field" style="margin-top:16px;">
+                <label class="checkbox-row"><input asp-for="FacultyStaff.IsActive" /> Active</label>
+            </div>
+        </section>
+
+        <aside class="school-side-panel">
+            <div class="school-side-box">
+                <h3>Photo Tips</h3>
+                <ul>
+                    <li>Photos make the staff directory easier to use.</li>
+                    <li>Teacher photos can support class roster features later.</li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <section class="school-form-card" style="margin-top:22px;">
+        <h3>Emergency Contact</h3>
+        <div class="school-grid">
+            <div class="school-field"><label>Name</label><input asp-for="FacultyStaff.EmergencyContactName" /></div>
+            <div class="school-field"><label>Phone</label><input asp-for="FacultyStaff.EmergencyContactPhone" /></div>
+            <div class="school-field"><label>Relationship</label><input asp-for="FacultyStaff.EmergencyContactRelationship" /></div>
+        </div>
+    </section>
+
+    <section class="school-form-card" style="margin-top:22px;">
+        <h3>Additional Notes</h3>
+        <div class="school-grid full">
+            <div class="school-field"><label>Notes</label><textarea asp-for="FacultyStaff.Notes" rows="5"></textarea></div>
+        </div>
+
+        <div class="school-actions">
+            <button class="btn primary" type="submit">Save Faculty/Staff</button>
+            <a class="btn" asp-action="Index">Cancel</a>
+        </div>
+    </section>
+</form>
+
+
+<section class="school-form-card faculty-documents-card">
+    <h3>Faculty / Staff Documents</h3>
+    <p>Attach W-4s, resumes, applications, certifications, employment documents, and other personnel files.</p>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert success">@TempData["SuccessMessage"]</div>
+    }
+
+    <form asp-action="UploadDocument" method="post" enctype="multipart/form-data" class="document-upload-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="facultyStaffId" value="@Model.FacultyStaff.FacultyStaffId" />
+
+        <div class="document-upload-grid">
+            <div class="school-field">
+                <label>Document Type</label>
+                <select name="documentType">
+                    <option value="W-4">W-4</option>
+                    <option value="Resume">Resume</option>
+                    <option value="Application">Application</option>
+                    <option value="Certification">Certification</option>
+                    <option value="Training Document">Training Document</option>
+                    <option value="Employment Document">Employment Document</option>
+                    <option value="Background Check">Background Check</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="school-field">
+                <label>Document Title</label>
+                <input type="text" name="documentTitle" placeholder="Example: 2026 W-4" />
+            </div>
+
+            <div class="school-field">
+                <label>File</label>
+                <input type="file" name="documentFile" />
+                <small>PDF, image, Word, Excel, or TXT. Max 10 MB.</small>
+            </div>
+        </div>
+
+        <div class="school-field" style="margin-top:14px;">
+            <label>Notes</label>
+            <textarea name="notes" rows="3" placeholder="Optional notes about this document."></textarea>
+        </div>
+
+        <div class="school-actions">
+            <button class="btn primary" type="submit">Upload Document</button>
+        </div>
+    </form>
+
+    <div class="faculty-documents-list">
+        @if (Model.Documents == null || !Model.Documents.Any())
+        {
+            <div class="document-empty">
+                <strong>No documents uploaded</strong>
+                <span>Uploaded faculty/staff documents will appear here.</span>
+            </div>
+        }
+        else
+        {
+            foreach (var doc in Model.Documents)
+            {
+                <div class="document-row">
+                    <div class="document-icon">📄</div>
+
+                    <div class="document-info">
+                        <strong>@doc.DocumentTitle</strong>
+                        <span>@doc.DocumentType • @doc.OriginalFileName • @doc.FileSizeDisplay</span>
+                        @if (!string.IsNullOrWhiteSpace(doc.Notes))
+                        {
+                            <small>@doc.Notes</small>
+                        }
+                        <small>Uploaded @doc.UploadedDate.ToString("g") by @(doc.UploadedBy ?? "Unknown")</small>
+                    </div>
+
+                    <div class="document-actions">
+                        <a class="btn" asp-action="DownloadDocument" asp-route-id="@doc.FacultyStaffDocumentId">Download</a>
+
+                        <form asp-action="DeleteDocument" asp-route-id="@doc.FacultyStaffDocumentId" method="post" onsubmit="return confirm('Remove this faculty/staff document?');">
+                            @Html.AntiForgeryToken()
+                            <button class="btn danger" type="submit">Remove</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+@await Html.PartialAsync("_FacultyStaffDocumentStyles")
+
+
+@await Html.PartialAsync("_SchoolFormStyles")
+@await Html.PartialAsync("_SchoolPhotoStyles")
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

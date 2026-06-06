@@ -1,0 +1,93 @@
+@model ChurchAssetTracker.Models.ITAssetRow
+@{
+    ViewData["Title"] = "IT Asset Details";
+    var canEdit = ViewBag.CanEdit as bool? ?? false;
+}
+
+<div class="page-header">
+    <div>
+        <h1>@Model.AssetName</h1>
+        <p class="text-muted">Restricted IT asset record</p>
+    </div>
+    <div>
+        <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
+        @if (canEdit)
+        {
+            <a class="btn btn-primary" asp-action="Edit" asp-route-id="@Model.ITAssetId">Edit</a>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Type</dt><dd class="col-sm-9">@Model.AssetType</dd>
+            <dt class="col-sm-3">Make / Model</dt><dd class="col-sm-9">@Model.Make @Model.Model</dd>
+            <dt class="col-sm-3">Serial Number</dt><dd class="col-sm-9">@Model.SerialNumber</dd>
+            <dt class="col-sm-3">Asset Tag</dt><dd class="col-sm-9">@Model.AssetTag</dd>
+            <dt class="col-sm-3">IP Address</dt><dd class="col-sm-9">@Model.IPAddress</dd>
+            <dt class="col-sm-3">MAC Address</dt><dd class="col-sm-9">@Model.MACAddress</dd>
+            <dt class="col-sm-3">Location</dt><dd class="col-sm-9">@Model.Location</dd>
+            <dt class="col-sm-3">Assigned To</dt><dd class="col-sm-9">@Model.AssignedTo</dd>
+            <dt class="col-sm-3">Login Username</dt><dd class="col-sm-9">@Model.LoginUsername</dd>
+            <dt class="col-sm-3">Login Password</dt>
+            <dd class="col-sm-9">
+                @if (string.IsNullOrWhiteSpace(Model.LoginPassword))
+                {
+                    <span class="text-muted">Not saved</span>
+                }
+                else
+                {
+                    <div class="password-display-wrap">
+                        <span id="assetPassword" class="password-display" data-password="@Model.LoginPassword">••••••••••••</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleStoredPassword(event)">Show</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyStoredPassword()">Copy</button>
+                    </div>
+                }
+            </dd>
+            <dt class="col-sm-3">Credential Reference</dt><dd class="col-sm-9">@Model.CredentialReference</dd>
+            <dt class="col-sm-3">Operating System</dt><dd class="col-sm-9">@Model.OperatingSystem</dd>
+            <dt class="col-sm-3">Firmware Version</dt><dd class="col-sm-9">@Model.FirmwareVersion</dd>
+            <dt class="col-sm-3">Purchase Date</dt><dd class="col-sm-9">@Model.PurchaseDate?.ToString("yyyy-MM-dd")</dd>
+            <dt class="col-sm-3">Warranty Expiration</dt><dd class="col-sm-9">@Model.WarrantyExpiration?.ToString("yyyy-MM-dd")</dd>
+            <dt class="col-sm-3">Status</dt><dd class="col-sm-9">@(Model.IsActive ? "Active" : "Inactive")</dd>
+            <dt class="col-sm-3">Notes</dt><dd class="col-sm-9"><pre class="mb-0">@Model.Notes</pre></dd>
+        </dl>
+    </div>
+</div>
+
+@if (canEdit && Model.IsActive)
+{
+    <form asp-action="Deactivate" asp-route-id="@Model.ITAssetId" method="post" class="mt-3" onsubmit="return confirm('Deactivate this IT asset?');">
+        @Html.AntiForgeryToken()
+        <button class="btn btn-danger" type="submit">Deactivate IT Asset</button>
+    </form>
+}
+
+
+@await Html.PartialAsync("_ITAssetStyles")
+
+<script>
+    function toggleStoredPassword(event) {
+        const display = document.getElementById("assetPassword");
+        if (!display) return;
+
+        const button = event.target;
+        const showing = display.textContent !== "••••••••••••";
+
+        display.textContent = showing ? "••••••••••••" : display.dataset.password;
+        button.textContent = showing ? "Show" : "Hide";
+    }
+
+    async function copyStoredPassword() {
+        const display = document.getElementById("assetPassword");
+        if (!display) return;
+
+        try {
+            await navigator.clipboard.writeText(display.dataset.password);
+            alert("Password copied.");
+        } catch {
+            alert("Could not copy password.");
+        }
+    }
+</script>

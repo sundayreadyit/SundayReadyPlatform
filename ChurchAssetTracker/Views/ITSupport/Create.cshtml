@@ -1,0 +1,188 @@
+@model ChurchAssetTracker.Data.ITSupportTicketForm
+@{
+    ViewData["Title"] = "Create IT Support Ticket";
+}
+
+<div class="it-form-hero">
+    <span class="eyebrow">Helpdesk</span>
+    <h2>Create IT Support Ticket</h2>
+    <p>Capture the issue, requester, assignment, priority, and related asset information.</p>
+</div>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="it-validation">
+            <strong>Please fix the following:</strong>
+            <div asp-validation-summary="All"></div>
+        </div>
+    }
+
+    <div class="it-form-shell">
+        <section class="it-form-card">
+            <h3>Ticket Details</h3>
+            <p>Describe the issue clearly enough for IT staff to begin troubleshooting.</p>
+
+            <div class="it-form-grid">
+                <div class="it-field">
+                    <label asp-for="Title">Title</label>
+                    <input asp-for="Title" placeholder="Example: Projector not displaying in Room 101" />
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="Category">Category</label>
+                    <select asp-for="Category">
+                        <option value="">-- Select category --</option>
+                        <option value="IT Support">IT Support</option>
+                        <option value="Classroom Technology">Classroom Technology</option>
+                        <option value="Network">Network</option>
+                        <option value="Audio/Visual">Audio/Visual</option>
+                        <option value="Printer">Printer</option>
+                        <option value="Phone">Phone</option>
+                        <option value="Software">Software</option>
+                        <option value="Account Access">Account Access</option>
+                    </select>
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="Priority">Priority</label>
+                    <select asp-for="Priority">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                </div>
+
+                <div class="it-field">
+                    <label asp-for="Status">Status</label>
+                    <select asp-for="Status">
+                        <option value="New">New</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Waiting on User">Waiting on User</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Closed">Closed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="it-field full">
+                    <label asp-for="Description">Description</label>
+                    <textarea asp-for="Description" placeholder="Describe what is happening, where it is happening, when it started, and any troubleshooting already attempted."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <aside class="it-side-panel">
+            <div class="it-side-box">
+                <h3>Priority Guide</h3>
+                <div class="it-priority-guide">
+                    <div class="it-guide-pill"><strong>Critical</strong><span>Major outage or urgent classroom/church impact</span></div>
+                    <div class="it-guide-pill"><strong>High</strong><span>Important issue affecting work or instruction</span></div>
+                    <div class="it-guide-pill"><strong>Medium</strong><span>Normal request or non-urgent issue</span></div>
+                    <div class="it-guide-pill"><strong>Low</strong><span>Question, enhancement, or minor issue</span></div>
+                </div>
+            </div>
+
+            <div class="it-side-box">
+                <h3>Tip</h3>
+                <ul>
+                    <li>Selecting a requester from People can auto-fill contact information.</li>
+                    <li>Assign only if you know who should work the ticket.</li>
+                    <li>Link assets or rooms when it helps troubleshooting.</li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <section class="it-form-card" style="margin-top:22px;">
+        <h3>Requester and Assignment</h3>
+        <p>Who reported the issue, who owns it, and what asset or room is involved?</p>
+
+        <div class="it-help-panel">
+            <strong>Requester contact information</strong>
+            <span>Selecting a person from the People list will auto-fill requester name, email, and phone. You can still edit those fields manually.</span>
+        </div>
+
+        <div class="it-form-grid three">
+            <div class="it-field">
+                <label asp-for="RequestedByPersonId">Requested By Person</label>
+                <select asp-for="RequestedByPersonId" id="RequestedByPersonId">
+                    <option value="">-- Not listed / enter manually --</option>
+                    @foreach (var person in Model.People)
+                    {
+                        <option value="@person.PersonId">@person.FullName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="it-field">
+                <label asp-for="AssignedToUserId">Assigned To</label>
+                <select asp-for="AssignedToUserId">
+                    <option value="">-- Unassigned --</option>
+                    @foreach (var user in Model.Users)
+                    {
+                        <option value="@user.UserId">@user.DisplayName</option>
+                    }
+                </select>
+                <small>Only users with IT support-related roles are listed.</small>
+            </div>
+
+            <div class="it-field">
+                <label asp-for="DueDate">Due Date</label>
+                <input asp-for="DueDate" type="datetime-local" />
+            </div>
+
+            <div class="it-field">
+                <label asp-for="RequestedByName">Requester Name</label>
+                <input asp-for="RequestedByName" />
+            </div>
+
+            <div class="it-field">
+                <label asp-for="RequestedByEmail">Requester Email</label>
+                <input asp-for="RequestedByEmail" />
+            </div>
+
+            <div class="it-field">
+                <label asp-for="RequestedByPhone">Requester Phone</label>
+                <input asp-for="RequestedByPhone" />
+            </div>
+
+            <div class="it-field">
+                <label asp-for="ITAssetId">Linked IT Asset</label>
+                <select asp-for="ITAssetId">
+                    <option value="">-- None --</option>
+                    @foreach (var asset in Model.ITAssets)
+                    {
+                        <option value="@asset.ITAssetId">@asset.DisplayName</option>
+                    }
+                </select>
+            </div>
+
+            <div class="it-field">
+                <label asp-for="AccessAreaId">Room / Area</label>
+                <select asp-for="AccessAreaId">
+                    <option value="">-- None --</option>
+                    @foreach (var area in Model.AccessAreas)
+                    {
+                        <option value="@area.AccessAreaId">@area.AreaName</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="it-form-actions">
+            <button class="btn primary" type="submit">Create Ticket</button>
+            <a class="btn" asp-action="Index">Cancel</a>
+        </div>
+    </section>
+</form>
+
+@await Html.PartialAsync("_ITSupportFormPolishStyles")
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

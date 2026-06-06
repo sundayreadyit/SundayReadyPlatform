@@ -1,0 +1,157 @@
+@model List<ChurchAssetTracker.Data.ITSupportTicketRow>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="empty-ticket-state">
+        <strong>No tickets found</strong>
+        <span>Nothing needs attention in this queue.</span>
+    </div>
+}
+else
+{
+    <div class="tech-ticket-list">
+        @foreach (var ticket in Model)
+        {
+            var isOverdue = ticket.DueDate.HasValue && ticket.DueDate.Value.Date < DateTime.Today;
+            var priorityClass = "priority-" + (ticket.Priority ?? "").Replace(" ", "-").ToLowerInvariant();
+            var statusClass = "status-" + (ticket.Status ?? "").Replace(" ", "-").ToLowerInvariant();
+
+            <a class="tech-ticket @(isOverdue ? "overdue-ticket" : "")"
+               asp-controller="ITSupport"
+               asp-action="Details"
+               asp-route-id="@ticket.TicketId">
+
+                <div class="ticket-main">
+                    <strong>@ticket.TicketNumber - @ticket.Title</strong>
+
+                    <div class="ticket-meta">
+                        <span>@ticket.Category</span>
+                        @if (!string.IsNullOrWhiteSpace(ticket.RequestedByName))
+                        {
+                            <span>Requested by @ticket.RequestedByName</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(ticket.AccessAreaName))
+                        {
+                            <span>@ticket.AccessAreaName</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="ticket-side">
+                    <div>
+                        <span class="ticket-badge @priorityClass">@ticket.Priority</span>
+                        <span class="ticket-badge @statusClass">@ticket.Status</span>
+                    </div>
+
+                    <small>
+                        @if (ticket.DueDate.HasValue)
+                        {
+                            <span>Due @ticket.DueDate.Value.ToString("MMM d")</span>
+                        }
+                        else
+                        {
+                            <span>No due date</span>
+                        }
+                    </small>
+                </div>
+            </a>
+        }
+    </div>
+}
+
+<style>
+.empty-ticket-state {
+    border: 1px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 18px;
+    background: #f8fafc;
+    color: #475569;
+}
+
+.empty-ticket-state strong,
+.empty-ticket-state span {
+    display: block;
+}
+
+.tech-ticket-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tech-ticket {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    text-decoration: none;
+    color: #0f172a;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px;
+    background: #fff;
+}
+
+.tech-ticket:hover {
+    background: #f8fafc;
+}
+
+.overdue-ticket {
+    background: #fff7ed;
+    border-color: #fed7aa;
+}
+
+.ticket-main strong {
+    display: block;
+}
+
+.ticket-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+    color: #64748b;
+    font-size: .9rem;
+}
+
+.ticket-side {
+    display: grid;
+    justify-items: end;
+    gap: 8px;
+    min-width: 180px;
+}
+
+.ticket-side small {
+    color: #64748b;
+}
+
+.ticket-badge {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 5px 9px;
+    font-size: .78rem;
+    font-weight: 800;
+    border: 1px solid transparent;
+    margin-left: 4px;
+}
+
+.priority-critical { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.priority-high { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+.priority-medium { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.priority-low { background: #e0f2fe; color: #075985; border-color: #bae6fd; }
+.status-new { background: #e0f2fe; color: #075985; border-color: #bae6fd; }
+.status-assigned, .status-in-progress { background: #eef2ff; color: #3730a3; border-color: #c7d2fe; }
+.status-waiting-on-user { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.status-resolved, .status-closed { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.status-cancelled { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+
+@@media (max-width: 700px) {
+    .tech-ticket {
+        display: grid;
+    }
+
+    .ticket-side {
+        justify-items: start;
+        min-width: 0;
+    }
+}
+</style>

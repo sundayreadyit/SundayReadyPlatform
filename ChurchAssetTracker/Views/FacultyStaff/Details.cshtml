@@ -1,0 +1,101 @@
+@model ChurchAssetTracker.Data.FacultyStaffEditViewModel
+@{
+    ViewData["Title"] = "Faculty / Staff Details";
+    var member = Model.FacultyStaff;
+    var photoUrl = string.IsNullOrWhiteSpace(member.PhotoPath) ? null : Url.Content("~" + member.PhotoPath);
+    var initials = $"{(string.IsNullOrWhiteSpace(member.FirstName) ? "F" : member.FirstName[0])}{(string.IsNullOrWhiteSpace(member.LastName) ? "" : member.LastName[0])}";
+}
+
+<div class="details-hero">
+    <div class="details-identity">
+        @if (!string.IsNullOrWhiteSpace(photoUrl))
+        {
+            <img class="details-photo" src="@photoUrl" alt="@member.DisplayName photo" />
+        }
+        else
+        {
+            <div class="details-photo initials">@initials</div>
+        }
+
+        <div>
+            <span class="eyebrow">CWCA Faculty / Staff Record</span>
+            <h2>@member.DisplayName</h2>
+            <p>@member.RoleTitle @(!string.IsNullOrWhiteSpace(member.Department) ? $"• {member.Department}" : "")</p>
+        </div>
+    </div>
+
+    <div class="details-actions">
+        <a class="btn" asp-action="Index">Back</a>
+        <a class="btn primary" asp-action="Edit" asp-route-id="@member.FacultyStaffId">Edit</a>
+    </div>
+</div>
+
+<div class="details-grid">
+    <section class="details-card">
+        <h3>Staff Information</h3>
+        <dl>
+            <dt>Name</dt><dd>@member.DisplayName</dd>
+            <dt>Legal First Name</dt><dd>@member.FirstName</dd>
+            <dt>Last Name</dt><dd>@member.LastName</dd>
+            <dt>Preferred Name</dt><dd>@member.PreferredName</dd>
+            <dt>Role / Title</dt><dd>@member.RoleTitle</dd>
+            <dt>Department</dt><dd>@member.Department</dd>
+            <dt>Classroom</dt><dd>@member.Classroom</dd>
+            <dt>Status</dt><dd>@(member.IsActive ? "Active" : "Inactive")</dd>
+        </dl>
+    </section>
+
+    <section class="details-card">
+        <h3>Contact Information</h3>
+        <dl>
+            <dt>Phone</dt><dd>@member.Phone</dd>
+            <dt>Extension</dt><dd>@member.Extension</dd>
+            <dt>Email</dt><dd>@member.Email</dd>
+        </dl>
+    </section>
+
+    <section class="details-card">
+        <h3>Emergency Contact</h3>
+        <dl>
+            <dt>Name</dt><dd>@member.EmergencyContactName</dd>
+            <dt>Phone</dt><dd>@member.EmergencyContactPhone</dd>
+            <dt>Relationship</dt><dd>@member.EmergencyContactRelationship</dd>
+        </dl>
+    </section>
+
+    <section class="details-card">
+        <h3>Notes</h3>
+        <p class="details-notes">@member.Notes</p>
+    </section>
+</div>
+
+<section class="details-card">
+    <h3>Faculty / Staff Documents</h3>
+
+    @if (Model.Documents == null || !Model.Documents.Any())
+    {
+        <div class="details-empty">No documents uploaded.</div>
+    }
+    else
+    {
+        <div class="details-doc-list">
+            @foreach (var doc in Model.Documents)
+            {
+                <div class="details-doc-row">
+                    <div class="details-doc-icon">📄</div>
+                    <div>
+                        <strong>@doc.DocumentTitle</strong>
+                        <span>@doc.DocumentType • @doc.OriginalFileName • @doc.FileSizeDisplay</span>
+                        @if (!string.IsNullOrWhiteSpace(doc.Notes))
+                        {
+                            <small>@doc.Notes</small>
+                        }
+                    </div>
+                    <a class="btn small" asp-action="DownloadDocument" asp-route-id="@doc.FacultyStaffDocumentId">Download</a>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+@await Html.PartialAsync("_SchoolDetailsStyles")

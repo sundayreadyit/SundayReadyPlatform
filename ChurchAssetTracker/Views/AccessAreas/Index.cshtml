@@ -1,0 +1,60 @@
+@model List<ChurchAssetTracker.Data.AccessAreaRow>
+@{
+    ViewData["Title"] = "Access Areas";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Access Areas</h2>
+        <p>Manage church rooms, offices, doors, and areas that keys may open.</p>
+    </div>
+    <a class="btn primary" asp-action="Create">Add Access Area</a>
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Area Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th class="actions">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.AreaName</td>
+            <td>@item.Description</td>
+            <td>
+                @if (item.IsActive)
+                {
+                    <span class="badge good">Active</span>
+                }
+                else
+                {
+                    <span class="badge muted">Inactive</span>
+                }
+            </td>
+            <td class="actions">
+                <a class="btn small" asp-action="Edit" asp-route-id="@item.AccessAreaId">Edit</a>
+
+                @if (item.IsActive)
+                {
+                    <form asp-action="Deactivate" asp-route-id="@item.AccessAreaId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button class="btn small danger" type="submit">Deactivate</button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-action="Activate" asp-route-id="@item.AccessAreaId" method="post" class="inline-form">
+                        @Html.AntiForgeryToken()
+                        <button class="btn small" type="submit">Activate</button>
+                    </form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

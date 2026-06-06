@@ -1,0 +1,86 @@
+@model ChurchAssetTracker.Data.ITSupportTicketDetailsViewModel
+@{
+    ViewData["Title"] = "My IT Ticket";
+    var t = Model.Ticket;
+    var publicComments = Model.Comments.Where(c => !c.IsInternal).OrderBy(c => c.CreatedDate).ToList();
+    var priorityClass = "priority-" + (t.Priority ?? "").Replace(" ", "-").ToLowerInvariant();
+    var statusClass = "status-" + (t.Status ?? "").Replace(" ", "-").ToLowerInvariant();
+}
+
+<div class="ticket-detail-hero">
+    <div class="ticket-detail-top">
+        <div>
+            <span class="eyebrow">My IT Ticket</span>
+            <h2>@t.TicketNumber - @t.Title</h2>
+            <p>Track status and communicate with IT.</p>
+        </div>
+
+        <div class="ticket-detail-actions">
+            <a class="btn" asp-action="MyTickets">Back to My Tickets</a>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;">
+        <span class="ticket-pill @priorityClass">@t.Priority Priority</span>
+        <span class="ticket-pill @statusClass">@t.Status</span>
+    </div>
+</div>
+
+@if (TempData["TicketError"] != null) { <div class="alert danger">@TempData["TicketError"]</div> }
+
+<div class="ticket-detail-grid">
+    <section class="ticket-info-panel">
+        <h3>Ticket Summary</h3>
+
+        <div class="ticket-facts">
+            <div class="ticket-fact"><span>Status</span><strong>@t.Status</strong></div>
+            <div class="ticket-fact"><span>Priority</span><strong>@t.Priority</strong></div>
+            <div class="ticket-fact"><span>Assigned To</span><strong>@(t.AssignedToName ?? "Unassigned")</strong></div>
+            <div class="ticket-fact"><span>Category</span><strong>@(t.Category ?? "General")</strong></div>
+            <div class="ticket-fact"><span>Room / Area</span><strong>@(t.AccessAreaName ?? "Not specified")</strong></div>
+            <div class="ticket-fact"><span>Created</span><strong>@t.CreatedDate.ToString("g")</strong></div>
+        </div>
+
+        <h3 style="margin-top:20px;">Description</h3>
+        <p style="white-space:pre-wrap;">@t.Description</p>
+    </section>
+
+    <aside class="ticket-action-panel">
+        <h3>Requester</h3>
+        <div class="ticket-facts">
+            <div class="ticket-fact"><span>Name</span><strong>@t.RequestedByName</strong></div>
+            <div class="ticket-fact"><span>Email</span><strong>@t.RequestedByEmail</strong></div>
+            <div class="ticket-fact"><span>Phone</span><strong>@t.RequestedByPhone</strong></div>
+        </div>
+    </aside>
+</div>
+
+<section class="ticket-conversation-panel" style="margin-top:20px;">
+    <h3>Conversation</h3>
+    <p style="color:#64748b;">Updates visible to you and the IT team.</p>
+
+    <form asp-action="RequesterAddComment" method="post" class="comment-box">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="ticketId" value="@t.TicketId" />
+        <label>Add Update</label>
+        <textarea name="commentText" placeholder="Add additional details or answer a question from IT."></textarea>
+        <div class="form-actions"><button class="btn primary" type="submit">Add Update</button></div>
+    </form>
+
+    @if (!publicComments.Any())
+    {
+        <div class="it-empty-state"><strong>No updates yet</strong><span>Conversation updates will appear here.</span></div>
+    }
+    else
+    {
+        foreach (var c in publicComments)
+        {
+            <div class="comment-card public">
+                <div class="comment-meta"><strong>@(c.CreatedByName ?? "Unknown")</strong><span>@c.CreatedDate.ToString("g")</span></div>
+                <p>@c.CommentText</p>
+            </div>
+        }
+    }
+</section>
+
+@await Html.PartialAsync("_ITSupportPolishStyles")

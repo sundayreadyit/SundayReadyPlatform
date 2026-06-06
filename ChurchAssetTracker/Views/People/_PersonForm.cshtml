@@ -1,0 +1,58 @@
+@model PersonEditViewModel
+
+<div class="card form-card">
+    <form method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="PersonId" />
+
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+        <div class="form-grid">
+            <label>
+                <span>First Name</span>
+                <input asp-for="FirstName" />
+                <span asp-validation-for="FirstName" class="field-validation"></span>
+            </label>
+
+            <label>
+                <span>Last Name</span>
+                <input asp-for="LastName" />
+                <span asp-validation-for="LastName" class="field-validation"></span>
+            </label>
+
+            <label>
+                <span>Phone</span>
+                <input asp-for="Phone" />
+                <span asp-validation-for="Phone" class="field-validation"></span>
+            </label>
+
+            <label>
+                <span>Email</span>
+                <input asp-for="Email" />
+                <span asp-validation-for="Email" class="field-validation"></span>
+            </label>
+
+            <label>
+                <span>Ministry Team</span>
+                <input asp-for="MinistryTeam" placeholder="Worship, Youth, Facilities, etc." />
+                <span asp-validation-for="MinistryTeam" class="field-validation"></span>
+            </label>
+
+            <label class="checkbox-row">
+                <input asp-for="IsActive" />
+                <span>Active</span>
+            </label>
+
+            <label class="full-width">
+                <span>Notes</span>
+                <textarea asp-for="Notes" rows="4"></textarea>
+                <span asp-validation-for="Notes" class="field-validation"></span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <button class="button primary" type="submit">Save</button>
+            <a class="button" asp-controller="People" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>
