@@ -405,3 +405,4 @@ FodyWeavers.xsd
 bin/
 obj/
 appsettings.Development.json
+*.pubxml.user 
