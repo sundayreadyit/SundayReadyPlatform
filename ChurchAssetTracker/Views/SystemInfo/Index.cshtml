@@ -1,0 +1,163 @@
+@using ChurchAssetTracker.Models
+@using System.Diagnostics
+@using System.Runtime.InteropServices
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostingEnvironment
+
+@{
+    ViewData["Title"] = "System Information";
+
+    var appPool = Environment.GetEnvironmentVariable("APP_POOL_ID") ?? "Unknown";
+    var machineName = Environment.MachineName;
+    var osDescription = RuntimeInformation.OSDescription;
+    var frameworkDescription = RuntimeInformation.FrameworkDescription;
+    var processArchitecture = RuntimeInformation.ProcessArchitecture.ToString();
+    var environmentName = HostingEnvironment.EnvironmentName;
+    var startedAt = Process.GetCurrentProcess().StartTime;
+    var uptime = DateTime.Now - startedAt;
+    var uptimeDisplay = $"{(int)uptime.TotalDays} days, {uptime.Hours} hours, {uptime.Minutes} minutes";
+}
+
+<style>
+    .sysinfo-page {
+        color: var(--bs-body-color, #e5e7eb);
+    }
+
+    .sysinfo-hero {
+        background: linear-gradient(135deg, #1e3a8a, #0f172a);
+        border-radius: 16px;
+        padding: 26px;
+        margin-bottom: 22px;
+        color: #ffffff;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    .sysinfo-card {
+        background: #111827;
+        border: 1px solid #334155;
+        border-radius: 16px;
+        color: #e5e7eb;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        margin-bottom: 18px;
+    }
+
+    .sysinfo-card .card-header {
+        background: #0f172a;
+        border-bottom: 1px solid #334155;
+        color: #f8fafc;
+        font-weight: 700;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+
+    .sysinfo-table {
+        color: #e5e7eb;
+        margin-bottom: 0;
+    }
+
+    .sysinfo-table td {
+        border-color: #334155;
+        padding: 12px 14px;
+        vertical-align: middle;
+    }
+
+    .sysinfo-table td:first-child {
+        color: #93c5fd;
+        width: 240px;
+        font-weight: 600;
+    }
+
+    .sysinfo-note {
+        color: #cbd5e1;
+        margin-bottom: 0;
+    }
+
+    @@media (max-width: 768px) {
+        .sysinfo-table td:first-child {
+            width: 150px;
+        }
+    }
+</style>
+
+<div class="sysinfo-page container-fluid mt-4">
+    <div class="sysinfo-hero">
+        <h1 class="mb-2">System Information</h1>
+        <p class="mb-0">Admin-only technical information for troubleshooting the CWC Operations Portal.</p>
+    </div>
+
+    <div class="card sysinfo-card">
+        <div class="card-header">Application</div>
+        <div class="card-body p-0">
+            <table class="table sysinfo-table">
+                <tbody>
+                    <tr>
+                        <td>Application</td>
+                        <td>CWC Operations Portal</td>
+                    </tr>
+                    <tr>
+                        <td>Version</td>
+                        <td>v@(PortalVersion.Version)</td>
+                    </tr>
+                    <tr>
+                        <td>Release Name</td>
+                        <td>@PortalVersion.ReleaseName</td>
+                    </tr>
+                    <tr>
+                        <td>Build Date</td>
+                        <td>@PortalVersion.BuildDate</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card sysinfo-card">
+        <div class="card-header">Server</div>
+        <div class="card-body p-0">
+            <table class="table sysinfo-table">
+                <tbody>
+                    <tr>
+                        <td>Environment</td>
+                        <td>@environmentName</td>
+                    </tr>
+                    <tr>
+                        <td>Server Name</td>
+                        <td>@machineName</td>
+                    </tr>
+                    <tr>
+                        <td>.NET Runtime</td>
+                        <td>@frameworkDescription</td>
+                    </tr>
+                    <tr>
+                        <td>Operating System</td>
+                        <td>@osDescription</td>
+                    </tr>
+                    <tr>
+                        <td>Process Architecture</td>
+                        <td>@processArchitecture</td>
+                    </tr>
+                    <tr>
+                        <td>IIS App Pool</td>
+                        <td>@appPool</td>
+                    </tr>
+                    <tr>
+                        <td>Application Started</td>
+                        <td>@startedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    </tr>
+                    <tr>
+                        <td>Application Uptime</td>
+                        <td>@uptimeDisplay</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card sysinfo-card">
+        <div class="card-header">Notes</div>
+        <div class="card-body">
+            <p class="sysinfo-note">
+                This page is visible to Admin users only. It is intended for troubleshooting deployments, IIS hosting, and runtime issues.
+            </p>
+        </div>
+    </div>
+</div>

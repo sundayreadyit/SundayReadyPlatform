@@ -1,3 +1,4 @@
+@using ChurchAssetTracker.Models
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -476,7 +477,7 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
             <button type="button" class="sidebar-close" onclick="closeSidebar()">Close Menu</button>
         </div>
 
-        <div class="nav-section"><div class="nav-section-title">Main</div><div class="nav-links"><a class="nav-link" asp-controller="Dashboard" asp-action="Index" title="Dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a></div></div>
+        <div class="nav-section"><div class="nav-section-title">Main</div><div class="nav-links"><a class="nav-link" asp-controller="Dashboard" asp-action="Index" title="Dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a><a class="nav-link" asp-controller="About" asp-action="Index" title="About"><span class="nav-icon">ℹ️</span><span class="nav-label">About</span></a></div></div>
 
         @if (canReservations || canAssets || canKeys)
         {
@@ -531,7 +532,7 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
             <div class="nav-section"><div class="nav-section-title">Administration</div><div class="nav-links">
             @if(canPeople){<a class="nav-link" asp-controller="People" asp-action="Index" title="People"><span class="nav-icon">👥</span><span class="nav-label">People</span></a>}
             @if(canAudit){<a class="nav-link" asp-controller="Audit" asp-action="Index" title="Audit Log"><span class="nav-icon">📝</span><span class="nav-label">Audit Log</span></a>}
-            @if(canUsers){<a class="nav-link" asp-controller="AdminUsers" asp-action="Index" title="Users"><span class="nav-icon">⚙️</span><span class="nav-label">Users</span></a>}
+            @if(canUsers){<a class="nav-link" asp-controller="AdminUsers" asp-action="Index" title="Users"><span class="nav-icon">⚙️</span><span class="nav-label">Users</span></a><a class="nav-link" asp-controller="SystemInfo" asp-action="Index" title="System Information"><span class="nav-icon">🖥️</span><span class="nav-label">System Info</span></a>}
             </div></div>
         }
     </aside>
@@ -562,7 +563,7 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
 </div></div>}
 </header>
 <main class="content-area">@RenderBody()</main>
-<footer class="footer">CWC Operations Portal • Internal Use Only</footer>
+<footer class="footer">CWC Operations Portal v@PortalVersion.Version • @PortalVersion.ReleaseName • Build @PortalVersion.BuildDate • Internal Use Only</footer>
 </div></div>
 <script>
 

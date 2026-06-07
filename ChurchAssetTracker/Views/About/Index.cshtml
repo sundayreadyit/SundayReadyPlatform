@@ -1,0 +1,169 @@
+@using ChurchAssetTracker.Models
+
+@{
+    ViewData["Title"] = "About";
+}
+
+<style>
+    .about-page {
+        color: var(--bs-body-color, #e5e7eb);
+    }
+
+    .about-hero {
+        background: linear-gradient(135deg, #14532d, #166534);
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 22px;
+        color: #ffffff;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+
+    .about-card {
+        background: #111827;
+        border: 1px solid #334155;
+        border-radius: 16px;
+        color: #e5e7eb;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25);
+        margin-bottom: 18px;
+    }
+
+    .about-card .card-header {
+        background: #0f172a;
+        border-bottom: 1px solid #334155;
+        color: #f8fafc;
+        font-weight: 700;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+
+    .about-table {
+        color: #e5e7eb;
+        margin-bottom: 0;
+    }
+
+    .about-table td {
+        border-color: #334155;
+        padding: 12px 14px;
+        vertical-align: middle;
+    }
+
+    .about-table td:first-child {
+        color: #93c5fd;
+        width: 220px;
+        font-weight: 600;
+    }
+
+    .module-list {
+        columns: 2;
+        margin-bottom: 0;
+    }
+
+    .module-list li {
+        margin-bottom: 6px;
+    }
+
+    .release-note {
+        border-left: 4px solid #16a34a;
+        padding-left: 16px;
+    }
+
+    .release-note h5 {
+        color: #f8fafc;
+    }
+
+    .release-note .text-muted,
+    .about-card .text-muted {
+        color: #cbd5e1 !important;
+    }
+
+    @@media (max-width: 768px) {
+        .module-list {
+            columns: 1;
+        }
+
+        .about-table td:first-child {
+            width: 145px;
+        }
+    }
+</style>
+
+<div class="about-page container-fluid mt-4">
+    <div class="about-hero">
+        <h1 class="mb-2">CWC Operations Portal</h1>
+        <p class="mb-0">Centralized church and school operations management for Christian Worship Center.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card about-card">
+                <div class="card-header">Application Information</div>
+                <div class="card-body p-0">
+                    <table class="table about-table">
+                        <tbody>
+                            <tr>
+                                <td>Application</td>
+                                <td>CWC Operations Portal</td>
+                            </tr>
+                            <tr>
+                                <td>Version</td>
+                                <td>v@(PortalVersion.Version)</td>
+                            </tr>
+                            <tr>
+                                <td>Release Name</td>
+                                <td>@PortalVersion.ReleaseName</td>
+                            </tr>
+                            <tr>
+                                <td>Build Date</td>
+                                <td>@PortalVersion.BuildDate</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card about-card">
+                <div class="card-header">Portal Modules</div>
+                <div class="card-body">
+                    <ul class="module-list">
+                        <li>Dashboard</li>
+                        <li>Reservations</li>
+                        <li>Assets</li>
+                        <li>Checkouts</li>
+                        <li>Keys</li>
+                        <li>Key Assignments</li>
+                        <li>Access Areas</li>
+                        <li>IT Assets</li>
+                        <li>IT Support</li>
+                        <li>IT Documentation</li>
+                        <li>Students</li>
+                        <li>Faculty / Staff</li>
+                        <li>People</li>
+                        <li>User Administration</li>
+                        <li>Audit Log</li>
+                        <li>Notifications</li>
+                        <li>Global Search</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card about-card">
+        <div class="card-header">Release Notes</div>
+        <div class="card-body">
+            <div class="release-note">
+                <h5>v@(PortalVersion.Version) - @PortalVersion.ReleaseName</h5>
+                <p class="text-muted mb-2">Build Date: @PortalVersion.BuildDate</p>
+                <ul class="mb-0">
+                    <li>Added application version tracking.</li>
+                    <li>Added About page with application information.</li>
+                    <li>Added footer version display.</li>
+                    <li>Moved technical server details to a separate Admin-only System Information page.</li>
+                    <li>Prepared system for future patch management.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
