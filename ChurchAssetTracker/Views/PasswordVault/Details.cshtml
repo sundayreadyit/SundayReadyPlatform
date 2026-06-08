@@ -1,0 +1,85 @@
+@model ChurchAssetTracker.Models.PasswordVaultRow
+
+@{
+    ViewData["Title"] = "Vault Entry Details";
+}
+
+<style>
+    .detail-card{background:#fff;border:1px solid #dbe3ea;border-radius:16px;padding:22px;box-shadow:0 10px 24px rgba(15,23,42,.08);max-width:980px}
+    .detail-grid{display:grid;grid-template-columns:220px 1fr;gap:10px 18px}
+    .detail-grid dt{font-weight:800;color:#334155}
+    .detail-grid dd{margin:0;color:#0f172a;word-break:break-word}
+    .secret-box{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .secret-value{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;min-width:260px}
+    .warning{margin:14px 0;padding:12px 14px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}
+    .actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #cbd5e1;border-radius:10px;padding:10px 14px;background:#fff;color:#0f172a;text-decoration:none;cursor:pointer;font-weight:600}
+    .btn.primary{background:#166534;color:#fff;border-color:#166534}
+    .btn.danger{background:#991b1b;color:#fff;border-color:#991b1b}
+    @@media(max-width:800px){.detail-grid{grid-template-columns:1fr}.secret-value{min-width:100%}}
+</style>
+
+<h1>@Model.Name</h1>
+<p style="color:#64748b">Password Vault entry details. Revealing a password creates an audit log entry.</p>
+
+<div class="warning">Only reveal or copy secrets when needed. Every reveal action is recorded in the Audit Log.</div>
+
+<div class="detail-card">
+    <dl class="detail-grid">
+        <dt>Category</dt><dd>@Model.Category</dd>
+        <dt>Username</dt><dd>@Model.Username</dd>
+        <dt>Password / Secret</dt>
+        <dd>
+            <div class="secret-box">
+                <span id="secretValue" class="secret-value">••••••••••••</span>
+                <button class="btn primary" type="button" onclick="revealSecret()">Reveal</button>
+                <button class="btn" type="button" onclick="copySecret()">Copy</button>
+            </div>
+            <div id="secretMessage" style="color:#64748b;margin-top:6px;font-size:.9rem"></div>
+        </dd>
+        <dt>URL</dt><dd>@if (!string.IsNullOrWhiteSpace(Model.Url)) { <a href="@Model.Url" target="_blank" rel="noopener">@Model.Url</a> }</dd>
+        <dt>Owner</dt><dd>@Model.Owner</dd>
+        <dt>Last Changed</dt><dd>@Model.LastChangedDate?.ToString("yyyy-MM-dd")</dd>
+        <dt>Expiration</dt><dd>@Model.ExpirationDate?.ToString("yyyy-MM-dd")</dd>
+        <dt>MFA Enabled</dt><dd>@(Model.MfaEnabled ? "Yes" : "No")</dd>
+        <dt>Recovery Email</dt><dd>@Model.RecoveryEmail</dd>
+        <dt>Status</dt><dd>@Model.Status</dd>
+        <dt>Active</dt><dd>@(Model.IsActive ? "Yes" : "No")</dd>
+        <dt>Notes</dt><dd style="white-space:pre-wrap">@Model.Notes</dd>
+        <dt>Created</dt><dd>@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
+        <dt>Modified</dt><dd>@Model.ModifiedDate?.ToString("yyyy-MM-dd HH:mm")</dd>
+    </dl>
+
+    <div class="actions">
+        <a class="btn primary" asp-action="Edit" asp-route-id="@Model.CredentialId">Edit</a>
+        <a class="btn" asp-action="Index">Back to Vault</a>
+    </div>
+</div>
+
+<form id="revealForm" method="post" asp-action="Reveal" asp-route-id="@Model.CredentialId" style="display:none">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+<script>
+let revealedSecret = '';
+async function revealSecret(){
+    const form = document.getElementById('revealForm');
+    const token = form.querySelector('input[name="__RequestVerificationToken"]').value;
+    const message = document.getElementById('secretMessage');
+    message.textContent = 'Revealing secret...';
+    const response = await fetch(form.action, { method:'POST', headers:{ 'RequestVerificationToken': token }});
+    const data = await response.json();
+    if(!data.success){ message.textContent = data.message || 'Could not reveal secret.'; return; }
+    revealedSecret = data.password || '';
+    document.getElementById('secretValue').textContent = revealedSecret || '(blank)';
+    message.textContent = 'Secret revealed. This access was audited.';
+}
+async function copySecret(){
+    if(!revealedSecret){ await revealSecret(); }
+    if(!revealedSecret) return;
+    await navigator.clipboard.writeText(revealedSecret);
+    document.getElementById('secretMessage').textContent = 'Secret copied to clipboard. This access was audited.';
+}
+</script>
+}

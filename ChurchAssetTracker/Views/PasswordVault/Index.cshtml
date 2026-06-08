@@ -1,0 +1,116 @@
+@model ChurchAssetTracker.Models.PasswordVaultIndexViewModel
+@using ChurchAssetTracker.Models
+
+@{
+    ViewData["Title"] = "Password Vault";
+}
+
+<style>
+    .vault-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
+    .vault-header h1{margin:0;color:var(--bs-body-color,#f8fafc)}
+    .vault-header p{margin:4px 0 0;color:#94a3b8}
+    .vault-card{background:#0f172a;border:1px solid #334155;border-radius:16px;padding:18px;box-shadow:0 10px 24px rgba(15,23,42,.25);margin-bottom:16px;color:#f8fafc}
+    .vault-filters{display:grid;grid-template-columns:2fr 1fr auto auto;gap:10px;align-items:end}
+    .vault-filters label{color:#cbd5e1}
+    .vault-filters input,.vault-filters select{width:100%;border:1px solid #334155;border-radius:10px;padding:10px 12px;background:#020617;color:#f8fafc}
+    .vault-table{width:100%;border-collapse:collapse;background:#0f172a;border-radius:14px;overflow:hidden;color:#f8fafc}
+    .vault-table th{background:#1e293b;text-align:left;color:#f8fafc;font-size:.88rem;padding:12px;border-bottom:1px solid #334155}
+    .vault-table td{padding:12px;border-bottom:1px solid #334155;vertical-align:middle;color:#f8fafc}
+    .vault-table tr:hover{background:#1e293b}
+    .vault-name{font-weight:700;color:#ffffff}
+    .vault-sub{font-size:.86rem;color:#94a3b8;margin-top:2px}
+    .pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 10px;font-size:.78rem;font-weight:700;background:#1d4ed8;color:#fff;border:1px solid #3b82f6}
+    .pill.off{background:#991b1b;color:#fff;border-color:#ef4444}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #475569;border-radius:10px;padding:9px 12px;background:#1e293b;color:#fff;text-decoration:none;cursor:pointer;font-weight:600}
+    .btn.primary{background:#16a34a;color:#fff;border-color:#16a34a}
+    .btn.danger{background:#b91c1c;color:#fff;border-color:#b91c1c}
+    .btn.small{padding:6px 9px;font-size:.86rem}
+    .inline-form{display:inline}
+    .empty-state{padding:32px;text-align:center;color:#cbd5e1;background:#0f172a;border:1px dashed #475569;border-radius:14px}
+    @@media(max-width:900px){.vault-filters{grid-template-columns:1fr}.vault-header{display:block}.vault-table{font-size:.9rem}.vault-table th:nth-child(3),.vault-table td:nth-child(3){display:none}}
+</style>
+
+<div class="vault-header">
+    <div>
+        <h1>Password Vault</h1>
+        <p>Secure storage for shared credentials, service accounts, SMTP accounts, certificate secrets, and infrastructure passwords.</p>
+    </div>
+    <a class="btn primary" asp-action="Create">+ Add Vault Entry</a>
+</div>
+
+<div class="vault-card">
+    <form class="vault-filters" method="get">
+        <div>
+            <label>Search</label>
+            <input type="search" name="search" value="@Model.Search" placeholder="Search name, username, URL, owner, or notes..." />
+        </div>
+        <div>
+            <label>Category</label>
+            <select name="category">
+                <option value="">All categories</option>
+                @foreach (var c in PasswordVaultIndexViewModel.Categories)
+                {
+                    <option value="@c" selected="@(Model.Category == c)">@c</option>
+                }
+            </select>
+        </div>
+        <label style="display:flex;gap:8px;align-items:center;margin-bottom:9px;white-space:nowrap">
+            <input type="checkbox" name="includeInactive" value="true" checked="@Model.IncludeInactive" /> Include inactive
+        </label>
+        <button class="btn" type="submit">Filter</button>
+    </form>
+</div>
+
+@if (!Model.Credentials.Any())
+{
+    <div class="empty-state">No vault entries found.</div>
+}
+else
+{
+    <div class="vault-card" style="padding:0;overflow:auto">
+        <table class="vault-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Username</th>
+                    <th>Owner</th>
+                    <th>Status</th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model.Credentials)
+            {
+                <tr>
+                    <td>
+                        <div class="vault-name">@item.Name</div>
+                        @if (!string.IsNullOrWhiteSpace(item.Url))
+                        {
+                            <div class="vault-sub">@item.Url</div>
+                        }
+                    </td>
+                    <td><span class="pill">@item.Category</span></td>
+                    <td>@item.Username</td>
+                    <td>@item.Owner</td>
+                    <td><span class="pill @(item.IsActive ? "" : "off")">@item.Status</span></td>
+                    <td>
+                        <div class="actions">
+                            <a class="btn small" asp-action="Details" asp-route-id="@item.CredentialId">Details</a>
+                            <a class="btn small" asp-action="Edit" asp-route-id="@item.CredentialId">Edit</a>
+                            @if (item.IsActive)
+                            {
+                                <form class="inline-form" asp-action="Deactivate" asp-route-id="@item.CredentialId" method="post" onsubmit="return confirm('Deactivate this vault entry?');">
+                                    @Html.AntiForgeryToken()
+                                    <button class="btn small danger" type="submit">Deactivate</button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

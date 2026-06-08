@@ -1,0 +1,131 @@
+@model ChurchAssetTracker.Models.PasswordVaultRow
+@using ChurchAssetTracker.Models
+
+@{
+    var isNew = Model.CredentialId == 0;
+    ViewData["Title"] = isNew ? "Add Vault Entry" : "Edit Vault Entry";
+}
+
+<style>
+    .form-card{background:#fff;border:1px solid #dbe3ea;border-radius:16px;padding:22px;box-shadow:0 10px 24px rgba(15,23,42,.08);max-width:980px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .form-row-full{grid-column:1 / -1}
+    label{font-weight:700;color:#334155;margin-bottom:6px;display:block}
+    input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;box-sizing:border-box}
+    textarea{min-height:110px}
+    .validation-summary-errors,.field-validation-error{color:#991b1b}
+    .hint{color:#64748b;font-size:.9rem;margin-top:4px}
+    .actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid #cbd5e1;border-radius:10px;padding:10px 14px;background:#fff;color:#0f172a;text-decoration:none;cursor:pointer;font-weight:600}
+    .btn.primary{background:#166534;color:#fff;border-color:#166534}
+    @@media(max-width:800px){.form-grid{grid-template-columns:1fr}}
+</style>
+
+<h1>@ViewData["Title"]</h1>
+<p class="hint">Use this vault for service accounts, shared mailboxes, SMTP accounts, certificates, WiFi secrets, and infrastructure credentials.</p>
+
+<div class="form-card">
+    <form asp-action="@(isNew ? "Create" : "Edit")" asp-route-id="@Model.CredentialId" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly"></div>
+        <input type="hidden" asp-for="CredentialId" />
+
+        <div class="form-grid">
+            <div>
+                <label asp-for="Name"></label>
+                <input asp-for="Name" />
+                <span asp-validation-for="Name"></span>
+            </div>
+
+            <div>
+                <label asp-for="Category"></label>
+                <select asp-for="Category">
+                    @foreach (var c in PasswordVaultIndexViewModel.Categories)
+                    {
+                        <option value="@c">@c</option>
+                    }
+                </select>
+                <span asp-validation-for="Category"></span>
+            </div>
+
+            <div>
+                <label asp-for="Username"></label>
+                <input asp-for="Username" autocomplete="off" />
+                <span asp-validation-for="Username"></span>
+            </div>
+
+            <div>
+                <label asp-for="Password"></label>
+                <input asp-for="Password" value="" autocomplete="new-password" placeholder="@(isNew ? "Enter password or secret" : "Leave blank to keep existing secret")" />
+                <div class="hint">@(isNew ? "Required for new entries." : "Leave blank unless you are rotating or replacing the stored secret.")</div>
+                <span asp-validation-for="Password"></span>
+            </div>
+
+            <div class="form-row-full">
+                <label asp-for="Url"></label>
+                <input asp-for="Url" placeholder="https://..." />
+                <span asp-validation-for="Url"></span>
+            </div>
+
+            <div>
+                <label asp-for="Owner"></label>
+                <input asp-for="Owner" />
+                <span asp-validation-for="Owner"></span>
+            </div>
+
+            <div>
+                <label asp-for="RecoveryEmail"></label>
+                <input asp-for="RecoveryEmail" />
+                <span asp-validation-for="RecoveryEmail"></span>
+            </div>
+
+            <div>
+                <label asp-for="LastChangedDate"></label>
+                <input asp-for="LastChangedDate" type="date" />
+                <span asp-validation-for="LastChangedDate"></span>
+            </div>
+
+            <div>
+                <label asp-for="ExpirationDate"></label>
+                <input asp-for="ExpirationDate" type="date" />
+                <span asp-validation-for="ExpirationDate"></span>
+            </div>
+
+            <div>
+                <label asp-for="Status"></label>
+                <select asp-for="Status">
+                    @foreach (var s in PasswordVaultIndexViewModel.Statuses)
+                    {
+                        <option value="@s">@s</option>
+                    }
+                </select>
+                <span asp-validation-for="Status"></span>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:center;margin-top:28px">
+                <input asp-for="MfaEnabled" style="width:auto" />
+                <label asp-for="MfaEnabled" style="margin:0"></label>
+            </div>
+
+            <div style="display:flex;gap:10px;align-items:center">
+                <input asp-for="IsActive" style="width:auto" />
+                <label asp-for="IsActive" style="margin:0"></label>
+            </div>
+
+            <div class="form-row-full">
+                <label asp-for="Notes"></label>
+                <textarea asp-for="Notes"></textarea>
+                <span asp-validation-for="Notes"></span>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn primary" type="submit">Save</button>
+            <a class="btn" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

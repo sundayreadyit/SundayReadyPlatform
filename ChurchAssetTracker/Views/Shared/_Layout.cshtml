@@ -440,6 +440,8 @@ function toggleDarkMode(){
 
     <link rel="icon" type="image/png" href="~/images/branding/cwc-app-icon-192.png" />
     <link rel="apple-touch-icon" href="~/images/branding/cwc-app-icon-192.png" />
+    <link rel="manifest" href="~/manifest.webmanifest" />
+    <meta name="theme-color" content="#14532d" />
 
 </head>
 <body>
@@ -452,6 +454,7 @@ function toggleDarkMode(){
     var canReservations = isAdmin || User.IsInRole("ReservationManager") || User.IsInRole("Pastor");
     var canITAssets = isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITAssetManager") || User.IsInRole("ITAssetViewer");
     var canITSupport = isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITSupportManager") || User.IsInRole("ITSupportTech");
+    var canPasswordVault = isAdmin || User.IsInRole("PasswordVault");
     
     var canITRequester = User.IsInRole("ITRequester");
 var canAudit = isAdmin || User.IsInRole("Pastor");
@@ -496,10 +499,11 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
             </div></div>
         }
 
-        @if (canITAssets || canITSupport || canITRequester)
+        @if (canITAssets || canITSupport || canITRequester || canPasswordVault)
         {
             <div class="nav-section"><div class="nav-section-title">IT Operations</div><div class="nav-links">
             @if(canITAssets){<a class="nav-link" asp-controller="ITAssets" asp-action="Index" title="IT Assets"><span class="nav-icon">💻</span><span class="nav-label">IT Assets</span></a>}
+            @if(canPasswordVault){<a class="nav-link" asp-controller="PasswordVault" asp-action="Index" title="Password Vault"><span class="nav-icon">🔐</span><span class="nav-label">Password Vault</span></a>}
             @if(canITSupport){<a class="nav-link" asp-controller="ITSupport" asp-action="Index" title="IT Support"><span class="nav-icon">🎫</span><span class="nav-label">IT Support</span></a>
                     <a class="nav-link" asp-controller="ITDocuments" asp-action="Index" title="IT Documentation">
                         <span class="nav-icon">📚</span>
@@ -558,6 +562,7 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
 <a asp-controller="Profile" asp-action="Index">Profile</a>
 <a asp-controller="Profile" asp-action="ChangePassword">Change Password</a>
 <button type="button" class="theme-toggle-button" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+<button id="installAppButton" type="button" class="theme-toggle-button" onclick="installCwcPortalApp()" style="display:none">Install Portal App</button>
 
 <form asp-controller="Account" asp-action="Logout" method="post">@Html.AntiForgeryToken()<button type="submit">Logout</button></form>
 </div></div>}
@@ -594,6 +599,28 @@ document.addEventListener('click',function(e){var m=document.getElementById('pro
 (function addBulkKeyAssignmentButton(){var path=window.location.pathname.toLowerCase();if(!(path.endsWith('/keyassignments')||path.endsWith('/keyassignments/index')))return;var appBase='@Url.Content("~/")';if(appBase.endsWith('/'))appBase=appBase.slice(0,-1);if(document.querySelector('.bulk-key-injected'))return;var bulkLink=document.createElement('a');bulkLink.className='btn primary bulk-key-injected';bulkLink.href=appBase+'/KeyAssignments/BulkCreate';bulkLink.textContent='Assign Multiple Keys';var pageHeader=document.querySelector('.page-header');if(pageHeader){var existingButton=pageHeader.querySelector('a.btn, a.btn-primary, button.btn, button.btn-primary');if(existingButton&&existingButton.parentElement){existingButton.parentElement.appendChild(bulkLink);return;}pageHeader.appendChild(bulkLink);}})();
 
 (function addDeleteButtons(){var path=window.location.pathname.toLowerCase();var appBase='@Url.Content("~/")';if(appBase.endsWith('/'))appBase=appBase.slice(0,-1);var config=null;if(path.endsWith('/adminusers')||path.endsWith('/adminusers/index')){config={editPath:appBase+'/AdminUsers/Edit',deletePath:appBase+'/AdminDelete/DeleteUser/',label:'Delete User',message:'Permanently delete this user? Use this only for test or accidental users.'};}else if(path.endsWith('/people')||path.endsWith('/people/index')){config={editPath:appBase+'/People/Edit',deletePath:appBase+'/AdminDelete/DeletePerson/',label:'Delete',message:'Permanently delete this person? If they have history, use inactive instead.'};}else if(path.endsWith('/students')||path.endsWith('/students/index')){config={editPath:appBase+'/Students/Edit',deletePath:appBase+'/AdminDelete/DeleteStudent/',label:'Delete',message:'Permanently delete this student? Use this only for test or accidental records.'};}else if(path.endsWith('/facultystaff')||path.endsWith('/facultystaff/index')){config={editPath:appBase+'/FacultyStaff/Edit',deletePath:appBase+'/AdminDelete/DeleteFacultyStaff/',label:'Delete',message:'Permanently delete this faculty/staff record? Use this only for test or accidental records.'};}if(!config)return;var token=document.querySelector('#globalAntiForgeryForm input[name="__RequestVerificationToken"]');var tokenValue=token?token.value:'';var editPathNoBase=config.editPath.replace(appBase,'');var links=Array.from(document.querySelectorAll('a[href*="'+config.editPath+'"], a[href*="'+editPathNoBase+'"]'));links.forEach(function(link){var href=link.getAttribute('href')||'';var id=extractId(href);if(!id)return;var parent=link.parentElement;if(!parent||parent.querySelector('.delete-injected')||parent.querySelector('form[action*="Delete"], a[href*="Delete"], button.danger'))return;var form=document.createElement('form');form.method='post';form.action=config.deletePath+id;form.className='inline-form delete-injected';form.onsubmit=function(){return confirm(config.message);};var hidden=document.createElement('input');hidden.type='hidden';hidden.name='__RequestVerificationToken';hidden.value=tokenValue;form.appendChild(hidden);var button=document.createElement('button');button.type='submit';button.className='btn small danger';button.textContent=config.label;form.appendChild(button);parent.appendChild(form);});function extractId(href){var m=href.match(/\/Edit\/(\d+)/i);if(m&&m[1])return m[1];var q=href.match(/[?&]id=(\d+)/i);if(q&&q[1])return q[1];return null;}})();
+
+
+let cwcPortalInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    cwcPortalInstallPrompt = e;
+    var btn = document.getElementById('installAppButton');
+    if (btn) btn.style.display = 'block';
+});
+async function installCwcPortalApp(){
+    if(!cwcPortalInstallPrompt) return;
+    cwcPortalInstallPrompt.prompt();
+    await cwcPortalInstallPrompt.userChoice;
+    cwcPortalInstallPrompt = null;
+    var btn = document.getElementById('installAppButton');
+    if (btn) btn.style.display = 'none';
+}
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+        navigator.serviceWorker.register('@Url.Content("~/service-worker.js")').catch(function(){});
+    });
+}
 </script>
 
 <partial name="_ToastNotifications" />

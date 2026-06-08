@@ -2,6 +2,7 @@ using ChurchAssetTracker.Data;
 using ChurchAssetTracker.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization();
+var dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataProtectionKeys");
+Directory.CreateDirectory(dataProtectionKeysPath);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+    .SetApplicationName("CWCOperationsPortal");
 builder.Services.AddScoped<SqlDataService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.Configure<EmailSettings>(
