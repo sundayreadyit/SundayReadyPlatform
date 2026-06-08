@@ -1,0 +1,91 @@
+@using ChurchAssetTracker.Models
+
+@{
+    ViewData["Title"] = "Install App";
+}
+
+<style>
+    .install-page { color: var(--bs-body-color, #e5e7eb); }
+    .install-hero { background: linear-gradient(135deg, #14532d, #166534); border-radius: 18px; padding: 28px; color: #fff; box-shadow: 0 12px 30px rgba(0,0,0,.24); margin-bottom: 18px; }
+    .install-hero h1 { margin: 0 0 8px; }
+    .install-hero p { margin: 0; color: rgba(255,255,255,.88); }
+    .install-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
+    .install-card { background: #111827; border: 1px solid #334155; border-radius: 16px; padding: 18px; color: #e5e7eb; box-shadow: 0 10px 28px rgba(0,0,0,.24); }
+    .install-card h2, .install-card h3 { margin-top: 0; color: #f8fafc; }
+    .install-status { margin: 12px 0 0; padding: 12px 14px; border-radius: 12px; background: #0f172a; border: 1px solid #334155; color: #cbd5e1; }
+    .install-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    .install-button { border: 1px solid #16a34a; background: #16a34a; color: #fff; border-radius: 12px; padding: 11px 14px; font-weight: 800; cursor: pointer; display: none; }
+    .install-button:hover { background: #15803d; }
+    .secondary-button { border: 1px solid #475569; background: #1e293b; color: #fff; border-radius: 12px; padding: 11px 14px; font-weight: 800; text-decoration: none; display: inline-flex; }
+    .step-list { margin: 0; padding-left: 22px; }
+    .step-list li { margin-bottom: 10px; }
+    .muted-note { color: #94a3b8; font-size: .95rem; line-height: 1.45; }
+    .platform-list { display: grid; gap: 12px; }
+    .platform { padding: 14px; border: 1px solid #334155; background: #0f172a; border-radius: 14px; }
+    .platform strong { display: block; color: #f8fafc; margin-bottom: 4px; }
+    .platform span { color: #cbd5e1; }
+    @@media (max-width: 900px) { .install-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="install-page">
+    <div class="install-hero">
+        <h1>Install CWC Operations Portal</h1>
+        <p>Install the portal on your computer, tablet, or phone so it opens like an app without typing the browser address each time.</p>
+    </div>
+
+    <div class="install-grid">
+        <div class="install-card">
+            <h2>Install this portal as an app</h2>
+            <p class="muted-note">
+                The portal uses Progressive Web App support. It still runs from the server, but it can be launched from a Start Menu,
+                desktop shortcut, taskbar, or phone home screen.
+            </p>
+
+            <div class="install-actions">
+                <button id="installAppPageButton" type="button" class="install-button" onclick="installCwcPortalApp()">⬇️ Install Portal App</button>
+                <a class="secondary-button" asp-controller="Dashboard" asp-action="Index">Back to Dashboard</a>
+            </div>
+
+            <div id="installAppPageStatus" class="install-status">
+                Checking whether this browser supports one-click installation...
+            </div>
+        </div>
+
+        <div class="install-card">
+            <h3>Version</h3>
+            <div class="platform-list">
+                <div class="platform">
+                    <strong>CWC Operations Portal v@(PortalVersion.Version)</strong>
+                    <span>@PortalVersion.ReleaseName • Build @PortalVersion.BuildDate</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="install-card" style="margin-top:16px">
+        <h2>Manual install instructions</h2>
+        <div class="platform-list">
+            <div class="platform">
+                <strong>Microsoft Edge / Google Chrome on Windows</strong>
+                <span>Open the portal, click the browser menu, then choose <b>Apps</b> → <b>Install this site as an app</b>. Some browsers show an install icon in the address bar.</span>
+            </div>
+            <div class="platform">
+                <strong>Android</strong>
+                <span>Open the portal in Chrome, tap the three-dot menu, then choose <b>Install app</b> or <b>Add to Home screen</b>.</span>
+            </div>
+            <div class="platform">
+                <strong>iPhone / iPad</strong>
+                <span>Open the portal in Safari, tap <b>Share</b>, then choose <b>Add to Home Screen</b>.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="install-card" style="margin-top:16px">
+        <h2>Notes</h2>
+        <ol class="step-list">
+            <li>The app requires access to the church network or VPN/Tailscale when used remotely.</li>
+            <li>For best results, use the HTTPS portal address when installing.</li>
+            <li>The Password Vault and other sensitive portal pages remain server-based and are not cached for offline use.</li>
+        </ol>
+    </div>
+</div>

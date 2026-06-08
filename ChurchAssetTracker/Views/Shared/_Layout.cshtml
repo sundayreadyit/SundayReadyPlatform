@@ -436,6 +436,48 @@ function toggleDarkMode(){
             }
         }
 
+
+        .app-install-button {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #166534;
+            background: #16a34a;
+            color: #fff;
+            border-radius: 999px;
+            padding: 9px 13px;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .app-install-button:hover {
+            background: #15803d;
+        }
+
+        html.dark-mode .app-install-button {
+            background: #15803d !important;
+            border-color: #16a34a !important;
+            color: #ffffff !important;
+        }
+
+        .app-installed-badge {
+            display: none;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #334155;
+            border-radius: 999px;
+            padding: 9px 13px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        html.dark-mode .app-installed-badge {
+            background: #111827 !important;
+            color: #cbd5e1 !important;
+            border-color: #334155 !important;
+        }
+
 </style>
 
     <link rel="icon" type="image/png" href="~/images/branding/cwc-app-icon-192.png" />
@@ -480,7 +522,7 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
             <button type="button" class="sidebar-close" onclick="closeSidebar()">Close Menu</button>
         </div>
 
-        <div class="nav-section"><div class="nav-section-title">Main</div><div class="nav-links"><a class="nav-link" asp-controller="Dashboard" asp-action="Index" title="Dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a><a class="nav-link" asp-controller="About" asp-action="Index" title="About"><span class="nav-icon">ℹ️</span><span class="nav-label">About</span></a></div></div>
+        <div class="nav-section"><div class="nav-section-title">Main</div><div class="nav-links"><a class="nav-link" asp-controller="Dashboard" asp-action="Index" title="Dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a><a class="nav-link" asp-controller="About" asp-action="Index" title="About"><span class="nav-icon">ℹ️</span><span class="nav-label">About</span></a><a class="nav-link" asp-controller="App" asp-action="Index" title="Install App"><span class="nav-icon">⬇️</span><span class="nav-label">Install App</span></a></div></div>
 
         @if (canReservations || canAssets || canKeys)
         {
@@ -548,6 +590,9 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
 @if (User.Identity?.IsAuthenticated == true)
 {
 
+<button id="installAppTopButton" type="button" class="app-install-button" onclick="installCwcPortalApp()">⬇️ Install App</button>
+<span id="appInstalledBadge" class="app-installed-badge">✓ App Installed</span>
+
 <form class="topbar-global-search" asp-controller="Search" asp-action="Index" method="get">
     <input type="search" name="query" placeholder="Search..." value="@Context.Request.Query["query"]" />
 </form>
@@ -562,7 +607,8 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
 <a asp-controller="Profile" asp-action="Index">Profile</a>
 <a asp-controller="Profile" asp-action="ChangePassword">Change Password</a>
 <button type="button" class="theme-toggle-button" onclick="toggleDarkMode()">Toggle Dark Mode</button>
-<button id="installAppButton" type="button" class="theme-toggle-button" onclick="installCwcPortalApp()" style="display:none">Install Portal App</button>
+<a asp-controller="App" asp-action="Index">Install / Download App</a>
+<button id="installAppMenuButton" type="button" class="theme-toggle-button" onclick="installCwcPortalApp()" style="display:none">Install Portal App</button>
 
 <form asp-controller="Account" asp-action="Logout" method="post">@Html.AntiForgeryToken()<button type="submit">Logout</button></form>
 </div></div>}
@@ -602,24 +648,77 @@ document.addEventListener('click',function(e){var m=document.getElementById('pro
 
 
 let cwcPortalInstallPrompt = null;
+
+function isCwcPortalStandalone(){
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function setCwcInstallButtonsVisible(visible){
+    ['installAppTopButton','installAppMenuButton','installAppPageButton'].forEach(function(id){
+        var btn = document.getElementById(id);
+        if(btn) btn.style.display = visible ? (id === 'installAppTopButton' ? 'inline-flex' : 'block') : 'none';
+    });
+}
+
+function setCwcInstallStatus(message){
+    ['installAppStatus','installAppPageStatus'].forEach(function(id){
+        var el = document.getElementById(id);
+        if(el) el.textContent = message || '';
+    });
+}
+
+function updateCwcInstallUi(){
+    var installed = isCwcPortalStandalone();
+    var badge = document.getElementById('appInstalledBadge');
+    if(badge) badge.style.display = installed ? 'inline-flex' : 'none';
+
+    if(installed){
+        setCwcInstallButtonsVisible(false);
+        setCwcInstallStatus('The CWC Operations Portal is already running as an installed app on this device.');
+        return;
+    }
+
+    if(cwcPortalInstallPrompt){
+        setCwcInstallButtonsVisible(true);
+        setCwcInstallStatus('This device supports one-click installation. Click Install Portal App to continue.');
+    } else {
+        setCwcInstallButtonsVisible(false);
+        setCwcInstallStatus('Use your browser menu and choose Install app, Add to taskbar, or Add to Home screen.');
+    }
+}
+
 window.addEventListener('beforeinstallprompt', function(e) {
     e.preventDefault();
     cwcPortalInstallPrompt = e;
-    var btn = document.getElementById('installAppButton');
-    if (btn) btn.style.display = 'block';
+    updateCwcInstallUi();
 });
+
+window.addEventListener('appinstalled', function(){
+    cwcPortalInstallPrompt = null;
+    updateCwcInstallUi();
+});
+
 async function installCwcPortalApp(){
-    if(!cwcPortalInstallPrompt) return;
+    if(!cwcPortalInstallPrompt){
+        updateCwcInstallUi();
+        return;
+    }
     cwcPortalInstallPrompt.prompt();
     await cwcPortalInstallPrompt.userChoice;
     cwcPortalInstallPrompt = null;
-    var btn = document.getElementById('installAppButton');
-    if (btn) btn.style.display = 'none';
+    updateCwcInstallUi();
 }
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){
-        navigator.serviceWorker.register('@Url.Content("~/service-worker.js")').catch(function(){});
+        navigator.serviceWorker.register('@Url.Content("~/service-worker.js")', { scope: '@Url.Content("~/")' }).then(function(){
+            updateCwcInstallUi();
+        }).catch(function(){
+            setCwcInstallStatus('App install support is not available because the service worker could not register.');
+        });
     });
+} else {
+    window.addEventListener('load', updateCwcInstallUi);
 }
 </script>
 

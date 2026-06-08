@@ -1,19 +1,44 @@
 {
+  "id": "/",
   "name": "CWC Operations Portal",
   "short_name": "CWC Portal",
   "description": "Centralized church and school operations management for Christian Worship Center.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
   "background_color": "#0f172a",
   "theme_color": "#14532d",
   "orientation": "any",
+  "categories": ["productivity", "business", "utilities"],
   "icons": [
     {
       "src": "/images/branding/cwc-app-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/images/branding/cwc-app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open the portal dashboard.",
+      "url": "/Dashboard",
+      "icons": [{ "src": "/images/branding/cwc-app-icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "IT Support",
+      "short_name": "IT Support",
+      "description": "Open IT support tickets.",
+      "url": "/ITSupport",
+      "icons": [{ "src": "/images/branding/cwc-app-icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
