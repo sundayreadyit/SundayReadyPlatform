@@ -145,6 +145,7 @@
                         <li>Audit Log</li>
                         <li>Notifications</li>
                         <li>Global Search</li>
+                        <li>User Guide</li>
                     </ul>
                 </div>
             </div>
@@ -158,12 +159,14 @@
                 <h5>v@(PortalVersion.Version) - @PortalVersion.ReleaseName</h5>
                 <p class="text-muted mb-2">Build Date: @PortalVersion.BuildDate</p>
                 <ul class="mb-0">
-                    <li>Added Password Vault module for encrypted credential and secret storage.</li>
-                    <li>Added role-restricted vault access for Admin and PasswordVault users.</li>
-                    <li>Added audit logging for password reveal events.</li>
-                    <li>Added a dedicated Install App page with desktop and mobile instructions.</li>
-                    <li>Added a visible install button when the browser supports one-click installation.</li>
-                    <li>Improved PWA manifest and service worker registration for installable app support.</li>
+                    <li>Added a dedicated Portal User Guide with end-user instructions and FAQ.</li>
+                    <li>Added User Guide navigation in the sidebar and profile menu.</li>
+                    <li>Changed IT ticket requesters to use Portal Users instead of People records.</li>
+                    <li>Automatically defaults the requester to the currently signed-in Portal user when creating tickets.</li>
+                    <li>Allows IT staff and administrators to create tickets on behalf of another Portal user.</li>
+                    <li>Added read-only View mode for People records.</li>
+                    <li>Made People names clickable so records open in view-only mode by default.</li>
+                    <li>Added a View action beside Edit and Deactivate on the People list.</li>
                     <li>Updated About page, footer version display, and release notes.</li>
                 </ul>
             </div>

@@ -522,7 +522,7 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
             <button type="button" class="sidebar-close" onclick="closeSidebar()">Close Menu</button>
         </div>
 
-        <div class="nav-section"><div class="nav-section-title">Main</div><div class="nav-links"><a class="nav-link" asp-controller="Dashboard" asp-action="Index" title="Dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a><a class="nav-link" asp-controller="About" asp-action="Index" title="About"><span class="nav-icon">ℹ️</span><span class="nav-label">About</span></a><a class="nav-link" asp-controller="App" asp-action="Index" title="Install App"><span class="nav-icon">⬇️</span><span class="nav-label">Install App</span></a></div></div>
+        <div class="nav-section"><div class="nav-section-title">Main</div><div class="nav-links"><a class="nav-link" asp-controller="Dashboard" asp-action="Index" title="Dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a><a class="nav-link" asp-controller="About" asp-action="Index" title="About"><span class="nav-icon">ℹ️</span><span class="nav-label">About</span></a><a class="nav-link" asp-controller="App" asp-action="Index" title="Install App"><span class="nav-icon">⬇️</span><span class="nav-label">Install App</span></a><a class="nav-link" asp-controller="UserGuide" asp-action="Index" title="User Guide"><span class="nav-icon">📖</span><span class="nav-label">User Guide</span></a></div></div>
 
         @if (canReservations || canAssets || canKeys)
         {
@@ -608,6 +608,7 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
 <a asp-controller="Profile" asp-action="ChangePassword">Change Password</a>
 <button type="button" class="theme-toggle-button" onclick="toggleDarkMode()">Toggle Dark Mode</button>
 <a asp-controller="App" asp-action="Index">Install / Download App</a>
+<a asp-controller="UserGuide" asp-action="Index">User Guide</a>
 <button id="installAppMenuButton" type="button" class="theme-toggle-button" onclick="installCwcPortalApp()" style="display:none">Install Portal App</button>
 
 <form asp-controller="Account" asp-action="Logout" method="post">@Html.AntiForgeryToken()<button type="submit">Logout</button></form>

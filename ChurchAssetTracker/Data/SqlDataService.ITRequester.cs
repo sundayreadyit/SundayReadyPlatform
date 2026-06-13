@@ -34,8 +34,6 @@ public partial class SqlDataService
     {
         var list = new List<ITSupportTicketRow>();
 
-        var personId = await GetUserPersonIdByUserIdAsync(userId);
-
         await using var conn = CreateConnection();
 
         const string sql = @"
@@ -48,6 +46,7 @@ public partial class SqlDataService
                 t.Priority,
                 t.Status,
                 t.RequestedByPersonId,
+                t.RequestedByUserId,
                 t.RequestedByName,
                 t.RequestedByEmail,
                 t.RequestedByPhone,
@@ -70,12 +69,11 @@ public partial class SqlDataService
             LEFT JOIN dbo.AccessAreas area ON t.AccessAreaId = area.AccessAreaId
             WHERE
                 t.CreatedByUserId = @UserId
-                OR (@PersonId IS NOT NULL AND t.RequestedByPersonId = @PersonId)
+                OR t.RequestedByUserId = @UserId
             ORDER BY t.CreatedDate DESC;";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@UserId", userId);
-        cmd.Parameters.AddWithValue("@PersonId", personId.HasValue ? personId.Value : DBNull.Value);
 
         await conn.OpenAsync();
 
@@ -91,8 +89,6 @@ public partial class SqlDataService
 
     public async Task<bool> CanUserViewRequesterTicketAsync(int ticketId, int userId)
     {
-        var personId = await GetUserPersonIdByUserIdAsync(userId);
-
         await using var conn = CreateConnection();
 
         const string sql = @"
@@ -102,13 +98,12 @@ public partial class SqlDataService
               AND
               (
                   CreatedByUserId = @UserId
-                  OR (@PersonId IS NOT NULL AND RequestedByPersonId = @PersonId)
+                  OR RequestedByUserId = @UserId
               );";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@TicketId", ticketId);
         cmd.Parameters.AddWithValue("@UserId", userId);
-        cmd.Parameters.AddWithValue("@PersonId", personId.HasValue ? personId.Value : DBNull.Value);
 
         await conn.OpenAsync();
 
@@ -120,20 +115,8 @@ public partial class SqlDataService
     {
         var model = await BuildITSupportTicketFormAsync();
 
-        var personId = await GetUserPersonIdByUserIdAsync(userId);
-
-        if (personId.HasValue)
-        {
-            var person = await GetPersonContactInfoAsync(personId.Value);
-
-            if (person != null)
-            {
-                model.RequestedByPersonId = personId.Value;
-                model.RequestedByName = person.FullName;
-                model.RequestedByEmail = person.Email;
-                model.RequestedByPhone = person.Phone;
-            }
-        }
+        model.RequestedByUserId = userId;
+        await ApplyRequesterUserContactAsync(model);
 
         model.Status = "New";
         model.Priority = "Medium";
@@ -154,21 +137,22 @@ public partial class SqlDataService
             Priority = r.GetString(5),
             Status = r.GetString(6),
             RequestedByPersonId = r.IsDBNull(7) ? null : r.GetInt32(7),
-            RequestedByName = r.IsDBNull(8) ? null : r.GetString(8),
-            RequestedByEmail = r.IsDBNull(9) ? null : r.GetString(9),
-            RequestedByPhone = r.IsDBNull(10) ? null : r.GetString(10),
-            AssignedToUserId = r.IsDBNull(11) ? null : r.GetInt32(11),
-            AssignedToName = r.IsDBNull(12) ? null : r.GetString(12),
-            ITAssetId = r.IsDBNull(13) ? null : r.GetInt32(13),
-            ITAssetName = r.IsDBNull(14) ? null : r.GetString(14),
-            AccessAreaId = r.IsDBNull(15) ? null : r.GetInt32(15),
-            AccessAreaName = r.IsDBNull(16) ? null : r.GetString(16),
-            DueDate = r.IsDBNull(17) ? null : r.GetDateTime(17),
-            CreatedByName = r.IsDBNull(18) ? null : r.GetString(18),
-            CreatedDate = r.GetDateTime(19),
-            UpdatedDate = r.IsDBNull(20) ? null : r.GetDateTime(20),
-            ResolvedDate = r.IsDBNull(21) ? null : r.GetDateTime(21),
-            ClosedDate = r.IsDBNull(22) ? null : r.GetDateTime(22)
+            RequestedByUserId = r.IsDBNull(8) ? null : r.GetInt32(8),
+            RequestedByName = r.IsDBNull(9) ? null : r.GetString(9),
+            RequestedByEmail = r.IsDBNull(10) ? null : r.GetString(10),
+            RequestedByPhone = r.IsDBNull(11) ? null : r.GetString(11),
+            AssignedToUserId = r.IsDBNull(12) ? null : r.GetInt32(12),
+            AssignedToName = r.IsDBNull(13) ? null : r.GetString(13),
+            ITAssetId = r.IsDBNull(14) ? null : r.GetInt32(14),
+            ITAssetName = r.IsDBNull(15) ? null : r.GetString(15),
+            AccessAreaId = r.IsDBNull(16) ? null : r.GetInt32(16),
+            AccessAreaName = r.IsDBNull(17) ? null : r.GetString(17),
+            DueDate = r.IsDBNull(18) ? null : r.GetDateTime(18),
+            CreatedByName = r.IsDBNull(19) ? null : r.GetString(19),
+            CreatedDate = r.GetDateTime(20),
+            UpdatedDate = r.IsDBNull(21) ? null : r.GetDateTime(21),
+            ResolvedDate = r.IsDBNull(22) ? null : r.GetDateTime(22),
+            ClosedDate = r.IsDBNull(23) ? null : r.GetDateTime(23)
         };
     }
 }

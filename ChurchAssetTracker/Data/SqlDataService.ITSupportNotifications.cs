@@ -56,14 +56,9 @@ public partial class SqlDataService
         await using var conn = CreateConnection();
 
         const string sql = @"
-            SELECT TOP 1 u.UserId
-            FROM dbo.ITSupportTickets t
-            INNER JOIN dbo.Users u
-                ON LOWER(LTRIM(RTRIM(u.Email))) = LOWER(LTRIM(RTRIM(t.RequestedByEmail)))
-            WHERE t.TicketId = @TicketId
-              AND u.IsActive = 1
-              AND t.RequestedByEmail IS NOT NULL
-              AND LTRIM(RTRIM(t.RequestedByEmail)) <> '';";
+            SELECT RequestedByUserId
+            FROM dbo.ITSupportTickets
+            WHERE TicketId = @TicketId;";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@TicketId", ticketId);

@@ -1,0 +1,122 @@
+@{
+    ViewData["Title"] = "Portal User Guide";
+}
+
+<style>
+    .guide-hero{background:linear-gradient(135deg,#14532d,#166534);color:#fff;border-radius:18px;padding:28px;margin-bottom:22px;box-shadow:0 12px 30px rgba(15,23,42,.18)}
+    .guide-layout{display:grid;grid-template-columns:280px 1fr;gap:22px;align-items:start}
+    .guide-toc,.guide-section{background:#fff;border:1px solid #dbe3ea;border-radius:16px;box-shadow:0 10px 24px rgba(15,23,42,.06)}
+    .guide-toc{position:sticky;top:20px;padding:18px}
+    .guide-toc a{display:block;padding:8px 0;color:#174c2f;text-decoration:none;font-weight:700}
+    .guide-section{padding:22px;margin-bottom:18px}
+    .guide-section h3{margin-top:0;color:#174c2f}
+    .guide-section li{margin-bottom:8px;line-height:1.45}
+    .guide-callout{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px;margin:14px 0;color:#14532d}
+    @@media(max-width:900px){.guide-layout{grid-template-columns:1fr}.guide-toc{position:static}}
+</style>
+
+<div class="guide-hero">
+    <h1>Portal User Guide</h1>
+    <p>Quick reference for staff, volunteers, administrators, and IT users working in the CWC Operations Portal.</p>
+</div>
+
+<div class="guide-layout">
+    <aside class="guide-toc">
+        <strong>Guide Sections</strong>
+        <a href="#login">Logging In</a>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#tickets">Creating Tickets</a>
+        <a href="#ticket-status">Ticket Status</a>
+        <a href="#assets">Asset Management</a>
+        <a href="#knowledge">Knowledge Base</a>
+        <a href="#profile">Profile</a>
+        <a href="#notifications">Notifications</a>
+        <a href="#faq">FAQ</a>
+    </aside>
+
+    <main>
+        <section id="login" class="guide-section">
+            <h3>Logging into the Portal</h3>
+            <ol>
+                <li>Open the CWC Operations Portal from your browser or installed app shortcut.</li>
+                <li>Enter your Portal username and password.</li>
+                <li>Select <strong>Login</strong>.</li>
+                <li>Use the password reset or contact IT if you cannot sign in.</li>
+            </ol>
+        </section>
+
+        <section id="dashboard" class="guide-section">
+            <h3>Navigating the Dashboard</h3>
+            <p>The dashboard is the main landing page after login. Available cards and links depend on your assigned role.</p>
+            <ul>
+                <li>Use the left navigation menu to open modules such as Reservations, Assets, IT Support, People, and Administration.</li>
+                <li>Use the top search box to quickly find records across the Portal.</li>
+                <li>Use the profile menu in the upper-right corner for profile, password, theme, install app, and logout options.</li>
+            </ul>
+        </section>
+
+        <section id="tickets" class="guide-section">
+            <h3>Creating IT Support Tickets</h3>
+            <ol>
+                <li>Open <strong>Submit IT Ticket</strong> or <strong>IT Support</strong>.</li>
+                <li>Enter a clear title and description.</li>
+                <li>Select the category and priority.</li>
+                <li>Requester defaults to the signed-in Portal user. Admins and IT staff may select another Portal user when submitting on behalf of someone else.</li>
+                <li>Link an IT asset or room/area when helpful.</li>
+                <li>Select <strong>Create Ticket</strong>.</li>
+            </ol>
+            <div class="guide-callout">Tip: Include what changed, when it started, what room or device is affected, and any troubleshooting already attempted.</div>
+        </section>
+
+        <section id="ticket-status" class="guide-section">
+            <h3>Viewing and Updating Ticket Status</h3>
+            <ul>
+                <li>Requesters can open <strong>My IT Tickets</strong> to view tickets they submitted or tickets created on their behalf.</li>
+                <li>IT staff can use <strong>IT Support</strong> or <strong>IT Dashboard</strong> to review, assign, update, resolve, close, cancel, or reopen tickets.</li>
+                <li>Use comments to add updates. Internal notes are visible to IT staff only.</li>
+                <li>Status options include New, Assigned, In Progress, Waiting on User, Resolved, Closed, and Cancelled.</li>
+            </ul>
+        </section>
+
+        <section id="assets" class="guide-section">
+            <h3>Asset Management</h3>
+            <ul>
+                <li>Use <strong>Assets</strong> to manage shared church and school equipment such as tables, chairs, projectors, and supplies.</li>
+                <li>Use <strong>Checkouts</strong> to track borrowed items and returns.</li>
+                <li>Use <strong>IT Assets</strong> for computers, printers, network equipment, and other technology assets.</li>
+            </ul>
+        </section>
+
+        <section id="knowledge" class="guide-section">
+            <h3>Knowledge Base Usage</h3>
+            <p>Use <strong>IT Documentation</strong> for internal IT procedures, support notes, and knowledge base articles. Documentation access may be limited by role.</p>
+        </section>
+
+        <section id="profile" class="guide-section">
+            <h3>User Profile Management</h3>
+            <ul>
+                <li>Open the profile menu in the upper-right corner.</li>
+                <li>Select <strong>Profile</strong> to review or update profile details.</li>
+                <li>Select <strong>Change Password</strong> to update your Portal password.</li>
+                <li>Select <strong>Install / Download App</strong> to install the Portal as an app where supported.</li>
+            </ul>
+        </section>
+
+        <section id="notifications" class="guide-section">
+            <h3>Notifications and Alerts</h3>
+            <ul>
+                <li>Use the bell icon in the top bar to review Portal notifications.</li>
+                <li>Notifications may be generated for ticket updates, comments, assignments, and workflow changes.</li>
+                <li>Email notifications may also be sent when configured for the workflow.</li>
+            </ul>
+        </section>
+
+        <section id="faq" class="guide-section">
+            <h3>Frequently Asked Questions</h3>
+            <p><strong>Why do I only see some modules?</strong><br />Module visibility is based on your assigned Portal roles.</p>
+            <p><strong>Can I submit a ticket for someone else?</strong><br />Administrators and IT staff can select a different Portal user as the requester.</p>
+            <p><strong>Why is a person missing from the ticket requester list?</strong><br />Ticket requesters come from Portal Users, not People records. The person must have a Portal user account to appear in the requester dropdown.</p>
+            <p><strong>Can I install the Portal like an app?</strong><br />Yes. Use the Install App option when your browser and device support installation.</p>
+        </section>
+    </main>
+</div>

@@ -17,6 +17,15 @@ public class PeopleController : Controller
     }
 
     [HttpGet]
+    [ActionName("View")]
+    public async Task<IActionResult> ViewPerson(int id)
+    {
+        var person = await _data.GetPersonForEditAsync(id);
+        if (person == null) return NotFound();
+        return View("View", person);
+    }
+
+    [HttpGet]
     public IActionResult Create()
     {
         return View(new PersonEditViewModel());

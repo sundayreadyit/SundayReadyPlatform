@@ -1,0 +1,63 @@
+@model PersonEditViewModel
+@{
+    ViewData["Title"] = "View Person";
+}
+
+<div class="page-header">
+    <div>
+        <h2>View Person</h2>
+        <p>Review this person record in read-only mode. Use Edit only when changes are needed.</p>
+    </div>
+    <div class="form-actions">
+        <a class="button primary" asp-controller="People" asp-action="Edit" asp-route-id="@Model.PersonId">Edit</a>
+        <a class="button" asp-controller="People" asp-action="Index">Back to People</a>
+    </div>
+</div>
+
+<div class="card form-card person-view-card">
+    <div class="form-grid">
+        <label>
+            <span>First Name</span>
+            <input value="@Model.FirstName" readonly />
+        </label>
+
+        <label>
+            <span>Last Name</span>
+            <input value="@Model.LastName" readonly />
+        </label>
+
+        <label>
+            <span>Phone</span>
+            <input value="@Model.Phone" readonly />
+        </label>
+
+        <label>
+            <span>Email</span>
+            <input value="@Model.Email" readonly />
+        </label>
+
+        <label>
+            <span>Ministry Team</span>
+            <input value="@Model.MinistryTeam" readonly />
+        </label>
+
+        <label>
+            <span>Status</span>
+            <input value="@(Model.IsActive ? "Active" : "Inactive")" readonly />
+        </label>
+
+        <label class="full-width">
+            <span>Notes</span>
+            <textarea rows="4" readonly>@Model.Notes</textarea>
+        </label>
+    </div>
+</div>
+
+<style>
+    .person-view-card input[readonly],
+    .person-view-card textarea[readonly] {
+        background: #f8fafc;
+        color: #334155;
+        cursor: default;
+    }
+</style>

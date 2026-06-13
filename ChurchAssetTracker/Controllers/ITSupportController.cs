@@ -58,6 +58,8 @@ public class ITSupportController : Controller
     public async Task<IActionResult> Create()
     {
         var model = await _data.BuildITSupportTicketFormAsync();
+        model.RequestedByUserId = CurrentUserId > 0 ? CurrentUserId : null;
+        await _data.ApplyRequesterUserContactAsync(model);
         await ApplyAssignableUserFilterAsync(model);
         return View(model);
     }
@@ -67,6 +69,9 @@ public class ITSupportController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ITSupportTicketForm model)
     {
+        if (model.RequestedByUserId.HasValue)
+            await _data.ApplyRequesterUserContactAsync(model);
+
         ValidateTicket(model);
 
         if (!ModelState.IsValid)
@@ -110,6 +115,12 @@ public class ITSupportController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RequesterCreate(ITSupportTicketForm model)
     {
+        var requesterUserId = CurrentUserId;
+        if (requesterUserId <= 0) return Unauthorized();
+
+        model.RequestedByUserId = requesterUserId;
+        await _data.ApplyRequesterUserContactAsync(model);
+
         ValidateRequesterTicket(model);
 
         if (!ModelState.IsValid)
@@ -123,6 +134,7 @@ public class ITSupportController : Controller
             rebuilt.RequestedByEmail = model.RequestedByEmail;
             rebuilt.RequestedByPhone = model.RequestedByPhone;
             rebuilt.RequestedByPersonId = model.RequestedByPersonId;
+            rebuilt.RequestedByUserId = model.RequestedByUserId;
             rebuilt.ITAssetId = model.ITAssetId;
             rebuilt.AccessAreaId = model.AccessAreaId;
             return View(rebuilt);
@@ -232,6 +244,9 @@ Comment:
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(ITSupportTicketForm model)
     {
+        if (model.RequestedByUserId.HasValue)
+            await _data.ApplyRequesterUserContactAsync(model);
+
         ValidateTicket(model);
 
         if (!ModelState.IsValid)
@@ -276,6 +291,23 @@ Description:
             fullName = contact.FullName,
             email = contact.Email,
             phone = contact.Phone
+        });
+    }
+
+
+
+    [Authorize(Roles = "Admin,ITAdmin,ITSupportManager,ITSupportTech")]
+    [HttpGet]
+    public async Task<IActionResult> UserContact(int id)
+    {
+        var user = await _data.GetITSupportRequesterUserOptionAsync(id);
+        if (user == null) return NotFound();
+
+        return Json(new
+        {
+            fullName = user.DisplayName,
+            email = user.Email,
+            phone = user.Phone
         });
     }
 

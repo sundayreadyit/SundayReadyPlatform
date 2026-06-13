@@ -59,7 +59,8 @@ public partial class SqlDataService
                 t.Priority,
                 t.Status,
                 t.RequestedByPersonId,
-                COALESCE(NULLIF(t.RequestedByName, ''), LTRIM(RTRIM(COALESCE(p.FirstName,'') + ' ' + COALESCE(p.LastName,'')))) AS RequestedByName,
+                t.RequestedByUserId,
+                COALESCE(NULLIF(t.RequestedByName, ''), ru.DisplayName, LTRIM(RTRIM(COALESCE(p.FirstName,'') + ' ' + COALESCE(p.LastName,'')))) AS RequestedByName,
                 t.RequestedByEmail,
                 t.RequestedByPhone,
                 t.AssignedToUserId,
@@ -84,6 +85,7 @@ public partial class SqlDataService
                 t.ClosedDate
             FROM dbo.ITSupportTickets t
             LEFT JOIN dbo.People p ON t.RequestedByPersonId = p.PersonId
+            LEFT JOIN dbo.Users ru ON t.RequestedByUserId = ru.UserId
             LEFT JOIN dbo.Users au ON t.AssignedToUserId = au.UserId
             LEFT JOIN dbo.Users cu ON t.CreatedByUserId = cu.UserId
             LEFT JOIN dbo.AccessAreas aa ON t.AccessAreaId = aa.AccessAreaId
@@ -125,7 +127,8 @@ public partial class SqlDataService
                 t.Priority,
                 t.Status,
                 t.RequestedByPersonId,
-                COALESCE(NULLIF(t.RequestedByName, ''), LTRIM(RTRIM(COALESCE(p.FirstName,'') + ' ' + COALESCE(p.LastName,'')))) AS RequestedByName,
+                t.RequestedByUserId,
+                COALESCE(NULLIF(t.RequestedByName, ''), ru.DisplayName, LTRIM(RTRIM(COALESCE(p.FirstName,'') + ' ' + COALESCE(p.LastName,'')))) AS RequestedByName,
                 t.RequestedByEmail,
                 t.RequestedByPhone,
                 t.AssignedToUserId,
@@ -150,6 +153,7 @@ public partial class SqlDataService
                 t.ClosedDate
             FROM dbo.ITSupportTickets t
             LEFT JOIN dbo.People p ON t.RequestedByPersonId = p.PersonId
+            LEFT JOIN dbo.Users ru ON t.RequestedByUserId = ru.UserId
             LEFT JOIN dbo.Users au ON t.AssignedToUserId = au.UserId
             LEFT JOIN dbo.Users cu ON t.CreatedByUserId = cu.UserId
             LEFT JOIN dbo.AccessAreas aa ON t.AccessAreaId = aa.AccessAreaId
@@ -170,6 +174,7 @@ public partial class SqlDataService
     {
         form ??= new ITSupportTicketForm();
         form.People = await GetITSupportPeopleOptionsAsync();
+        form.RequesterUsers = await GetPortalUserOptionsAsync();
         form.Users = await GetITSupportUserOptionsAsync();
         form.ITAssets = await GetITAssetOptionsAsync();
         form.AccessAreas = await GetITSupportAccessAreaOptionsAsync();
@@ -190,6 +195,7 @@ public partial class SqlDataService
             Priority = ticket.Priority,
             Status = ticket.Status,
             RequestedByPersonId = ticket.RequestedByPersonId,
+            RequestedByUserId = ticket.RequestedByUserId,
             RequestedByName = ticket.RequestedByName,
             RequestedByEmail = ticket.RequestedByEmail,
             RequestedByPhone = ticket.RequestedByPhone,
@@ -210,13 +216,13 @@ public partial class SqlDataService
             INSERT INTO dbo.ITSupportTickets
             (
                 Title, Description, Category, Priority, Status,
-                RequestedByPersonId, RequestedByName, RequestedByEmail, RequestedByPhone,
+                RequestedByPersonId, RequestedByUserId, RequestedByName, RequestedByEmail, RequestedByPhone,
                 AssignedToUserId, ITAssetId, AccessAreaId, DueDate,
                 CreatedByUserId
             )
             SELECT
                 @Title, @Description, @Category, @Priority, @Status,
-                @RequestedByPersonId, @RequestedByName, @RequestedByEmail, @RequestedByPhone,
+                @RequestedByPersonId, @RequestedByUserId, @RequestedByName, @RequestedByEmail, @RequestedByPhone,
                 @AssignedToUserId, @ITAssetId, @AccessAreaId, @DueDate,
                 u.UserId
             FROM (SELECT 1 AS x) seed
@@ -253,6 +259,7 @@ public partial class SqlDataService
                 Priority = @Priority,
                 Status = @Status,
                 RequestedByPersonId = @RequestedByPersonId,
+                RequestedByUserId = @RequestedByUserId,
                 RequestedByName = @RequestedByName,
                 RequestedByEmail = @RequestedByEmail,
                 RequestedByPhone = @RequestedByPhone,
@@ -353,21 +360,22 @@ public partial class SqlDataService
             Priority = r.GetString(5),
             Status = r.GetString(6),
             RequestedByPersonId = r.IsDBNull(7) ? null : r.GetInt32(7),
-            RequestedByName = r.IsDBNull(8) ? null : r.GetString(8),
-            RequestedByEmail = r.IsDBNull(9) ? null : r.GetString(9),
-            RequestedByPhone = r.IsDBNull(10) ? null : r.GetString(10),
-            AssignedToUserId = r.IsDBNull(11) ? null : r.GetInt32(11),
-            AssignedToName = r.IsDBNull(12) ? null : r.GetString(12),
-            ITAssetId = r.IsDBNull(13) ? null : r.GetInt32(13),
-            ITAssetName = r.IsDBNull(14) ? null : r.GetString(14),
-            AccessAreaId = r.IsDBNull(15) ? null : r.GetInt32(15),
-            AccessAreaName = r.IsDBNull(16) ? null : r.GetString(16),
-            DueDate = r.IsDBNull(17) ? null : r.GetDateTime(17),
-            CreatedByName = r.IsDBNull(18) ? null : r.GetString(18),
-            CreatedDate = r.GetDateTime(19),
-            UpdatedDate = r.IsDBNull(20) ? null : r.GetDateTime(20),
-            ResolvedDate = r.IsDBNull(21) ? null : r.GetDateTime(21),
-            ClosedDate = r.IsDBNull(22) ? null : r.GetDateTime(22)
+            RequestedByUserId = r.IsDBNull(8) ? null : r.GetInt32(8),
+            RequestedByName = r.IsDBNull(9) ? null : r.GetString(9),
+            RequestedByEmail = r.IsDBNull(10) ? null : r.GetString(10),
+            RequestedByPhone = r.IsDBNull(11) ? null : r.GetString(11),
+            AssignedToUserId = r.IsDBNull(12) ? null : r.GetInt32(12),
+            AssignedToName = r.IsDBNull(13) ? null : r.GetString(13),
+            ITAssetId = r.IsDBNull(14) ? null : r.GetInt32(14),
+            ITAssetName = r.IsDBNull(15) ? null : r.GetString(15),
+            AccessAreaId = r.IsDBNull(16) ? null : r.GetInt32(16),
+            AccessAreaName = r.IsDBNull(17) ? null : r.GetString(17),
+            DueDate = r.IsDBNull(18) ? null : r.GetDateTime(18),
+            CreatedByName = r.IsDBNull(19) ? null : r.GetString(19),
+            CreatedDate = r.GetDateTime(20),
+            UpdatedDate = r.IsDBNull(21) ? null : r.GetDateTime(21),
+            ResolvedDate = r.IsDBNull(22) ? null : r.GetDateTime(22),
+            ClosedDate = r.IsDBNull(23) ? null : r.GetDateTime(23)
         };
     }
 
@@ -379,6 +387,7 @@ public partial class SqlDataService
         cmd.Parameters.AddWithValue("@Priority", string.IsNullOrWhiteSpace(model.Priority) ? "Medium" : model.Priority);
         cmd.Parameters.AddWithValue("@Status", string.IsNullOrWhiteSpace(model.Status) ? "New" : model.Status);
         cmd.Parameters.AddWithValue("@RequestedByPersonId", model.RequestedByPersonId.HasValue ? model.RequestedByPersonId.Value : DBNull.Value);
+        cmd.Parameters.AddWithValue("@RequestedByUserId", model.RequestedByUserId.HasValue ? model.RequestedByUserId.Value : DBNull.Value);
         cmd.Parameters.AddWithValue("@RequestedByName", string.IsNullOrWhiteSpace(model.RequestedByName) ? DBNull.Value : model.RequestedByName.Trim());
         cmd.Parameters.AddWithValue("@RequestedByEmail", string.IsNullOrWhiteSpace(model.RequestedByEmail) ? DBNull.Value : model.RequestedByEmail.Trim());
         cmd.Parameters.AddWithValue("@RequestedByPhone", string.IsNullOrWhiteSpace(model.RequestedByPhone) ? DBNull.Value : model.RequestedByPhone.Trim());
@@ -399,6 +408,60 @@ public partial class SqlDataService
         while (await r.ReadAsync())
             list.Add(new PersonOption { PersonId = r.GetInt32(0), FullName = r.GetString(1) });
         return list;
+    }
+
+
+    private async Task<List<UserOption>> GetPortalUserOptionsAsync()
+    {
+        var list = new List<UserOption>();
+        await using var conn = CreateConnection();
+        const string sql = @"SELECT UserId, DisplayName, Email
+                             FROM dbo.Users
+                             WHERE IsActive = 1
+                             ORDER BY DisplayName";
+        await using var cmd = new SqlCommand(sql, conn);
+        await conn.OpenAsync();
+        await using var r = await cmd.ExecuteReaderAsync();
+        while (await r.ReadAsync())
+            list.Add(new UserOption
+            {
+                UserId = r.GetInt32(0),
+                DisplayName = r.GetString(1),
+                Email = r.IsDBNull(2) ? null : r.GetString(2)
+            });
+        return list;
+    }
+
+    public async Task<UserOption?> GetITSupportRequesterUserOptionAsync(int userId)
+    {
+        await using var conn = CreateConnection();
+        const string sql = @"SELECT UserId, DisplayName, Email
+                             FROM dbo.Users
+                             WHERE UserId = @UserId AND IsActive = 1";
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@UserId", userId);
+        await conn.OpenAsync();
+        await using var r = await cmd.ExecuteReaderAsync();
+        if (!await r.ReadAsync()) return null;
+        return new UserOption
+        {
+            UserId = r.GetInt32(0),
+            DisplayName = r.GetString(1),
+            Email = r.IsDBNull(2) ? null : r.GetString(2)
+        };
+    }
+
+    public async Task ApplyRequesterUserContactAsync(ITSupportTicketForm model)
+    {
+        if (!model.RequestedByUserId.HasValue) return;
+
+        var user = await GetITSupportRequesterUserOptionAsync(model.RequestedByUserId.Value);
+        if (user == null) return;
+
+        model.RequestedByName = user.DisplayName;
+        model.RequestedByEmail = user.Email;
+        model.RequestedByPhone = user.Phone;
+        model.RequestedByPersonId = null;
     }
 
     private async Task<List<UserOption>> GetITSupportUserOptionsAsync()

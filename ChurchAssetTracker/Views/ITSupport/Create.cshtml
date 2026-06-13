@@ -90,7 +90,7 @@
             <div class="it-side-box">
                 <h3>Tip</h3>
                 <ul>
-                    <li>Selecting a requester from People can auto-fill contact information.</li>
+                    <li>Selecting a requester from Portal Users can auto-fill contact information.</li>
                     <li>Assign only if you know who should work the ticket.</li>
                     <li>Link assets or rooms when it helps troubleshooting.</li>
                 </ul>
@@ -104,19 +104,21 @@
 
         <div class="it-help-panel">
             <strong>Requester contact information</strong>
-            <span>Selecting a person from the People list will auto-fill requester name, email, and phone. You can still edit those fields manually.</span>
+            <span>Selecting a Portal User will auto-fill requester name and email. Admins and IT staff can still create tickets on behalf of another Portal user.</span>
         </div>
 
         <div class="it-form-grid three">
             <div class="it-field">
-                <label asp-for="RequestedByPersonId">Requested By Person</label>
-                <select asp-for="RequestedByPersonId" id="RequestedByPersonId">
-                    <option value="">-- Not listed / enter manually --</option>
-                    @foreach (var person in Model.People)
+                <label asp-for="RequestedByUserId">Requested By User</label>
+                <select asp-for="RequestedByUserId" id="RequestedByUserId">
+                    <option value="">-- Select Portal user --</option>
+                    @foreach (var user in Model.RequesterUsers)
                     {
-                        <option value="@person.PersonId">@person.FullName</option>
+                        <option value="@user.UserId">@user.DisplayName</option>
                     }
                 </select>
+                <input type="hidden" asp-for="RequestedByPersonId" />
+                <small>Requester list is populated from Portal Users, not People records.</small>
             </div>
 
             <div class="it-field">
@@ -185,4 +187,27 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const requesterSelect = document.getElementById('RequestedByUserId');
+            if (!requesterSelect) return;
+
+            requesterSelect.addEventListener('change', async function () {
+                if (!this.value) return;
+
+                try {
+                    const response = await fetch(`/ITSupport/UserContact/${this.value}`);
+                    if (!response.ok) return;
+
+                    const contact = await response.json();
+                    const name = document.getElementById('RequestedByName');
+                    const email = document.getElementById('RequestedByEmail');
+                    const phone = document.getElementById('RequestedByPhone');
+                    if (name) name.value = contact.fullName || '';
+                    if (email) email.value = contact.email || '';
+                    if (phone) phone.value = contact.phone || '';
+                } catch { }
+            });
+        })();
+    </script>
 }

@@ -10,6 +10,7 @@ public class ITSupportTicketRow
     public string Priority { get; set; } = "Medium";
     public string Status { get; set; } = "New";
     public int? RequestedByPersonId { get; set; }
+    public int? RequestedByUserId { get; set; }
     public string? RequestedByName { get; set; }
     public string? RequestedByEmail { get; set; }
     public string? RequestedByPhone { get; set; }
@@ -37,6 +38,7 @@ public class ITSupportTicketForm
     public string Status { get; set; } = "New";
 
     public int? RequestedByPersonId { get; set; }
+    public int? RequestedByUserId { get; set; }
     public string? RequestedByName { get; set; }
     public string? RequestedByEmail { get; set; }
     public string? RequestedByPhone { get; set; }
@@ -48,6 +50,7 @@ public class ITSupportTicketForm
     public DateTime? DueDate { get; set; }
 
     public List<PersonOption> People { get; set; } = new();
+    public List<UserOption> RequesterUsers { get; set; } = new();
     public List<UserOption> Users { get; set; } = new();
     public List<ITAssetOption> ITAssets { get; set; } = new();
     public List<AccessAreaOption> AccessAreas { get; set; } = new();
@@ -81,6 +84,8 @@ public class UserOption
 {
     public int UserId { get; set; }
     public string DisplayName { get; set; } = "";
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
 }
 
 public class ITAssetOption
