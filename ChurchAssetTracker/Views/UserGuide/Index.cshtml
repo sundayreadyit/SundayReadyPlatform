@@ -3,18 +3,30 @@
 }
 
 <style>
+    .guide-page{color:var(--bs-body-color,#0f172a)}
     .guide-hero{background:linear-gradient(135deg,#14532d,#166534);color:#fff;border-radius:18px;padding:28px;margin-bottom:22px;box-shadow:0 12px 30px rgba(15,23,42,.18)}
     .guide-layout{display:grid;grid-template-columns:280px 1fr;gap:22px;align-items:start}
-    .guide-toc,.guide-section{background:#fff;border:1px solid #dbe3ea;border-radius:16px;box-shadow:0 10px 24px rgba(15,23,42,.06)}
+    .guide-toc,.guide-section{background:#fff;border:1px solid #dbe3ea;border-radius:16px;box-shadow:0 10px 24px rgba(15,23,42,.06);color:#0f172a}
     .guide-toc{position:sticky;top:20px;padding:18px}
+    .guide-toc strong{display:block;margin-bottom:8px;color:#0f172a}
     .guide-toc a{display:block;padding:8px 0;color:#174c2f;text-decoration:none;font-weight:700}
     .guide-section{padding:22px;margin-bottom:18px}
     .guide-section h3{margin-top:0;color:#174c2f}
-    .guide-section li{margin-bottom:8px;line-height:1.45}
+    .guide-section p,.guide-section li{line-height:1.45;color:#0f172a}
+    .guide-section li{margin-bottom:8px}
     .guide-callout{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px;margin:14px 0;color:#14532d}
+
+    [data-theme="dark"] .guide-page, body.dark-mode .guide-page{color:#e5e7eb}
+    [data-theme="dark"] .guide-toc,[data-theme="dark"] .guide-section,body.dark-mode .guide-toc,body.dark-mode .guide-section{background:#111827;border-color:#334155;color:#e5e7eb;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+    [data-theme="dark"] .guide-toc strong,[data-theme="dark"] .guide-section h3,body.dark-mode .guide-toc strong,body.dark-mode .guide-section h3{color:#f8fafc}
+    [data-theme="dark"] .guide-toc a,body.dark-mode .guide-toc a{color:#86efac}
+    [data-theme="dark"] .guide-section p,[data-theme="dark"] .guide-section li,body.dark-mode .guide-section p,body.dark-mode .guide-section li{color:#e5e7eb}
+    [data-theme="dark"] .guide-section strong,body.dark-mode .guide-section strong{color:#ffffff}
+    [data-theme="dark"] .guide-callout,body.dark-mode .guide-callout{background:#052e16;border-color:#16a34a;color:#dcfce7}
     @@media(max-width:900px){.guide-layout{grid-template-columns:1fr}.guide-toc{position:static}}
 </style>
 
+<div class="guide-page">
 <div class="guide-hero">
     <h1>Portal User Guide</h1>
     <p>Quick reference for staff, volunteers, administrators, and IT users working in the CWC Operations Portal.</p>
@@ -119,4 +131,5 @@
             <p><strong>Can I install the Portal like an app?</strong><br />Yes. Use the Install App option when your browser and device support installation.</p>
         </section>
     </main>
+</div>
 </div>

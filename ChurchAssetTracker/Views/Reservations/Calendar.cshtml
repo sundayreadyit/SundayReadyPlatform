@@ -81,7 +81,7 @@
     if (!day.IsCurrentMonth) dayClass += " muted-day";
     if (day.IsToday) dayClass += " today";
 
-    <div class="@dayClass" data-date="@day.Date.ToString("yyyy-MM-dd")">
+    <div class="@dayClass" data-date="@day.Date.ToString("yyyy-MM-dd")" title="Click empty space to add a reservation for @day.Date.ToString("MMMM d, yyyy")">
         <div class="calendar-date">@day.Date.Day</div>
         @foreach (var reservation in day.Reservations)
         {
@@ -108,35 +108,99 @@
 
 <style>
     .print-title { display: none; }
-    .calendar-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0 18px; }
-    .legend-item { display: inline-flex; align-items: center; gap: 6px; font-size: .9rem; }
-    .legend-dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; }
+    .calendar-toolbar-note { color: var(--muted, #cbd5e1); }
+    .calendar-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .55rem .9rem;
+        margin: 12px 0 18px;
+        align-items: center;
+        color: #e5e7eb;
+    }
+    .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .9rem;
+        font-weight: 600;
+        color: #dbeafe !important;
+        line-height: 1.2;
+    }
+    .legend-dot {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        min-width: 14px;
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px rgba(255,255,255,.22), 0 0 0 1px rgba(15,23,42,.85) inset;
+    }
+    .filter-bar { display: flex; flex-wrap: wrap; gap: .5rem .75rem; align-items: center; margin-bottom: .7rem; color: #e5e7eb; }
+    .filter-bar label { color: #f8fafc !important; font-weight: 700; }
+    .filter-bar select { border-radius: 10px; border: 1px solid #475569; background: #0b1220; color: #f8fafc; padding: .35rem .55rem; }
+    .filter-bar .btn { color: #f8fafc; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
     .calendar-header-row { margin-bottom: 8px; font-weight: 700; text-align: center; }
-    .calendar-header-row div { padding: 8px; background: #f3f4f6; border-radius: 8px; }
-    .calendar-day { min-height: 125px; border: 1px solid #d1d5db; border-radius: 10px; padding: 8px; background: #fff; overflow: hidden; }
-    .calendar-day.muted-day { background: #f9fafb; color: #9ca3af; }
+    .calendar-header-row div { padding: 8px; background: #1e293b; color: #f8fafc; border: 1px solid #334155; border-radius: 10px; }
+    .calendar-day { min-height: 125px; border: 1px solid #334155; border-radius: 12px; padding: 8px; background: #111827; color: #f8fafc; overflow: hidden; transition: border-color .15s ease, background .15s ease, transform .15s ease; cursor: pointer; }
+    .calendar-day:hover { border-color: #60a5fa; background: #172033; }
+    .calendar-day.muted-day { background: #0b1220; color: #7f8ea8; }
     .calendar-day.today { outline: 3px solid #2563eb; }
-    .calendar-day.drag-over { outline: 3px dashed #16a34a; background: #f0fdf4; }
-    .calendar-date { font-weight: 700; margin-bottom: 6px; }
-    .calendar-event { display: block; text-decoration: none; padding: 6px; border-radius: 8px; margin-bottom: 6px; background: #f1f5f9; color: #111827; font-size: .85rem; line-height: 1.2; border-left: 6px solid #475569; cursor: pointer; }
+    .calendar-day.drag-over { outline: 3px dashed #16a34a; background: #052e1a; }
+    .calendar-date { font-weight: 800; margin-bottom: 6px; color: inherit; }
+    .calendar-day::after { content: "+ Add"; display: inline-flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; color: #93c5fd; opacity: 0; border: 1px dashed #3b82f6; border-radius: 999px; padding: .18rem .45rem; margin-top: .25rem; transition: opacity .15s ease; }
+    .calendar-day:hover::after { opacity: .85; }
+    .calendar-day:has(.calendar-event)::after { display: none; }
+    .calendar-event { display: block; text-decoration: none; padding: 6px; border-radius: 8px; margin-bottom: 6px; background: #1e293b; color: #f8fafc; font-size: .85rem; line-height: 1.2; border-left: 6px solid #475569; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); }
+    .calendar-event:hover { color: #fff; filter: brightness(1.08); }
     .calendar-event[draggable="true"] { cursor: grab; }
     .calendar-event.dragging { opacity: .45; }
-    .calendar-event.approved { background: #dcfce7; }
-    .calendar-event.pending { background: #fef3c7; }
-    .calendar-event.denied, .calendar-event.cancelled { background: #fee2e2; }
-    .calendar-time { display: block; font-weight: 700; }
+    .calendar-event.approved { background: #064e3b; color: #dcfce7; }
+    .calendar-event.pending { background: #78350f; color: #fef3c7; }
+    .calendar-event.denied, .calendar-event.cancelled { background: #7f1d1d; color: #fee2e2; }
+    .calendar-time { display: block; font-weight: 800; }
     .calendar-title { display: block; }
-    .calendar-event small { display: block; opacity: .8; }
+    .calendar-event small { display: block; opacity: .85; }
+
+    body:not(.dark-mode) .calendar-header-row div { background: #f3f4f6; color: #111827; border-color: #d1d5db; }
+    body:not(.dark-mode) .calendar-day { background: #fff; color: #111827; border-color: #d1d5db; }
+    body:not(.dark-mode) .calendar-day:hover { background: #f8fafc; border-color: #2563eb; }
+    body:not(.dark-mode) .calendar-day.muted-day { background: #f9fafb; color: #9ca3af; }
+    body:not(.dark-mode) .calendar-day.drag-over { background: #f0fdf4; }
+    body:not(.dark-mode) .calendar-event { background: #f1f5f9; color: #111827; }
+    body:not(.dark-mode) .calendar-event.approved { background: #dcfce7; }
+    body:not(.dark-mode) .calendar-event.pending { background: #fef3c7; }
+    body:not(.dark-mode) .calendar-event.denied, body:not(.dark-mode) .calendar-event.cancelled { background: #fee2e2; }
+    body:not(.dark-mode) .filter-bar { color: #111827; }
+    body:not(.dark-mode) .filter-bar label { color: #111827 !important; }
+    body:not(.dark-mode) .filter-bar select { background: #fff; color: #111827; border-color: #cbd5e1; }
+    body:not(.dark-mode) .legend-item { color: #334155 !important; }
+    body:not(.dark-mode) .legend-dot { box-shadow: 0 0 0 2px rgba(15,23,42,.08), 0 0 0 1px rgba(15,23,42,.18) inset; }
+
+
+    html[data-bs-theme="dark"] .legend-item,
+    body[data-bs-theme="dark"] .legend-item,
+    html.dark .legend-item,
+    body.dark-mode .legend-item {
+        color: #dbeafe !important;
+    }
+
+    html[data-bs-theme="dark"] .filter-bar label,
+    body[data-bs-theme="dark"] .filter-bar label,
+    html.dark .filter-bar label,
+    body.dark-mode .filter-bar label {
+        color: #f8fafc !important;
+    }
 
     @@media print {
         .no-print, .topbar, .nav { display: none !important; }
         .print-title { display: block; text-align: center; margin-bottom: 12px; }
-        body { background: white !important; }
+        body { background: white !important; color: black !important; }
         .container { max-width: none !important; margin: 0 !important; padding: 0 !important; }
         .calendar-grid { gap: 4px; }
-        .calendar-day { min-height: 95px; border-radius: 0; page-break-inside: avoid; }
-        .calendar-event { font-size: .72rem; padding: 4px; margin-bottom: 3px; }
+        .calendar-header-row div { background: #f3f4f6 !important; color: #111827 !important; border-color: #d1d5db !important; }
+        .calendar-day { min-height: 95px; border-radius: 0; page-break-inside: avoid; background: white !important; color: black !important; }
+        .calendar-day::after { display: none !important; }
+        .calendar-event { font-size: .72rem; padding: 4px; margin-bottom: 3px; color: #111827 !important; background: #f1f5f9 !important; }
         .calendar-legend { font-size: .75rem; margin-bottom: 8px; }
     }
 </style>
@@ -170,6 +234,17 @@
     });
 
     document.querySelectorAll('.calendar-day[data-date]').forEach(function (dayEl) {
+        dayEl.addEventListener('click', function (e) {
+            if (e.target.closest('.calendar-event')) {
+                return;
+            }
+
+            const selectedDate = dayEl.dataset.date;
+            if (selectedDate) {
+                window.location.href = '@Url.Action("Create", "Reservations")' + '?date=' + encodeURIComponent(selectedDate);
+            }
+        });
+
         dayEl.addEventListener('dragover', function (e) {
             e.preventDefault();
             dayEl.classList.add('drag-over');

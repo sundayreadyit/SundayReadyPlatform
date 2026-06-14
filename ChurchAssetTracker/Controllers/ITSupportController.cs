@@ -69,8 +69,7 @@ public class ITSupportController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ITSupportTicketForm model)
     {
-        if (model.RequestedByUserId.HasValue)
-            await _data.ApplyRequesterUserContactAsync(model);
+        await ApplyRequesterContactWithoutLosingManualPhoneAsync(model);
 
         ValidateTicket(model);
 
@@ -87,6 +86,28 @@ public class ITSupportController : Controller
         await NotifyTicketCreatedByITAsync(id, model);
 
         return RedirectToAction(nameof(Details), new { id });
+    }
+
+
+    private async Task ApplyRequesterContactWithoutLosingManualPhoneAsync(ITSupportTicketForm model)
+    {
+        if (!model.RequestedByUserId.HasValue) return;
+
+        var enteredName = model.RequestedByName;
+        var enteredEmail = model.RequestedByEmail;
+        var enteredPhone = model.RequestedByPhone;
+
+        await _data.ApplyRequesterUserContactAsync(model);
+
+        // Keep manually entered values when the selected Portal User profile does not have them populated.
+        if (string.IsNullOrWhiteSpace(model.RequestedByName) && !string.IsNullOrWhiteSpace(enteredName))
+            model.RequestedByName = enteredName;
+
+        if (string.IsNullOrWhiteSpace(model.RequestedByEmail) && !string.IsNullOrWhiteSpace(enteredEmail))
+            model.RequestedByEmail = enteredEmail;
+
+        if (string.IsNullOrWhiteSpace(model.RequestedByPhone) && !string.IsNullOrWhiteSpace(enteredPhone))
+            model.RequestedByPhone = enteredPhone;
     }
 
     [Authorize(Roles = "ITRequester")]
@@ -244,8 +265,7 @@ Comment:
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(ITSupportTicketForm model)
     {
-        if (model.RequestedByUserId.HasValue)
-            await _data.ApplyRequesterUserContactAsync(model);
+        await ApplyRequesterContactWithoutLosingManualPhoneAsync(model);
 
         ValidateTicket(model);
 

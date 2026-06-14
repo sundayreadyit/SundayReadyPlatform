@@ -65,7 +65,19 @@ public class ReservationsController : Controller
 
     [Authorize(Roles = "Admin,ReservationManager")]
     [HttpGet]
-    public async Task<IActionResult> Create() => View(await _data.BuildReservationFormAsync());
+    public async Task<IActionResult> Create(DateTime? date = null)
+    {
+        var model = await _data.BuildReservationFormAsync();
+
+        if (date.HasValue)
+        {
+            var selectedDate = date.Value.Date;
+            model.StartDateTime = selectedDate.AddHours(9);
+            model.EndDateTime = selectedDate.AddHours(10);
+        }
+
+        return View(model);
+    }
 
     [Authorize(Roles = "Admin,ReservationManager")]
     [HttpPost]

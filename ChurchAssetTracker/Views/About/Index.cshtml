@@ -159,15 +159,23 @@
                 <h5>v@(PortalVersion.Version) - @PortalVersion.ReleaseName</h5>
                 <p class="text-muted mb-2">Build Date: @PortalVersion.BuildDate</p>
                 <ul class="mb-0">
-                    <li>Added a dedicated Portal User Guide with end-user instructions and FAQ.</li>
-                    <li>Added User Guide navigation in the sidebar and profile menu.</li>
-                    <li>Changed IT ticket requesters to use Portal Users instead of People records.</li>
-                    <li>Automatically defaults the requester to the currently signed-in Portal user when creating tickets.</li>
-                    <li>Allows IT staff and administrators to create tickets on behalf of another Portal user.</li>
-                    <li>Added read-only View mode for People records.</li>
-                    <li>Made People names clickable so records open in view-only mode by default.</li>
-                    <li>Added a View action beside Edit and Deactivate on the People list.</li>
-                    <li>Updated About page, footer version display, and release notes.</li>
+                    <li>Redesigned the Key Assignments list to use a cleaner, person-focused summary view.</li>
+                    <li>Removed the bulky Active Keys display from the main Key Assignments grid.</li>
+                    <li>Made Key Holder names clickable to open a read-only key assignment details page.</li>
+                    <li>Added an Edit Assignments workflow for quickly adding or returning keys for a person.</li>
+                    <li>Improved User Guide readability and contrast in Dark Mode.</li>
+                    <li>Fixed IT Support ticket creation so manually entered requester phone numbers are preserved.</li>
+                    <li>Fixed Key Assignment detail and list pages so summary cards and person details display correctly in Dark Mode.</li>
+                    <li>Cleaned up the Add Reservation form layout with grouped sections for details, date/time, setup, contact information, and notes.</li>
+                    <li>Improved Reservations Calendar Dark Mode styling so calendar days, filters, and event blocks remain readable.</li>
+                    <li>Added Outlook-style calendar behavior: clicking an empty calendar day opens the Add Reservation form prefilled for that date.</li>
+                    <li>Fixed Add Reservation form Dark Mode styling so form sections, labels, inputs, dropdowns, text areas, and alerts remain readable.</li>
+                    <li>Added a New Person shortcut to the Add Reservation form so users can add a missing requester from the Requested By field.</li>
+                    <li>Updated the People create workflow to safely return users back to the reservation form after adding a person.</li>
+                    <li>Fixed Reservations Calendar Dark Mode legend readability so Room/Access Area labels remain visible beside their color dots.</li>
+                    <li>Added a New Person shortcut to the asset checkout form so users can add a missing borrower without leaving the workflow permanently.</li>
+                    <li>Updated the People create workflow messaging so it supports returning users to reservation and checkout workflows.</li>
+                    <li>Updated About page, footer version display, and release notes for the full v1.2.1 hotfix series.</li>
                 </ul>
             </div>
         </div>

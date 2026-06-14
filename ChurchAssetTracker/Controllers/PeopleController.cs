@@ -17,18 +17,9 @@ public class PeopleController : Controller
     }
 
     [HttpGet]
-    [ActionName("View")]
-    public async Task<IActionResult> ViewPerson(int id)
+    public IActionResult Create(string? returnUrl = null)
     {
-        var person = await _data.GetPersonForEditAsync(id);
-        if (person == null) return NotFound();
-        return View("View", person);
-    }
-
-    [HttpGet]
-    public IActionResult Create()
-    {
-        return View(new PersonEditViewModel());
+        return View(new PersonEditViewModel { ReturnUrl = returnUrl });
     }
 
     [HttpPost]
@@ -39,6 +30,13 @@ public class PeopleController : Controller
         await _data.CreatePersonAsync(model);
         await _data.LogAuditAsync("Create", "Person", null, $"Added person: {model.FirstName} {model.LastName}");
         TempData["SuccessMessage"] = "Person added successfully.";
+
+        if (!string.IsNullOrWhiteSpace(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+        {
+            TempData["InfoMessage"] = "New person added. They are now available in the Requested By list.";
+            return Redirect(model.ReturnUrl);
+        }
+
         return RedirectToAction(nameof(Index));
     }
 

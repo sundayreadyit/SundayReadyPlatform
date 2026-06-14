@@ -1,0 +1,75 @@
+@model ChurchAssetTracker.Models.KeyAssignmentPersonEditViewModel
+@{
+    ViewData["Title"] = "Edit Key Assignments";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Edit Key Assignments</h1>
+        <p>Add or remove keys assigned to <strong>@Model.KeyHolder</strong>.</p>
+    </div>
+    <a class="btn-secondary" asp-action="Details" asp-route-personId="@Model.PersonId">Back to Details</a>
+</div>
+
+<form asp-action="EditPerson" method="post" class="form-card key-edit-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="PersonId" />
+    <input type="hidden" asp-for="KeyHolder" />
+
+    <div class="edit-help">
+        Checked keys will be assigned to this person. Unchecking an active key will mark that key as returned.
+        Keys already assigned to another person are shown but cannot be selected.
+    </div>
+
+    <label>Notes</label>
+    <textarea asp-for="Notes" placeholder="Optional note for newly assigned or returned keys"></textarea>
+
+    <h3>Available and Assigned Keys</h3>
+
+    <div class="key-edit-list">
+        @foreach (var key in Model.Keys)
+        {
+            var isChecked = Model.SelectedKeyIds.Contains(key.KeyId) || key.IsAssignedToThisPerson;
+            <label class="key-edit-option @(key.IsAssignedToThisPerson ? "assigned" : "") @(key.IsAssignedToOtherPerson ? "locked" : "")">
+                <input type="checkbox"
+                       name="SelectedKeyIds"
+                       value="@key.KeyId"
+                       checked="@isChecked"
+                       disabled="@key.IsAssignedToOtherPerson" />
+                <span>
+                    <strong>@key.DisplayName</strong>
+                    @if (key.IsAssignedToThisPerson)
+                    {
+                        <small>Currently assigned to @Model.KeyHolder</small>
+                    }
+                    else if (key.IsAssignedToOtherPerson)
+                    {
+                        <small>Assigned to @key.AssignedToName</small>
+                    }
+                </span>
+            </label>
+        }
+    </div>
+
+    <div class="form-actions">
+        <button class="btn primary" type="submit">Save Assignments</button>
+        <a class="btn" asp-action="Details" asp-route-personId="@Model.PersonId">Cancel</a>
+    </div>
+</form>
+
+<style>
+    .edit-help{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-weight:700}
+    .key-edit-list{display:grid;gap:10px;margin-top:12px}
+    .key-edit-option{display:flex;gap:12px;align-items:flex-start;border:1px solid #dbe3ea;background:#fff;border-radius:12px;padding:12px;cursor:pointer;color:#0f172a}
+    .key-edit-option input{margin-top:4px}
+    .key-edit-option small{display:block;margin-top:3px;color:#64748b}
+    .key-edit-option.assigned{background:#ecfdf5;border-color:#bbf7d0}
+    .key-edit-option.locked{background:#f8fafc;color:#64748b;cursor:not-allowed}
+    html.dark-mode .key-edit-form{background:#111827!important;border-color:#334155!important;color:#f8fafc!important}
+    html.dark-mode .key-edit-option{background:#111827!important;border-color:#334155!important;color:#f8fafc!important}
+    html.dark-mode .key-edit-option strong{color:#f8fafc!important}
+    html.dark-mode .key-edit-option.assigned{background:#052e16!important;border-color:#16a34a!important}
+    html.dark-mode .key-edit-option.locked{background:#1e293b!important;color:#94a3b8!important}
+    html.dark-mode .key-edit-option small{color:#cbd5e1!important}
+    html.dark-mode .edit-help{background:#052e16!important;border-color:#16a34a!important;color:#dcfce7!important}
+</style>

@@ -4,6 +4,7 @@
     <form method="post">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="PersonId" />
+        <input type="hidden" asp-for="ReturnUrl" />
 
         <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
@@ -52,7 +53,14 @@
 
         <div class="form-actions">
             <button class="button primary" type="submit">Save</button>
-            <a class="button" asp-controller="People" asp-action="Index">Cancel</a>
+            @if (!string.IsNullOrWhiteSpace(Model.ReturnUrl))
+            {
+                <a class="button" href="@Model.ReturnUrl">Cancel</a>
+            }
+            else
+            {
+                <a class="button" asp-controller="People" asp-action="Index">Cancel</a>
+            }
         </div>
     </form>
 </div>

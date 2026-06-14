@@ -488,6 +488,7 @@ public partial class SqlDataService
     {
         var list = new List<KeyAssignmentRow>();
         const string sql = @"SELECT ka.KeyAssignmentId,
+                                    ka.PersonId,
                                     k.KeyName,
                                     k.KeyCode,
                                     p.FirstName + ' ' + p.LastName AS KeyHolder,
@@ -502,7 +503,7 @@ public partial class SqlDataService
         await using var cmd = new SqlCommand(sql, conn);
         await conn.OpenAsync();
         await using var r = await cmd.ExecuteReaderAsync();
-        while (await r.ReadAsync()) list.Add(new KeyAssignmentRow { KeyAssignmentId = r.GetInt32(0), KeyName = r.GetString(1), KeyCode = r.GetString(2), KeyHolder = r.GetString(3), IssuedDate = r.GetDateTime(4), ReturnedDate = r.IsDBNull(5) ? null : r.GetDateTime(5), Status = r.GetString(6) });
+        while (await r.ReadAsync()) list.Add(new KeyAssignmentRow { KeyAssignmentId = r.GetInt32(0), PersonId = r.GetInt32(1), KeyName = r.GetString(2), KeyCode = r.GetString(3), KeyHolder = r.GetString(4), IssuedDate = r.GetDateTime(5), ReturnedDate = r.IsDBNull(6) ? null : r.GetDateTime(6), Status = r.GetString(7) });
         return list;
     }
 

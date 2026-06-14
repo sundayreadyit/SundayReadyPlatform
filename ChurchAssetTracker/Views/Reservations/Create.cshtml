@@ -1,85 +1,357 @@
 @model ChurchAssetTracker.Data.ReservationForm
-@{ ViewData["Title"] = "Add Reservation"; }
-<h2>Add Reservation</h2>
-<form asp-action="Create" method="post" class="form-card">
-@Html.AntiForgeryToken()
-
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert danger"><strong>Please fix the following:</strong><div asp-validation-summary="All"></div></div>
+@{
+    ViewData["Title"] = "Add Reservation";
 }
-@if (Model.Conflicts.Any())
-{
-    <div class="alert warning">
-        <strong>Conflict blocked:</strong>
-        <p>One or more occurrences conflict with another pending or approved reservation.</p>
-        <ul>
-        @foreach (var conflict in Model.Conflicts)
+
+<div class="reservation-page">
+    <div class="reservation-header">
+        <div>
+            <h2>Add Reservation</h2>
+            <p>Create a room, event, or facility reservation and include setup, access, and contact details.</p>
+        </div>
+        <div class="reservation-header-actions">
+            <a class="btn" asp-action="Calendar">Back to Calendar</a>
+            <a class="btn" asp-action="Index">List View</a>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post" class="reservation-form-card">
+        @Html.AntiForgeryToken()
+
+        @if (!ViewData.ModelState.IsValid)
         {
-            <li>@conflict.EventName — @conflict.StartDateTime.ToString("g") to @conflict.EndDateTime.ToString("g") (@conflict.Status)</li>
+            <div class="reservation-alert danger">
+                <strong>Please fix the following:</strong>
+                <div asp-validation-summary="All"></div>
+            </div>
         }
-        </ul>
-    </div>
-}
 
-<label>Event Name</label>
-<input asp-for="EventName" />
+        @if (Model.Conflicts.Any())
+        {
+            <div class="reservation-alert warning">
+                <strong>Conflict blocked:</strong>
+                <p>One or more occurrences conflict with another pending or approved reservation.</p>
+                <ul>
+                    @foreach (var conflict in Model.Conflicts)
+                    {
+                        <li>@conflict.EventName — @conflict.StartDateTime.ToString("g") to @conflict.EndDateTime.ToString("g") (@conflict.Status)</li>
+                    }
+                </ul>
+            </div>
+        }
 
-<label>Requested By</label>
-<select asp-for="RequestedByPersonId">
-    <option value="">-- Select person if applicable --</option>
-    @foreach (var person in Model.People) { <option value="@person.PersonId">@person.FullName</option> }
-</select>
+        <section class="reservation-section">
+            <div class="section-title">
+                <h3>Reservation Details</h3>
+                <p>Who, where, and when this reservation is for.</p>
+            </div>
+            <div class="form-grid two">
+                <div class="form-field wide">
+                    <label asp-for="EventName">Event Name</label>
+                    <input asp-for="EventName" class="form-control-clean" placeholder="Example: Sanctuary Worship Practice" />
+                </div>
+                <div class="form-field">
+                    <label asp-for="Status">Status</label>
+                    <select asp-for="Status" class="form-control-clean">
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Denied">Denied</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <div class="field-label-row">
+                        <label asp-for="RequestedByPersonId">Requested By</label>
+                        <a class="inline-action"
+                           asp-controller="People"
+                           asp-action="Create"
+                           asp-route-returnUrl="@Url.Action("Create", "Reservations")">+ New Person</a>
+                    </div>
+                    <select asp-for="RequestedByPersonId" class="form-control-clean">
+                        <option value="">-- Select person if applicable --</option>
+                        @foreach (var person in Model.People)
+                        {
+                            <option value="@person.PersonId">@person.FullName</option>
+                        }
+                    </select>
+                    <small>If the requester is not listed, add them first and return to this form.</small>
+                </div>
+                <div class="form-field">
+                    <label asp-for="AccessAreaId">Room / Access Area</label>
+                    <select asp-for="AccessAreaId" class="form-control-clean">
+                        <option value="">-- Select room or area --</option>
+                        @foreach (var area in Model.AccessAreas)
+                        {
+                            <option value="@area.AccessAreaId">@area.AreaName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </section>
 
-<label>Room / Access Area</label>
-<select asp-for="AccessAreaId">
-    <option value="">-- Select room or area --</option>
-    @foreach (var area in Model.AccessAreas) { <option value="@area.AccessAreaId">@area.AreaName</option> }
-</select>
+        <section class="reservation-section">
+            <div class="section-title">
+                <h3>Date and Time</h3>
+                <p>Use recurrence only when the reservation repeats.</p>
+            </div>
+            <div class="form-grid two">
+                <div class="form-field">
+                    <label asp-for="StartDateTime">Start Date/Time</label>
+                    <input asp-for="StartDateTime" type="datetime-local" class="form-control-clean" />
+                </div>
+                <div class="form-field">
+                    <label asp-for="EndDateTime">End Date/Time</label>
+                    <input asp-for="EndDateTime" type="datetime-local" class="form-control-clean" />
+                </div>
+                <div class="form-field">
+                    <label asp-for="RecurrencePattern">Recurrence</label>
+                    <select asp-for="RecurrencePattern" class="form-control-clean">
+                        <option value="None">Does not repeat</option>
+                        <option value="Weekly">Weekly</option>
+                        <option value="Biweekly">Every 2 weeks</option>
+                        <option value="Monthly">Monthly</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label asp-for="RecurrenceEndDate">Recurrence End Date</label>
+                    <input asp-for="RecurrenceEndDate" type="date" class="form-control-clean" />
+                    <small>Required only for recurring reservations.</small>
+                </div>
+            </div>
+        </section>
 
-<div class="grid two">
-    <div><label>Start Date/Time</label><input asp-for="StartDateTime" type="datetime-local" /></div>
-    <div><label>End Date/Time</label><input asp-for="EndDateTime" type="datetime-local" /></div>
+        <section class="reservation-section">
+            <div class="section-title">
+                <h3>Purpose and Setup</h3>
+                <p>Add notes the office, facilities, or key team may need.</p>
+            </div>
+            <div class="form-grid three">
+                <div class="form-field">
+                    <label asp-for="Purpose">Purpose</label>
+                    <textarea asp-for="Purpose" class="form-control-clean" rows="4"></textarea>
+                </div>
+                <div class="form-field">
+                    <label asp-for="SetupNotes">Setup Notes</label>
+                    <textarea asp-for="SetupNotes" class="form-control-clean" rows="4"></textarea>
+                </div>
+                <div class="form-field">
+                    <label asp-for="AccessKeyNeeds">Access / Key Needs</label>
+                    <textarea asp-for="AccessKeyNeeds" class="form-control-clean" rows="4"></textarea>
+                </div>
+            </div>
+        </section>
+
+        <section class="reservation-section">
+            <div class="section-title">
+                <h3>Contact Information</h3>
+                <p>Optional contact details for follow-up questions.</p>
+            </div>
+            <div class="form-grid three">
+                <div class="form-field">
+                    <label asp-for="ContactName">Contact Name</label>
+                    <input asp-for="ContactName" class="form-control-clean" />
+                </div>
+                <div class="form-field">
+                    <label asp-for="ContactPhone">Contact Phone</label>
+                    <input asp-for="ContactPhone" class="form-control-clean" />
+                </div>
+                <div class="form-field">
+                    <label asp-for="ContactEmail">Contact Email</label>
+                    <input asp-for="ContactEmail" class="form-control-clean" />
+                </div>
+            </div>
+        </section>
+
+        <section class="reservation-section">
+            <div class="section-title">
+                <h3>Visibility and Internal Notes</h3>
+                <p>Public events may be shown on public-facing views if enabled later.</p>
+            </div>
+            <label class="checkbox-card">
+                <input asp-for="IsPublicEvent" />
+                <span>
+                    <strong>Public event</strong>
+                    <small>Mark this reservation as visible for public event listings.</small>
+                </span>
+            </label>
+            <div class="form-field full-width">
+                <label asp-for="Notes">Internal Notes</label>
+                <textarea asp-for="Notes" class="form-control-clean" rows="4"></textarea>
+            </div>
+        </section>
+
+        <div class="form-actions clean-actions">
+            <button class="btn primary" type="submit">Save Reservation</button>
+            <a class="btn" asp-action="Calendar">Cancel</a>
+        </div>
+    </form>
 </div>
 
-<div class="grid two">
-    <div>
-        <label>Recurrence</label>
-        <select asp-for="RecurrencePattern">
-            <option value="None">Does not repeat</option>
-            <option value="Weekly">Weekly</option>
-            <option value="Biweekly">Every 2 weeks</option>
-            <option value="Monthly">Monthly</option>
-        </select>
-    </div>
-    <div>
-        <label>Recurrence End Date</label>
-        <input asp-for="RecurrenceEndDate" type="date" />
-        <small>Required only for recurring reservations.</small>
-    </div>
-</div>
+<style>
+    .reservation-page { max-width: 1220px; }
+    .reservation-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.25rem; }
+    .reservation-header h2 { margin-bottom: .35rem; }
+    .reservation-header p { margin: 0; color: var(--muted, #64748b); }
+    .reservation-header-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .reservation-form-card { background: var(--card, #fff); border: 1px solid var(--border, #d1d5db); border-radius: 18px; padding: 1.2rem; box-shadow: 0 16px 40px rgba(15, 23, 42, .08); }
+    .reservation-section { border: 1px solid var(--border, #e5e7eb); border-radius: 16px; padding: 1rem; margin-bottom: 1rem; background: var(--panel, #f8fafc); }
+    .section-title { margin-bottom: .9rem; }
+    .section-title h3 { margin: 0 0 .25rem; font-size: 1.05rem; }
+    .section-title p { margin: 0; color: var(--muted, #64748b); font-size: .92rem; }
+    .form-grid { display: grid; gap: .9rem; }
+    .form-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .form-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .form-field { display: flex; flex-direction: column; gap: .35rem; }
+    .field-label-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; }
+    .inline-action { font-weight: 800; font-size: .85rem; text-decoration: none; color: #2563eb; background: rgba(37, 99, 235, .08); border: 1px solid rgba(37, 99, 235, .22); border-radius: 999px; padding: .3rem .6rem; white-space: nowrap; }
+    .inline-action:hover { background: rgba(37, 99, 235, .14); text-decoration: none; }
 
-<label>Status</label>
-<select asp-for="Status">
-    <option value="Pending">Pending</option>
-    <option value="Approved">Approved</option>
-    <option value="Denied">Denied</option>
-    <option value="Cancelled">Cancelled</option>
-</select>
+    .form-field.wide { grid-column: span 1; }
+    .form-field.full-width { margin-top: .9rem; }
+    .form-field label, .checkbox-card strong { font-weight: 700; color: var(--text, #0f172a); }
+    .form-field small, .checkbox-card small { color: var(--muted, #64748b); }
+    .form-control-clean { width: 100%; border: 1px solid var(--border, #cbd5e1); border-radius: 12px; padding: .65rem .75rem; background: var(--input-bg, #fff); color: var(--text, #0f172a); }
+    textarea.form-control-clean { resize: vertical; min-height: 94px; }
+    .checkbox-card { display: flex; gap: .75rem; align-items: flex-start; border: 1px solid var(--border, #cbd5e1); border-radius: 14px; padding: .8rem; background: var(--input-bg, #fff); max-width: 420px; }
+    .checkbox-card span { display: flex; flex-direction: column; gap: .2rem; }
+    .reservation-alert { border-radius: 14px; padding: .9rem 1rem; margin-bottom: 1rem; border: 1px solid transparent; }
+    .reservation-alert.danger { background: #fee2e2; color: #7f1d1d; border-color: #fecaca; }
+    .reservation-alert.warning { background: #fef3c7; color: #78350f; border-color: #fde68a; }
+    .clean-actions { display: flex; gap: .6rem; justify-content: flex-end; }
 
-<label>Purpose</label><textarea asp-for="Purpose"></textarea>
-<label>Setup Notes</label><textarea asp-for="SetupNotes"></textarea>
-<label>Access / Key Needs</label><textarea asp-for="AccessKeyNeeds"></textarea>
+    body.dark-mode .reservation-header p,
+    [data-theme="dark"] .reservation-header p,
+    html.dark .reservation-header p,
+    .theme-dark .reservation-header p,
+    body.dark-mode .section-title p,
+    [data-theme="dark"] .section-title p,
+    html.dark .section-title p,
+    .theme-dark .section-title p,
+    body.dark-mode .form-field small,
+    [data-theme="dark"] .form-field small,
+    html.dark .form-field small,
+    .theme-dark .form-field small,
+    body.dark-mode .checkbox-card small,
+    [data-theme="dark"] .checkbox-card small,
+    html.dark .checkbox-card small,
+    .theme-dark .checkbox-card small { color: #9fb3d9; }
 
-<div class="grid three">
-    <div><label>Contact Name</label><input asp-for="ContactName" /></div>
-    <div><label>Contact Phone</label><input asp-for="ContactPhone" /></div>
-    <div><label>Contact Email</label><input asp-for="ContactEmail" /></div>
-</div>
+    body.dark-mode .reservation-form-card,
+    [data-theme="dark"] .reservation-form-card,
+    html.dark .reservation-form-card,
+    .theme-dark .reservation-form-card,
+    body.dark-mode .reservation-section,
+    [data-theme="dark"] .reservation-section,
+    html.dark .reservation-section,
+    .theme-dark .reservation-section,
+    body.dark-mode .checkbox-card,
+    [data-theme="dark"] .checkbox-card,
+    html.dark .checkbox-card,
+    .theme-dark .checkbox-card { background: #111827; border-color: #334155; color: #f8fafc; }
 
-<label class="checkbox-row"><input asp-for="IsPublicEvent" /> Public event</label>
-<label>Internal Notes</label><textarea asp-for="Notes"></textarea>
+    body.dark-mode .form-control-clean,
+    [data-theme="dark"] .form-control-clean,
+    html.dark .form-control-clean,
+    .theme-dark .form-control-clean { background: #0b1220; border-color: #334155; color: #f8fafc; }
 
-<div class="form-actions"><button class="btn primary" type="submit">Save</button><a class="btn" asp-action="Index">Cancel</a></div>
-</form>
+    body.dark-mode .form-field label,
+    [data-theme="dark"] .form-field label,
+    html.dark .form-field label,
+    .theme-dark .form-field label,
+    body.dark-mode .checkbox-card strong,
+    [data-theme="dark"] .checkbox-card strong,
+    html.dark .checkbox-card strong,
+    .theme-dark .checkbox-card strong { color: #f8fafc; }
+
+
+
+    /* v1.2.1c: explicit dark mode support for the Reservations form.
+       The portal applies dark mode on the html element as .dark-mode. */
+    html.dark-mode .reservation-page,
+    html.dark-mode .reservation-page h2,
+    html.dark-mode .reservation-page h3,
+    html.dark-mode .reservation-page label,
+    html.dark-mode .reservation-page strong {
+        color: #f8fafc;
+    }
+
+    html.dark-mode .reservation-header p,
+    html.dark-mode .section-title p,
+    html.dark-mode .form-field small,
+    html.dark-mode .checkbox-card small {
+        color: #b6c7e6 !important;
+    }
+
+    html.dark-mode .reservation-form-card {
+        background: #0f172a;
+        border-color: #334155;
+        color: #f8fafc;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, .35);
+    }
+
+    html.dark-mode .reservation-section {
+        background: #111827;
+        border-color: #334155;
+        color: #f8fafc;
+    }
+
+    html.dark-mode .checkbox-card {
+        background: #0b1220;
+        border-color: #334155;
+        color: #f8fafc;
+    }
+
+    html.dark-mode .form-control-clean,
+    html.dark-mode .reservation-page input,
+    html.dark-mode .reservation-page select,
+    html.dark-mode .reservation-page textarea {
+        background: #0b1220 !important;
+        border-color: #475569 !important;
+        color: #f8fafc !important;
+    }
+
+    html.dark-mode .form-control-clean::placeholder,
+    html.dark-mode .reservation-page input::placeholder,
+    html.dark-mode .reservation-page textarea::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    html.dark-mode .inline-action {
+        color: #bfdbfe;
+        background: rgba(96, 165, 250, .12);
+        border-color: rgba(96, 165, 250, .35);
+    }
+
+    html.dark-mode .inline-action:hover {
+        background: rgba(96, 165, 250, .20);
+    }
+
+    html.dark-mode .form-control-clean:focus,
+    html.dark-mode .reservation-page input:focus,
+    html.dark-mode .reservation-page select:focus,
+    html.dark-mode .reservation-page textarea:focus {
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, .18);
+        outline: none;
+    }
+
+    html.dark-mode .reservation-alert.danger {
+        background: rgba(127, 29, 29, .35);
+        color: #fecaca;
+        border-color: #991b1b;
+    }
+
+    html.dark-mode .reservation-alert.warning {
+        background: rgba(120, 53, 15, .35);
+        color: #fde68a;
+        border-color: #d97706;
+    }
+
+    @@media (max-width: 900px) {
+        .reservation-header { flex-direction: column; }
+        .form-grid.two, .form-grid.three { grid-template-columns: 1fr; }
+        .clean-actions { justify-content: flex-start; flex-wrap: wrap; }
+    }
+</style>
+
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

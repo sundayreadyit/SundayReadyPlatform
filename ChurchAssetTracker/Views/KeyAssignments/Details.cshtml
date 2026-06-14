@@ -1,0 +1,133 @@
+@model ChurchAssetTracker.Models.KeyAssignmentPersonDetailsViewModel
+@{
+    ViewData["Title"] = "Key Assignment Details";
+    var activeKeys = Model.ActiveKeys.ToList();
+    var returnedKeys = Model.ReturnedKeys.ToList();
+}
+
+<div class="page-header">
+    <div>
+        <h1>@Model.KeyHolder</h1>
+        <p>Read-only view of assigned and returned keys.</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a class="btn-primary" asp-action="EditPerson" asp-route-personId="@Model.PersonId">Edit Assignments</a>
+        <a class="btn-secondary" asp-action="Index">Back to Key Assignments</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<div class="key-detail-grid">
+    <div class="key-detail-card"><span>Active Keys</span><strong>@activeKeys.Count</strong></div>
+    <div class="key-detail-card"><span>Returned Keys</span><strong>@returnedKeys.Count</strong></div>
+    <div class="key-detail-card"><span>Last Issued</span><strong>@(Model.LastIssuedDate.HasValue ? Model.LastIssuedDate.Value.ToShortDateString() : "None")</strong></div>
+</div>
+
+<div class="detail-panel">
+    <h3>Key Holder Information</h3>
+    <div class="person-facts">
+        <div><span>Name</span><strong>@Model.KeyHolder</strong></div>
+        <div><span>Phone</span><strong>@(Model.Phone ?? "Not listed")</strong></div>
+        <div><span>Email</span><strong>@(Model.Email ?? "Not listed")</strong></div>
+        <div><span>Ministry / Team</span><strong>@(Model.MinistryTeam ?? "Not listed")</strong></div>
+    </div>
+</div>
+
+<div class="detail-panel">
+    <h3>Assigned Keys</h3>
+    @if (!activeKeys.Any())
+    {
+        <p class="muted-text">No active key assignments.</p>
+    }
+    else
+    {
+        <table class="data-table compact-key-table">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Code</th>
+                    <th>Issued</th>
+                    <th>Status</th>
+                    <th class="actions-col">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var key in activeKeys)
+            {
+                <tr>
+                    <td><strong>@key.KeyName</strong></td>
+                    <td>@key.KeyCode</td>
+                    <td>@key.IssuedDate.ToShortDateString()</td>
+                    <td><span class="badge active">Active</span></td>
+                    <td><a class="btn-secondary" asp-action="Return" asp-route-id="@key.KeyAssignmentId">Return</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>
+
+<div class="detail-panel">
+    <h3>Returned Keys</h3>
+    @if (!returnedKeys.Any())
+    {
+        <p class="muted-text">No returned keys on record.</p>
+    }
+    else
+    {
+        <table class="data-table compact-key-table">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>Code</th>
+                    <th>Issued</th>
+                    <th>Returned</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var key in returnedKeys)
+            {
+                <tr>
+                    <td><strong>@key.KeyName</strong></td>
+                    <td>@key.KeyCode</td>
+                    <td>@key.IssuedDate.ToShortDateString()</td>
+                    <td>@key.ReturnedDate?.ToShortDateString()</td>
+                    <td><span class="badge inactive">Returned</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</div>
+
+<style>
+    .key-detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px}
+    .key-detail-card,.detail-panel{background:#ffffff;border:1px solid #dbe3ea;border-radius:16px;box-shadow:0 10px 24px rgba(15,23,42,.06);padding:18px;margin-bottom:16px;color:#0f172a}
+    .key-detail-card span{display:block;color:#475569;font-weight:800;font-size:.86rem}
+    .key-detail-card strong{display:block;font-size:1.45rem;margin-top:4px;color:#0f172a}
+    .detail-panel h3{color:#0f172a;margin-top:0}
+    .person-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .person-facts span{display:block;color:#64748b;font-size:.82rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+    .person-facts strong{display:block;color:#0f172a;margin-top:4px}
+    .muted-text{color:#64748b}
+
+    html.dark-mode .key-detail-card,
+    html.dark-mode .detail-panel{background:#111827!important;border-color:#334155!important;color:#f8fafc!important;box-shadow:0 16px 32px rgba(0,0,0,.24)}
+    html.dark-mode .key-detail-card strong,
+    html.dark-mode .person-facts strong,
+    html.dark-mode .detail-panel h3{color:#f8fafc!important}
+    html.dark-mode .key-detail-card span,
+    html.dark-mode .person-facts span,
+    html.dark-mode .muted-text{color:#cbd5e1!important}
+    html.dark-mode .compact-key-table{background:#111827!important;color:#f8fafc!important}
+    html.dark-mode .compact-key-table th{background:#1f2937!important;color:#f8fafc!important;border-color:#334155!important}
+    html.dark-mode .compact-key-table td{background:#111827!important;color:#f8fafc!important;border-color:#334155!important}
+    html.dark-mode .compact-key-table tr:hover td{background:#1e293b!important}
+    html.dark-mode .detail-panel .btn-secondary{background:#f8fafc!important;color:#2563eb!important;border:1px solid #cbd5e1!important;text-decoration:none!important}
+    @@media(max-width:800px){.key-detail-grid,.person-facts{grid-template-columns:1fr}}
+</style>

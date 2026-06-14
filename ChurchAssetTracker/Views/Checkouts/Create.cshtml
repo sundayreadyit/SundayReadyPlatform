@@ -1,6 +1,7 @@
 @model ChurchAssetTracker.Models.CheckoutCreateViewModel
 @{
     ViewData["Title"] = "Check Out Asset";
+    var returnUrl = Url.Action("Create", "Checkouts") ?? "/Checkouts/Create";
 }
 
 <div class="page-header">
@@ -11,7 +12,7 @@
     <a class="btn-secondary" asp-controller="Checkouts" asp-action="Index">Back to Checkouts</a>
 </div>
 
-<div class="form-card">
+<div class="form-card checkout-form-card">
     <form asp-action="Create" method="post">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
@@ -29,8 +30,14 @@
                 <span asp-validation-for="AssetId" class="field-validation"></span>
             </label>
 
-            <label>
-                <span>Borrower</span>
+            <div class="form-field borrower-field">
+                <div class="field-label-row">
+                    <label asp-for="PersonId">Borrower</label>
+                    <a class="btn-secondary small new-person-button"
+                       asp-controller="People"
+                       asp-action="Create"
+                       asp-route-returnUrl="@returnUrl">+ New Person</a>
+                </div>
                 <select asp-for="PersonId">
                     <option value="">-- Select person --</option>
                     @foreach (var person in Model.ActivePeople)
@@ -39,7 +46,8 @@
                     }
                 </select>
                 <span asp-validation-for="PersonId" class="field-validation"></span>
-            </label>
+                <small>If the borrower is missing, add them as a new person and return to this checkout form.</small>
+            </div>
 
             <label>
                 <span>Quantity Borrowed</span>
@@ -72,3 +80,12 @@
         </div>
     </form>
 </div>
+
+<style>
+.checkout-form-card .field-label-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.checkout-form-card .field-label-row label{margin:0;font-weight:800}
+.checkout-form-card .new-person-button{white-space:nowrap;padding:.45rem .7rem;font-size:.85rem;text-decoration:none}
+.checkout-form-card small{display:block;margin-top:6px;color:#64748b}
+html.dark-mode .checkout-form-card small{color:#94a3b8!important}
+@@media(max-width:700px){.checkout-form-card .field-label-row{align-items:flex-start;flex-direction:column}.checkout-form-card .new-person-button{width:100%;text-align:center}}
+</style>

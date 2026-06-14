@@ -17,6 +17,35 @@ public class KeyAssignmentsController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Details(int personId)
+    {
+        var model = await _data.GetKeyAssignmentPersonDetailsAsync(personId);
+        if (model == null) return NotFound();
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditPerson(int personId)
+    {
+        var model = await _data.GetKeyAssignmentPersonEditAsync(personId);
+        if (model == null) return NotFound();
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditPerson(KeyAssignmentPersonEditViewModel model)
+    {
+        if (model.PersonId <= 0) return BadRequest();
+
+        await _data.UpdateKeyAssignmentsForPersonAsync(model);
+        await _data.LogAuditAsync("Update", "KeyAssignment", model.PersonId, $"Updated key assignments for person ID {model.PersonId}");
+
+        TempData["SuccessMessage"] = "Key assignments updated successfully.";
+        return RedirectToAction(nameof(Details), new { personId = model.PersonId });
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Create()
     {
         var model = new KeyAssignmentCreateViewModel

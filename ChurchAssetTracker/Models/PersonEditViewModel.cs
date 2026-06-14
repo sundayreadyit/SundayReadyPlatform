@@ -31,4 +31,6 @@ public class PersonEditViewModel
     public bool IsActive { get; set; } = true;
 
     public string? Notes { get; set; }
+
+    public string? ReturnUrl { get; set; }
 }
