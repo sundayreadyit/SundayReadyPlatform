@@ -1,0 +1,17 @@
+@model ChurchAssetTracker.Models.WorshipSetInputModel
+@{ ViewData["Title"] = "Create Worship Set"; }
+<div class="set-form-page">
+    <div class="page-head"><div><span>Worship Planning</span><h1>Create Sunday Set</h1><p>Start with the service details. You can add and arrange songs on the next screen.</p></div><a asp-action="Index">← Worship Home</a></div>
+    <form asp-action="CreateSet" method="post" class="set-form">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation"></div>
+        <label>Service Date<input asp-for="ServiceDate" type="date" /></label>
+        <label>Set Title<input asp-for="Title" /></label>
+        <label>Status<select asp-for="Status"><option>Draft</option><option>Ready</option><option>Completed</option></select></label>
+        <label class="full">Service Notes<textarea asp-for="Notes" rows="5" placeholder="Theme, transitions, announcements, special service notes..."></textarea></label>
+        <div class="full actions"><a asp-action="Index" class="cancel">Cancel</a><button type="submit">Create Set & Add Songs</button></div>
+    </form>
+</div>
+<style>
+.set-form-page{max-width:900px;margin:0 auto}.page-head{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:18px}.page-head span{color:var(--portal-accent,#16a34a);font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:.75rem}.page-head h1{margin:3px 0}.page-head p{margin:0;color:#64748b}.page-head a{color:var(--portal-primary,#174c2f);font-weight:800;text-decoration:none}.set-form{display:grid;grid-template-columns:1fr 1fr;gap:16px;background:#fff;border:1px solid #dbe3ea;padding:24px;border-radius:18px}.set-form label{font-weight:800;color:#334155}.set-form input,.set-form select,.set-form textarea{display:block;width:100%;margin-top:7px;border:1px solid #cbd5e1;border-radius:10px;padding:11px 12px;font:inherit}.full{grid-column:1/-1}.actions{display:flex;justify-content:flex-end;gap:10px}.actions button,.actions a{border:0;border-radius:10px;padding:11px 15px;font-weight:800;text-decoration:none}.actions button{background:var(--portal-primary,#174c2f);color:#fff}.actions .cancel{background:#e2e8f0;color:#334155}.validation{grid-column:1/-1;color:#b91c1c}html.dark-mode .set-form{background:#111827;border-color:#334155}html.dark-mode .set-form label{color:#e5e7eb}html.dark-mode .set-form input,html.dark-mode .set-form select,html.dark-mode .set-form textarea{background:#020617;color:#e5e7eb;border-color:#475569}html.dark-mode .page-head p{color:#94a3b8}html.dark-mode .page-head a{color:#4ade80}@@media(max-width:700px){.set-form{grid-template-columns:1fr}.full{grid-column:auto}.page-head{align-items:flex-start;flex-direction:column}}
+</style>

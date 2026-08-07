@@ -44,7 +44,14 @@ public class AdministrationController : Controller
     {
         if (!ModelState.IsValid)
         {
-            TempData["AdminSettingsError"] = "Organization settings were not saved. Check the entered values.";
+            var errors = ModelState
+                .Where(x => x.Value?.Errors.Count > 0)
+                .SelectMany(x => x.Value!.Errors.Select(e => $"{x.Key}: {e.ErrorMessage}"))
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToList();
+            TempData["AdminSettingsError"] = errors.Count > 0
+                ? $"Organization settings were not saved. {string.Join(" ", errors)}"
+                : "Organization settings were not saved. Check the entered values.";
             return RedirectToAction(nameof(Index), new { section = "general" });
         }
 

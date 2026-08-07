@@ -160,17 +160,18 @@
                 <h5>v@(PortalVersion.Version) - @PortalVersion.ReleaseName</h5>
                 <p class="text-muted mb-2">Build Date: @PortalVersion.BuildDate</p>
                 <ul class="mb-0">
-                    <li>Added Administration → System Settings with runtime configuration stored in the portal database.</li>
-                    <li>Added a deployment Setup Wizard/checklist for organization, email, storage, modules and dashboard configuration.</li>
-                    <li>Added organization customization including organization name, portal name, subtitle and organization logo upload.</li>
-                    <li>Added Sunday Ready IT product branding, licensing footer and application ownership information.</li>
-                    <li>Moved SMTP configuration into the Administration GUI and added encrypted SMTP password storage plus Send Test Email.</li>
-                    <li>Moved Documentation Library and Worship Library paths into runtime Administration settings with path testing.</li>
-                    <li>Added Module Manager so organizations can enable or disable optional portal modules without deleting data.</li>
-                    <li>Added Dashboard Builder with role-profile widget selection and drag/drop ordering.</li>
-                    <li>Added collapsible navigation groups with per-browser remembered state for a cleaner sidebar.</li>
-                    <li>Added initial Worship Song Library for searching, viewing, printing and downloading licensed song files.</li>
-                    <li>Expanded dark-mode support to the Administration and Worship interfaces.</li>
+                    <li>Added complete Worship Planning with Sunday service sets, upcoming services and worship history.</li>
+                    <li>Added searchable CCLI song selection directly from the configured Worship Library share.</li>
+                    <li>Added drag-and-drop song ordering with automatic save of the Sunday playlist order.</li>
+                    <li>Added optional key, worship leader and transition/service notes for each song.</li>
+                    <li>Added one-click combined PDF worship packets with an organization-branded cover, a dedicated song-order page for musicians/ProPresenter, and all selected PDFs in set order.</li>
+                    <li>Added Print Set List for a clean running-order page, plus Songs Only for chart-only packets.</li>
+                    <li>Added Duplicate Set for quickly copying a previous service and moving the copied date forward one week.</li>
+                    <li>Added song usage history showing times used and last-used date in the Worship Library.</li>
+                    <li>Added graceful validation for missing or unreadable PDFs so the portal identifies the song preventing packet generation.</li>
+                    <li>Includes all v1.5.2 Administration validation fixes and borderless organization-logo improvements; v1.5.2 does not need to be deployed separately.</li>
+                    <li>Added the WorshipLeader security role so Worship Planning is limited to Admin and authorized worship users.</li>
+                    <li>Added the Worship Planning database schema and WorshipLeader role with automatic startup provisioning and an optional SQL migration script.</li>
                 </ul>
             </div>
         </div>

@@ -1,52 +1,77 @@
-@model ChurchAssetTracker.Models.WorshipLibraryViewModel
+@model ChurchAssetTracker.Models.WorshipPlanningHomeViewModel
 @{
-    ViewData["Title"] = "Worship Song Library";
+    ViewData["Title"] = "Worship Planning";
 }
 <div class="worship-page">
     <div class="worship-hero">
-        <div><span class="eyebrow">Ministry</span><h1>Worship Song Library</h1><p>Search, open and print licensed song files stored by your organization.</p></div>
-        <div class="song-count">@Model.Songs.Count songs</div>
+        <div><span class="eyebrow">Ministry</span><h1>Worship Planning</h1><p>Search the licensed song library, build Sunday sets, and print a complete worship packet.</p></div>
+        <div class="hero-actions"><a asp-action="CreateSet" class="hero-btn">+ New Sunday Set</a><a asp-action="History" class="hero-btn ghost">Past Sets</a></div>
     </div>
 
-    @if (!Model.RootExists)
-    {
-        <div class="library-warning"><strong>Worship library path is not available.</strong><span>@Model.RootPath</span><span>An administrator can configure this under Administration → Storage.</span></div>
-    }
-    else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-    {
-        <div class="library-warning"><strong>Unable to load the library.</strong><span>@Model.ErrorMessage</span></div>
-    }
-    else
-    {
-        <form method="get" class="song-search">
-            <input type="search" name="search" value="@Model.Search" placeholder="Search song title or filename..." autofocus />
-            <button type="submit">Search</button>
-            @if (!string.IsNullOrWhiteSpace(Model.Search)){<a asp-action="Index">Clear</a>}
-        </form>
+    @if (TempData["Success"] is string success){<div class="alert-success">@success</div>}
+    @if (TempData["Error"] is string error){<div class="alert-error">@error</div>}
 
-        @if (!Model.Songs.Any())
+    <section class="planning-section">
+        <div class="section-head"><div><span class="section-kicker">Upcoming Services</span><h2>Sunday Sets</h2></div><a asp-action="CreateSet" class="text-link">Create a set →</a></div>
+        @if (!Model.UpcomingSets.Any())
         {
-            <div class="empty-song-state"><strong>No songs found.</strong><span>Add files to the configured worship directory or try a different search.</span></div>
+            <div class="empty-song-state"><strong>No upcoming worship sets yet.</strong><span>Create a set, add songs, drag them into order, then print one combined PDF packet.</span></div>
         }
         else
         {
-            <div class="song-grid">
-            @foreach (var song in Model.Songs)
-            {
-                <article class="song-card">
-                    <div class="song-icon">🎵</div>
-                    <div class="song-main"><h3>@song.Title</h3><p>@song.RelativePath</p><small>@song.Extension.TrimStart('.').ToUpperInvariant() • @song.FileSizeDisplay • Updated @song.ModifiedDate.ToString("MMM d, yyyy")</small></div>
-                    <div class="song-actions">
-                        <a asp-action="ViewSong" asp-route-file="@song.Token" target="_blank">View / Print</a>
-                        <a asp-action="Download" asp-route-file="@song.Token" class="secondary">Download</a>
-                    </div>
-                </article>
-            }
+            <div class="set-grid">
+                @foreach(var set in Model.UpcomingSets)
+                {
+                    <a class="set-card" asp-action="EditSet" asp-route-id="@set.Id">
+                        <div class="set-date"><strong>@set.ServiceDate.ToString("MMM")</strong><span>@set.ServiceDate.Day</span></div>
+                        <div><span class="set-status @set.Status.ToLowerInvariant()">@set.Status</span><h3>@set.Title</h3><p>@set.SongCount song@(set.SongCount == 1 ? "" : "s") • @set.ServiceDate.ToString("dddd, MMMM d")</p></div>
+                    </a>
+                }
             </div>
         }
-    }
+    </section>
+
+    <section class="planning-section">
+        <div class="section-head"><div><span class="section-kicker">Library</span><h2>CCLI Song Library</h2></div><div class="song-count">@Model.Songs.Count songs shown</div></div>
+        @if (!Model.RootExists)
+        {
+            <div class="library-warning"><strong>Worship library path is not available.</strong><span>@Model.RootPath</span><span>An administrator can configure this under Administration → Storage.</span></div>
+        }
+        else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="library-warning"><strong>Unable to load the library.</strong><span>@Model.ErrorMessage</span></div>
+        }
+        else
+        {
+            <form method="get" class="song-search">
+                <input type="search" name="search" value="@Model.Search" placeholder="Search song title or filename..." />
+                <button type="submit">Search</button>
+                @if (!string.IsNullOrWhiteSpace(Model.Search)){<a asp-action="Index">Clear</a>}
+            </form>
+            @if (!Model.Songs.Any())
+            {
+                <div class="empty-song-state"><strong>No songs found.</strong><span>Add PDF files to the configured worship directory or try a different search.</span></div>
+            }
+            else
+            {
+                <div class="song-grid">
+                @foreach (var song in Model.Songs)
+                {
+                    <article class="song-card">
+                        <div class="song-icon">♪</div>
+                        <div class="song-main"><h3>@song.Title</h3><p>@song.RelativePath</p><small>@song.Extension.TrimStart('.').ToUpperInvariant() • @song.FileSizeDisplay • Updated @song.ModifiedDate.ToString("MMM d, yyyy")</small>
+                            @if(song.TimesUsed > 0){<small class="usage">Used @song.TimesUsed time@(song.TimesUsed==1?"":"s") • Last used @song.LastUsedDate?.ToString("MMM d, yyyy")</small>}
+                        </div>
+                        <div class="song-actions"><a asp-action="ViewSong" asp-route-file="@song.Token" target="_blank">View / Print</a><a asp-action="Download" asp-route-file="@song.Token" class="secondary">Download</a></div>
+                    </article>
+                }
+                </div>
+            }
+        }
+    </section>
 </div>
 <style>
-.worship-page{max-width:1200px;margin:0 auto}.worship-hero{display:flex;justify-content:space-between;gap:20px;align-items:center;background:linear-gradient(135deg,#312e81,#4338ca);color:#fff;border-radius:20px;padding:28px;margin-bottom:20px}.worship-hero h1{margin:4px 0 8px}.worship-hero p{margin:0;color:#e0e7ff}.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.76rem;font-weight:800;color:#c7d2fe}.song-count{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);border-radius:999px;padding:9px 13px;font-weight:800;white-space:nowrap}.song-search{display:flex;gap:10px;margin-bottom:18px}.song-search input{flex:1;border:1px solid #cbd5e1;border-radius:12px;padding:12px 14px}.song-search button,.song-search a,.song-actions a{border:0;background:#174c2f;color:#fff;text-decoration:none;border-radius:10px;padding:11px 15px;font-weight:800}.song-search a{background:#475569}.song-grid{display:grid;gap:12px}.song-card{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:#fff;border:1px solid #dbe3ea;border-radius:16px;padding:17px;box-shadow:0 8px 22px rgba(15,23,42,.05)}.song-icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:#eef2ff;font-size:1.5rem}.song-main h3{margin:0 0 5px}.song-main p{margin:0 0 5px;color:#64748b}.song-main small{color:#64748b}.song-actions{display:flex;gap:8px}.song-actions a.secondary{background:#fff;color:#334155;border:1px solid #cbd5e1}.library-warning,.empty-song-state{background:#fff;border:1px dashed #cbd5e1;border-radius:16px;padding:20px}.library-warning strong,.library-warning span,.empty-song-state strong,.empty-song-state span{display:block}.library-warning span,.empty-song-state span{color:#64748b;margin-top:5px}html.dark-mode .song-card,html.dark-mode .library-warning,html.dark-mode .empty-song-state,html.dark-mode .song-actions a.secondary{background:#111827!important;color:#e5e7eb!important;border-color:#334155!important}html.dark-mode .song-search input{background:#020617!important;color:#e5e7eb!important;border-color:#475569!important}html.dark-mode .song-main p,html.dark-mode .song-main small,html.dark-mode .library-warning span,html.dark-mode .empty-song-state span{color:#94a3b8!important}
-@@media(max-width:760px){.worship-hero{align-items:flex-start;flex-direction:column}.song-card{grid-template-columns:auto 1fr}.song-actions{grid-column:1/-1}.song-search{flex-wrap:wrap}.song-search input{flex-basis:100%}}
+.worship-page{max-width:1240px;margin:0 auto}.worship-hero{display:flex;justify-content:space-between;gap:20px;align-items:center;background:linear-gradient(135deg,var(--portal-secondary,#14532d),var(--portal-primary,#174c2f));color:#fff;border-radius:22px;padding:30px;margin-bottom:22px;box-shadow:0 18px 42px rgba(15,23,42,.13)}.worship-hero h1{margin:4px 0 8px}.worship-hero p{margin:0;color:rgba(255,255,255,.82)}.eyebrow,.section-kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.74rem;font-weight:800}.eyebrow{color:rgba(255,255,255,.7)}.hero-actions{display:flex;gap:9px;flex-wrap:wrap}.hero-btn{background:#fff;color:var(--portal-primary,#174c2f);text-decoration:none;border-radius:11px;padding:11px 15px;font-weight:800}.hero-btn.ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25)}.planning-section{margin:0 0 26px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:14px;margin-bottom:12px}.section-head h2{margin:2px 0}.section-kicker{color:var(--portal-accent,#16a34a)}.text-link{font-weight:800;color:var(--portal-primary,#174c2f);text-decoration:none}.set-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}.set-card{display:flex;gap:14px;align-items:center;padding:16px;background:#fff;border:1px solid #dbe3ea;border-radius:16px;text-decoration:none;color:#0f172a;box-shadow:0 7px 20px rgba(15,23,42,.05);transition:.15s}.set-card:hover{transform:translateY(-2px);border-color:var(--portal-accent,#16a34a)}.set-date{width:60px;height:65px;border-radius:13px;background:#ecfdf5;color:#14532d;display:flex;flex-direction:column;align-items:center;justify-content:center}.set-date strong{font-size:.76rem;text-transform:uppercase}.set-date span{font-size:1.6rem;font-weight:900}.set-card h3{margin:4px 0}.set-card p{margin:0;color:#64748b;font-size:.88rem}.set-status{font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em;padding:3px 7px;border-radius:999px;background:#e2e8f0;color:#475569}.set-status.ready{background:#dcfce7;color:#166534}.set-status.completed{background:#dbeafe;color:#1d4ed8}.song-count{border:1px solid #cbd5e1;border-radius:999px;padding:7px 11px;font-weight:800;color:#475569}.song-search{display:flex;gap:10px;margin-bottom:18px}.song-search input{flex:1;border:1px solid #cbd5e1;border-radius:12px;padding:12px 14px}.song-search button,.song-search a,.song-actions a{border:0;background:var(--portal-primary,#174c2f);color:#fff;text-decoration:none;border-radius:10px;padding:11px 15px;font-weight:800}.song-search a{background:#475569}.song-grid{display:grid;gap:12px}.song-card{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:#fff;border:1px solid #dbe3ea;border-radius:16px;padding:17px;box-shadow:0 8px 22px rgba(15,23,42,.05)}.song-icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:#ecfdf5;color:#166534;font-size:1.6rem;font-weight:900}.song-main h3{margin:0 0 5px}.song-main p{margin:0 0 5px;color:#64748b}.song-main small{display:block;color:#64748b}.song-main small.usage{margin-top:3px;color:#15803d;font-weight:700}.song-actions{display:flex;gap:8px}.song-actions a.secondary{background:#fff;color:#334155;border:1px solid #cbd5e1}.library-warning,.empty-song-state,.alert-success,.alert-error{background:#fff;border:1px dashed #cbd5e1;border-radius:16px;padding:20px}.library-warning strong,.library-warning span,.empty-song-state strong,.empty-song-state span{display:block}.library-warning span,.empty-song-state span{color:#64748b;margin-top:5px}.alert-success{border-style:solid;border-color:#86efac;background:#f0fdf4;color:#166534;margin-bottom:14px}.alert-error{border-style:solid;border-color:#fca5a5;background:#fef2f2;color:#991b1b;margin-bottom:14px}
+html.dark-mode .set-card,html.dark-mode .song-card,html.dark-mode .library-warning,html.dark-mode .empty-song-state,html.dark-mode .song-actions a.secondary{background:#111827!important;color:#e5e7eb!important;border-color:#334155!important}html.dark-mode .set-card p,html.dark-mode .song-main p,html.dark-mode .song-main small,html.dark-mode .library-warning span,html.dark-mode .empty-song-state span{color:#94a3b8!important}html.dark-mode .song-search input{background:#020617!important;color:#e5e7eb!important;border-color:#475569!important}html.dark-mode .song-count{border-color:#475569;color:#cbd5e1}html.dark-mode .text-link{color:#4ade80}
+@@media(max-width:760px){.worship-hero{align-items:flex-start;flex-direction:column}.song-card{grid-template-columns:auto 1fr}.song-actions{grid-column:1/-1}.song-search{flex-wrap:wrap}.song-search input{flex-basis:100%}.section-head{align-items:flex-start;flex-direction:column}}
 </style>

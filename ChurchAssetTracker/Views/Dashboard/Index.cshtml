@@ -14,6 +14,7 @@
     var canReservations = enabledModules.Contains("Reservations") && (isAdmin || User.IsInRole("ReservationManager") || User.IsInRole("Pastor"));
     var canAssets = enabledModules.Contains("Assets") && (isAdmin || User.IsInRole("AssetManager"));
     var canKeys = enabledModules.Contains("Keys") && (isAdmin || User.IsInRole("KeyManager"));
+    var canWorship = enabledModules.Contains("Worship") && (isAdmin || User.IsInRole("WorshipLeader"));
 
     var canSchool = enabledModules.Contains("School") && (isAdmin || User.IsInRole("SchoolAdmin") || User.IsInRole("SchoolStaff"));
 
@@ -49,6 +50,11 @@
         @if (canSchool)
         {
             <a class="qa-button" asp-controller="Students" asp-action="Create">+ Student</a>
+        }
+
+        @if (canWorship)
+        {
+            <a class="qa-button" asp-controller="Worship" asp-action="CreateSet">+ Worship Set</a>
         }
     </div>
 </div>
@@ -90,6 +96,29 @@
 </div>
 
 <div class="dashboard-layout">
+
+    @if (canWorship && enabledWidgets.Contains("UpcomingWorshipPanel"))
+    {
+        var worshipSets = (ViewBag.UpcomingWorshipSets as List<ChurchAssetTracker.Models.WorshipSetSummary>) ?? new();
+        <section class="dash-panel" data-dashboard-widget="UpcomingWorshipPanel">
+            <div class="panel-title-row">
+                <div><h3>Upcoming Worship Set</h3><p>Next planned worship service.</p></div>
+                <a asp-controller="Worship" asp-action="Index">Worship Planning</a>
+            </div>
+            @if (!worshipSets.Any())
+            {
+                <div class="empty-state"><strong>No upcoming worship set</strong><span>Create a Sunday set in Worship Planning.</span></div>
+            }
+            else
+            {
+                var set = worshipSets.First();
+                <a class="list-item" asp-controller="Worship" asp-action="EditSet" asp-route-id="@set.Id">
+                    <div><strong>@set.Title</strong><span>@set.ServiceDate.ToString("dddd, MMMM d") • @set.SongCount song@(set.SongCount == 1 ? "" : "s")</span></div>
+                    <div class="date-chip"><strong>@set.ServiceDate.ToString("MMM")</strong><span>@set.ServiceDate.Day</span></div>
+                </a>
+            }
+        </section>
+    }
 
     @if (canReservations && enabledWidgets.Contains("UpcomingReservationsPanel"))
     {

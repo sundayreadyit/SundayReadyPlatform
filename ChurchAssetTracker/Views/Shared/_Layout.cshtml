@@ -412,35 +412,41 @@ function toggleDarkMode(){
         .brand-logo-card {
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: rgba(255,255,255,.96);
-            border-radius: 16px;
-            padding: 8px;
+            justify-content: flex-start;
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 0;
             margin-bottom: 14px;
-            box-shadow: 0 8px 20px rgba(0,0,0,.14);
+            box-shadow: none;
         }
 
         .sidebar-brand-logo {
-            width: 100%;
+            width: auto;
+            height: auto;
             max-width: 205px;
             max-height: 82px;
             object-fit: contain;
+            object-position: left center;
             display: block;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
         }
 
         html.dark-mode .brand-logo-card {
-            background: #ffffff !important;
-            border-color: rgba(255,255,255,.18) !important;
-            box-shadow: 0 10px 26px rgba(0,0,0,.36) !important;
+            background: transparent !important;
+            border: 0 !important;
+            box-shadow: none !important;
         }
 
         html.dark-mode .sidebar-brand-logo {
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,.35));
+            filter: none;
         }
 
         @@media (max-width: 900px) {
             .brand-logo-card {
-                padding: 6px;
+                padding: 0;
                 margin-bottom: 10px;
             }
 
@@ -511,7 +517,7 @@ function toggleDarkMode(){
     var canITSupport = enabledModules.Contains("ITSupport") && (isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITSupportManager") || User.IsInRole("ITSupportTech"));
     var canPasswordVault = enabledModules.Contains("PasswordVault") && (isAdmin || User.IsInRole("PasswordVault"));
     var canDocumentation = enabledModules.Contains("Documentation");
-    var canWorship = enabledModules.Contains("Worship");
+    var canWorship = enabledModules.Contains("Worship") && (isAdmin || User.IsInRole("WorshipLeader"));
     
     var canITRequester = enabledModules.Contains("ITSupport") && User.IsInRole("ITRequester");
 var canAudit = isAdmin || User.IsInRole("Pastor");
@@ -559,7 +565,7 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
                     @if (canReservations) { <a class="nav-link" asp-controller="Reservations" asp-action="Index" title="Reservations"><span class="nav-icon">📅</span><span class="nav-label">Reservations</span></a> }
                     @if (canAssets) { <a class="nav-link" asp-controller="Assets" asp-action="Index" title="Assets"><span class="nav-icon">📦</span><span class="nav-label">Assets</span></a><a class="nav-link" asp-controller="Checkouts" asp-action="Index" title="Checkouts"><span class="nav-icon">📋</span><span class="nav-label">Checkouts</span></a> }
                     @if (canKeys) { <a class="nav-link" asp-controller="Keys" asp-action="Index" title="Keys"><span class="nav-icon">🔑</span><span class="nav-label">Keys</span></a><a class="nav-link" asp-controller="KeyAssignments" asp-action="Index" title="Key Assignments"><span class="nav-icon">🗝️</span><span class="nav-label">Key Assignments</span></a><a class="nav-link" asp-controller="AccessAreas" asp-action="Index" title="Access Areas"><span class="nav-icon">🚪</span><span class="nav-label">Access Areas</span></a> }
-                    @if (canWorship) { <a class="nav-link" asp-controller="Worship" asp-action="Index" title="Worship Song Library"><span class="nav-icon">🎵</span><span class="nav-label">Worship</span></a> }
+                    @if (canWorship) { <a class="nav-link" asp-controller="Worship" asp-action="Index" title="Worship Planning"><span class="nav-icon">🎵</span><span class="nav-label">Worship</span></a> }
                 </div>
             </div>
         }

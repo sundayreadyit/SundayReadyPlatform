@@ -1,0 +1,39 @@
+Sunday Ready Platform v1.5.3 - Worship Planning Update
+Build Date: 2026-08-07
+
+CUMULATIVE PATCH
+This source package includes all v1.5.2 Administration validation and branding fixes. If production is currently on v1.5.1, deploy v1.5.3 directly; v1.5.2 does not need to be installed first.
+
+WORSHIP PLANNING
+- Expanded the Worship module from a searchable song library into a complete Sunday worship planning workflow.
+- Added Sunday worship sets with service date, title, status and service notes.
+- Added searchable CCLI song selection from the configured Worship Library share.
+- Added drag-and-drop playlist ordering with automatic persistence.
+- Added per-song Key, Leader and transition/service Notes.
+- Added Preview for individual PDFs from both the library and selected set.
+- Added Print Full Packet to generate one combined PDF in set order.
+- Added an organization-branded cover sheet for the service packet.
+- Added a dedicated Worship Set List page that lists the songs in service order for musicians and the ProPresenter operator.
+- Full worship packets now contain the cover sheet, dedicated set-list page, and every selected song PDF in playlist order.
+- Added Print Set List for generating the running-order page by itself.
+- Added Print Songs Only to merge charts without the cover or set-list pages.
+- Added Duplicate Set to copy a previous service and move the copied service date forward seven days.
+- Added Past Worship Sets / service history.
+- Added an Upcoming Worship Set dashboard widget and quick action that can be positioned with the Dashboard Builder.
+- Added usage tracking in the library (times used and last-used date).
+- Added graceful packet-generation errors when a selected PDF is missing, outside the configured library, or unreadable.
+- Added WorshipSets and WorshipSetItems database schema with automatic creation.
+- Added the WorshipLeader security role. Only Admin and WorshipLeader users can see or access Worship Planning.
+- WorshipLeader users receive the Church dashboard profile and can use the Worship dashboard widget/quick action when enabled.
+- The WorshipLeader role is created automatically at application startup and appears in User Administration for assignment.
+- Added SQL/015_WorshipPlanning_v1_5_3.sql as an optional manual migration.
+
+CARRIED FORWARD FROM v1.5.2
+- Optional Administration fields no longer block saves when left blank.
+- Optional SMTP fields and Worship Library path validation corrected.
+- Administration validation feedback identifies the field preventing a save.
+- Login and sidebar organization logos render without a forced white card/background.
+- Responsive organization-logo sizing preserved across normal and dark modes.
+
+DEPENDENCY
+- Added PdfSharpCore 1.3.67 for combined PDF packet generation.

@@ -64,13 +64,13 @@ public class AdministrationSettingsViewModel
 public class BrandingSettingsInputModel
 {
     [Required, MaxLength(200)] public string OrganizationName { get; set; } = "";
-    [MaxLength(50)] public string OrganizationShortName { get; set; } = "";
+    [MaxLength(50)] public string? OrganizationShortName { get; set; }
     [Required, MaxLength(200)] public string PortalName { get; set; } = "";
-    [MaxLength(300)] public string PortalSubtitle { get; set; } = "";
-    [MaxLength(300)] public string OrganizationWebsite { get; set; } = "";
-    [MaxLength(200)] public string OrganizationEmail { get; set; } = "";
-    [MaxLength(100)] public string OrganizationPhone { get; set; } = "";
-    [MaxLength(100)] public string TimeZone { get; set; } = "Pacific Standard Time";
+    [MaxLength(300)] public string? PortalSubtitle { get; set; }
+    [MaxLength(300)] public string? OrganizationWebsite { get; set; }
+    [MaxLength(200)] public string? OrganizationEmail { get; set; }
+    [MaxLength(100)] public string? OrganizationPhone { get; set; }
+    [MaxLength(100)] public string? TimeZone { get; set; } = "Pacific Standard Time";
     [Required, RegularExpression(@"^#[0-9A-Fa-f]{6}$", ErrorMessage = "Primary color must be a 6-digit HEX color such as #174c2f.")] public string PrimaryColor { get; set; } = "#174c2f";
     [Required, RegularExpression(@"^#[0-9A-Fa-f]{6}$", ErrorMessage = "Secondary color must be a 6-digit HEX color such as #14532d.")] public string SecondaryColor { get; set; } = "#14532d";
     [Required, RegularExpression(@"^#[0-9A-Fa-f]{6}$", ErrorMessage = "Accent color must be a 6-digit HEX color such as #16a34a.")] public string AccentColor { get; set; } = "#16a34a";
@@ -79,22 +79,22 @@ public class BrandingSettingsInputModel
 public class EmailSettingsInputModel
 {
     public bool Enabled { get; set; }
-    [MaxLength(250)] public string SmtpHost { get; set; } = "";
+    [MaxLength(250)] public string? SmtpHost { get; set; }
     [Range(1,65535)] public int SmtpPort { get; set; } = 587;
     public bool UseSsl { get; set; } = true;
-    [MaxLength(250)] public string Username { get; set; } = "";
-    [DataType(DataType.Password)] public string Password { get; set; } = "";
-    [EmailAddress] public string FromEmail { get; set; } = "";
-    [MaxLength(200)] public string FromName { get; set; } = "";
-    [EmailAddress] public string AdminEmail { get; set; } = "";
-    [EmailAddress] public string ITSupportEmail { get; set; } = "";
-    [EmailAddress] public string ReservationsEmail { get; set; } = "";
+    [MaxLength(250)] public string? Username { get; set; }
+    [DataType(DataType.Password)] public string? Password { get; set; }
+    [EmailAddress] public string? FromEmail { get; set; }
+    [MaxLength(200)] public string? FromName { get; set; }
+    [EmailAddress] public string? AdminEmail { get; set; }
+    [EmailAddress] public string? ITSupportEmail { get; set; }
+    [EmailAddress] public string? ReservationsEmail { get; set; }
 }
 
 public class StorageSettingsInputModel
 {
     [Required] public string DocumentLibraryRootPath { get; set; } = "";
-    public string WorshipLibraryRootPath { get; set; } = "";
+    public string? WorshipLibraryRootPath { get; set; }
 }
 
 public class DashboardWidgetDefinition

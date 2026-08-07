@@ -36,9 +36,17 @@ builder.Services.AddDataProtection()
 builder.Services.AddScoped<SqlDataService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SystemSettingsService>();
+builder.Services.AddScoped<WorshipPlanningService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 var app = builder.Build();
+
+// Ensure cumulative v1.5.3 Worship schema and the WorshipLeader role exist at startup.
+using (var startupScope = app.Services.CreateScope())
+{
+    var worshipPlanning = startupScope.ServiceProvider.GetRequiredService<WorshipPlanningService>();
+    await worshipPlanning.EnsureSchemaAsync();
+}
 
 if (!app.Environment.IsDevelopment())
 {

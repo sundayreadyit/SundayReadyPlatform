@@ -1,0 +1,63 @@
+Sunday Ready Platform v1.5.3 - Deployment Guide
+
+SUPPORTED UPGRADE PATH FOR THIS PACKAGE
+- v1.5.1 -> v1.5.3 directly (v1.5.2 is included)
+- v1.5.2 -> v1.5.3
+
+1. BACK UP
+- Commit/push the current repository.
+- Back up the production database.
+- Preserve App_Data/DataProtectionKeys.
+- Preserve appsettings.json / production connection string as required by your normal publish workflow.
+- Preserve existing wwwroot/uploads content, including uploaded organization branding.
+
+2. BUILD / RESTORE
+- Restore NuGet packages. v1.5.3 adds PdfSharpCore 1.3.67.
+- Build the application before IIS deployment.
+
+3. DATABASE
+- No v1.5.2 database migration is needed.
+- Worship Planning tables and the WorshipLeader role are ensured automatically when the application starts.
+- Optional manual pre-creation script: SQL/015_WorshipPlanning_v1_5_3.sql.
+
+4. DEPLOY
+- Deploy the v1.5.3 build using the same IIS process as previous releases.
+- Do not delete App_Data/DataProtectionKeys.
+- Confirm the IIS application-pool identity still has Read access to the Worship Library share.
+
+5. VALIDATE v1.5.2 FIXES (INCLUDED)
+- Save Organization settings with optional Phone/Website/Email fields blank.
+- Upload a replacement organization logo.
+- Confirm the login and sidebar logos render without the forced white card.
+- Save SMTP settings with optional recipient fields blank.
+
+6. VALIDATE WORSHIP PLANNING
+- Open Worship and confirm existing CCLI PDFs still appear.
+- Create a Sunday Set.
+- Search for and add multiple PDF songs.
+- Drag/drop songs into a new order, refresh the page, and verify order persists.
+- Add Key, Leader and song Notes and save.
+- Mark the service Ready.
+- Preview a selected PDF.
+- In User Administration, assign the WorshipLeader role to a test worship user.
+- Confirm a user without Admin/WorshipLeader does not see Worship in navigation and receives Access Denied if directly requesting the Worship controller.
+- Confirm the WorshipLeader user sees Worship and can create/edit sets.
+- Click Print Set List and confirm a single clean page lists the songs in playlist order.
+- Click Print Full Packet and confirm one PDF opens containing the cover, dedicated set-list page, and every song in set order.
+- Click Print Songs Only and confirm only the song PDFs are merged.
+- Duplicate the set and confirm the copy is dated seven days later.
+- Confirm Past Sets displays completed/past services.
+- Confirm library usage counts/last-used dates appear after songs have been included in sets.
+
+7. PDF TROUBLESHOOTING
+- Combined packet generation expects selected songs to be PDFs.
+- If a file was renamed/deleted after being added to a set, the portal identifies the missing song instead of silently failing.
+- If cover-page font rendering fails in a non-Windows environment, ensure a compatible Arial font or PDFsharp font resolver is available. Production IIS on Windows should normally have Arial available.
+
+8. GIT
+Suggested commit:
+  git add .
+  git commit -m "v1.5.3 - Worship Planning Update"
+  git tag -a v1.5.3 -m "Sunday Ready Platform v1.5.3 - Worship Planning Update"
+  git push origin main
+  git push origin v1.5.3

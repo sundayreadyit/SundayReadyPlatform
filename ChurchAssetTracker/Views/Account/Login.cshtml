@@ -85,6 +85,24 @@
             z-index: 1;
         }
 
+        .login-brand-logo {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: min(240px, 80%);
+            max-height: 100px;
+            object-fit: contain;
+            object-position: left center;
+            margin: 0 0 20px 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+            position: relative;
+            z-index: 1;
+        }
+
         .brand-card h1 {
             margin: 0;
             font-size: 3rem;
@@ -281,7 +299,7 @@
                 <span>Internal Portal</span>
             </div>
 
-            <div style="background:#fff;border-radius:16px;padding:8px 12px;width:fit-content;margin-bottom:18px;position:relative;z-index:1"><img src="@branding.LogoPath" alt="@branding.OrganizationName" style="max-width:210px;max-height:80px;display:block;object-fit:contain" /></div>
+            <img src="@branding.LogoPath" alt="@branding.OrganizationName" class="login-brand-logo" />
             <h1>@branding.PortalName</h1>
 
             <p>

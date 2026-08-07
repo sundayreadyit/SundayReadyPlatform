@@ -1,0 +1,146 @@
+@model ChurchAssetTracker.Models.WorshipSetEditorViewModel
+@{
+    ViewData["Title"] = $"Worship Set - {Model.Set.ServiceDate:MMM d}";
+}
+<div class="set-editor">
+    <div class="editor-hero">
+        <div><span class="eyebrow">Worship Planning</span><h1>@Model.Set.Title</h1><p>@Model.Set.ServiceDate.ToString("dddd, MMMM d, yyyy") • @Model.Set.Items.Count song@(Model.Set.Items.Count==1?"":"s")</p></div>
+        <div class="editor-actions">
+            <a asp-action="PrintPacket" asp-route-id="@Model.Set.Id" asp-route-includeCover="true" asp-route-includeSetList="true" class="primary" target="_blank">Print Full Packet</a>
+            <a asp-action="PrintSetList" asp-route-id="@Model.Set.Id" class="secondary" target="_blank">Print Set List</a>
+            <a asp-action="PrintPacket" asp-route-id="@Model.Set.Id" asp-route-includeCover="false" asp-route-includeSetList="false" class="secondary" target="_blank">Print Songs Only</a>
+            <a asp-action="Index" class="secondary">Worship Home</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] is string success){<div class="alert success">@success</div>}
+    @if (TempData["Error"] is string error){<div class="alert error">@error</div>}
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)){<div class="alert error">@Model.ErrorMessage</div>}
+
+    <section class="panel service-panel">
+        <div class="panel-head"><div><span class="kicker">Service</span><h2>Service Details</h2></div><span class="status @Model.Set.Status.ToLowerInvariant()">@Model.Set.Status</span></div>
+        <form asp-action="UpdateSet" method="post" class="service-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" value="@Model.Set.Id" />
+            <label>Service Date<input type="date" name="ServiceDate" value="@Model.Set.ServiceDate.ToString("yyyy-MM-dd")" /></label>
+            <label>Title<input type="text" name="Title" value="@Model.Set.Title" maxlength="200" /></label>
+            <label>Status<select name="Status">
+                @if (Model.Set.Status == "Draft") { <option value="Draft" selected>Draft</option> } else { <option value="Draft">Draft</option> }
+                @if (Model.Set.Status == "Ready") { <option value="Ready" selected>Ready</option> } else { <option value="Ready">Ready</option> }
+                @if (Model.Set.Status == "Completed") { <option value="Completed" selected>Completed</option> } else { <option value="Completed">Completed</option> }
+            </select></label>
+            <label class="notes">Service Notes<textarea name="Notes" rows="3">@Model.Set.Notes</textarea></label>
+            <button type="submit">Save Service Details</button>
+        </form>
+    </section>
+
+    <div class="editor-columns">
+        <section class="panel set-panel">
+            <div class="panel-head"><div><span class="kicker">Set Order</span><h2>Sunday Playlist</h2><p>Drag songs to rearrange the print order.</p></div><span class="order-save" id="orderStatus"></span></div>
+            @if (!Model.Set.Items.Any())
+            {
+                <div class="empty"><strong>Your set is empty.</strong><span>Search the library and add songs from the panel on the right.</span></div>
+            }
+            else
+            {
+                <div id="setList" class="set-list" data-set-id="@Model.Set.Id">
+                @foreach (var item in Model.Set.Items)
+                {
+                    <article class="set-item" draggable="true" data-item-id="@item.Id">
+                        <div class="drag" title="Drag to reorder">⋮⋮</div>
+                        <div class="number">@item.SortOrder</div>
+                        <div class="item-content">
+                            <div class="item-title"><h3>@item.SongTitle</h3><span>@item.RelativePath</span></div>
+                            <form asp-action="UpdateSong" method="post" class="item-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="Id" value="@item.Id" />
+                                <input type="hidden" name="WorshipSetId" value="@Model.Set.Id" />
+                                <label>Key<input name="KeyOverride" value="@item.KeyOverride" maxlength="30" placeholder="G" /></label>
+                                <label>Leader<input name="Leader" value="@item.Leader" maxlength="200" placeholder="Optional" /></label>
+                                <label class="wide">Notes<input name="Notes" value="@item.Notes" maxlength="2000" placeholder="Transition, intro, ending, special note..." /></label>
+                                <button type="submit" class="mini">Save Notes</button>
+                            </form>
+                        </div>
+                        <div class="item-actions">
+                            <a asp-action="ViewSetSong" asp-route-setId="@Model.Set.Id" asp-route-itemId="@item.Id" target="_blank" class="preview">Preview</a>
+                            <form asp-action="RemoveSong" method="post" onsubmit="return confirm('Remove this song from the set?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="setId" value="@Model.Set.Id" /><input type="hidden" name="itemId" value="@item.Id" />
+                                <button type="submit" class="remove">Remove</button>
+                            </form>
+                        </div>
+                    </article>
+                }
+                </div>
+            }
+            <div class="set-footer-actions">
+                <form asp-action="DuplicateSet" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@Model.Set.Id" /><button type="submit" class="outline">Duplicate Set</button></form>
+                <form asp-action="DeleteSet" method="post" onsubmit="return confirm('Delete this entire worship set? This cannot be undone.');">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@Model.Set.Id" /><button type="submit" class="danger">Delete Set</button></form>
+            </div>
+        </section>
+
+        <section class="panel library-panel">
+            <div class="panel-head"><div><span class="kicker">Song Library</span><h2>Add Songs</h2><p>Search the CCLI PDF library and add songs to this service.</p></div></div>
+            <form method="get" asp-action="EditSet" class="library-search">
+                <input type="hidden" name="id" value="@Model.Set.Id" />
+                <input type="search" name="search" value="@Model.Search" placeholder="Search song title..." />
+                <button type="submit">Search</button>
+                @if(!string.IsNullOrWhiteSpace(Model.Search)){<a asp-action="EditSet" asp-route-id="@Model.Set.Id">Clear</a>}
+            </form>
+            <div class="library-results">
+                @if (!Model.SearchResults.Any())
+                {
+                    <div class="empty compact"><span>No songs found.</span></div>
+                }
+                else
+                {
+                    @foreach(var song in Model.SearchResults)
+                    {
+                        <div class="library-song">
+                            <div><strong>@song.Title</strong><span>@song.RelativePath</span></div>
+                            <div class="library-actions">
+                                <a asp-action="ViewSong" asp-route-file="@song.Token" target="_blank" title="Preview PDF">Preview</a>
+                                <form asp-action="AddSong" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="setId" value="@Model.Set.Id" /><input type="hidden" name="file" value="@song.Token" />
+                                    <button type="submit">+ Add</button>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </section>
+    </div>
+</div>
+<style>
+.set-editor{max-width:1450px;margin:0 auto}.editor-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:26px 28px;border-radius:20px;background:linear-gradient(135deg,var(--portal-secondary,#14532d),var(--portal-primary,#174c2f));color:#fff;margin-bottom:16px}.editor-hero h1{margin:3px 0 5px}.editor-hero p{margin:0;color:rgba(255,255,255,.8)}.eyebrow,.kicker{font-size:.73rem;text-transform:uppercase;letter-spacing:.11em;font-weight:900}.eyebrow{color:rgba(255,255,255,.7)}.kicker{color:var(--portal-accent,#16a34a)}.editor-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.editor-actions a{padding:10px 13px;border-radius:10px;text-decoration:none;font-weight:900}.editor-actions .primary{background:#fff;color:var(--portal-primary,#174c2f)}.editor-actions .secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff}.alert{padding:13px 16px;border-radius:12px;margin-bottom:13px;font-weight:700}.alert.success{background:#f0fdf4;border:1px solid #86efac;color:#166534}.alert.error{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b}.panel{background:#fff;border:1px solid #dbe3ea;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05)}.service-panel{margin-bottom:16px}.panel-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:13px}.panel-head h2{margin:2px 0}.panel-head p{margin:2px 0 0;color:#64748b}.status{padding:5px 9px;border-radius:999px;background:#e2e8f0;color:#475569;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;font-weight:900}.status.ready{background:#dcfce7;color:#166534}.status.completed{background:#dbeafe;color:#1d4ed8}.service-form{display:grid;grid-template-columns:170px minmax(250px,1fr) 150px minmax(300px,1.5fr) auto;gap:10px;align-items:end}.service-form label,.item-form label{font-size:.78rem;font-weight:900;color:#475569}.service-form input,.service-form select,.service-form textarea,.item-form input,.library-search input{width:100%;margin-top:5px;border:1px solid #cbd5e1;border-radius:9px;padding:9px 10px;font:inherit}.service-form button,.library-search button,.library-actions button,.mini,.outline,.danger,.remove{border:0;border-radius:9px;padding:10px 12px;font-weight:900;cursor:pointer}.service-form button,.library-search button,.library-actions button,.mini{background:var(--portal-primary,#174c2f);color:#fff}.editor-columns{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(360px,.75fr);gap:16px;align-items:start}.set-list{display:grid;gap:10px}.set-item{display:grid;grid-template-columns:24px 38px 1fr auto;gap:10px;align-items:start;border:1px solid #dbe3ea;border-radius:13px;padding:12px;background:#fff;transition:.12s}.set-item.dragging{opacity:.45;border-color:var(--portal-accent,#16a34a)}.drag{cursor:grab;color:#94a3b8;font-size:1.2rem;padding-top:7px}.number{width:34px;height:34px;border-radius:9px;background:#ecfdf5;color:#166534;font-weight:900;display:flex;align-items:center;justify-content:center}.item-title h3{margin:0 0 2px;font-size:1rem}.item-title span,.library-song span{display:block;color:#64748b;font-size:.78rem;word-break:break-word}.item-form{display:grid;grid-template-columns:70px 130px 1fr auto;gap:7px;align-items:end;margin-top:8px}.item-form input{padding:7px 8px}.mini{padding:8px 10px;font-size:.78rem}.item-actions{padding-top:4px;display:flex;flex-direction:column;gap:6px}.item-actions .preview{font-size:.78rem;font-weight:800;color:var(--portal-primary,#174c2f);text-decoration:none;text-align:center}.remove{background:#fff1f2;color:#be123c;border:1px solid #fecdd3;padding:7px 9px}.set-footer-actions{display:flex;justify-content:space-between;gap:10px;margin-top:14px}.outline{background:#fff;color:#334155;border:1px solid #cbd5e1}.danger{background:#be123c;color:#fff}.library-search{display:flex;gap:7px;margin-bottom:10px}.library-search input{margin:0;flex:1}.library-search a{align-self:center;color:#64748b;font-weight:800;text-decoration:none}.library-results{display:grid;gap:7px;max-height:690px;overflow:auto;padding-right:3px}.library-song{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px;border:1px solid #e2e8f0;border-radius:11px}.library-actions{display:flex;align-items:center;gap:7px;white-space:nowrap}.library-actions a{font-size:.8rem;color:var(--portal-primary,#174c2f);font-weight:800;text-decoration:none}.library-actions button{padding:7px 9px}.empty{padding:22px;border:1px dashed #cbd5e1;border-radius:13px}.empty strong,.empty span{display:block}.empty span{color:#64748b;margin-top:4px}.empty.compact{padding:12px}.order-save{font-size:.78rem;color:#15803d;font-weight:800}
+html.dark-mode .panel,html.dark-mode .set-item,html.dark-mode .library-song,html.dark-mode .outline{background:#111827!important;color:#e5e7eb!important;border-color:#334155!important}html.dark-mode .panel-head p,html.dark-mode .item-title span,html.dark-mode .library-song span,html.dark-mode .empty span{color:#94a3b8!important}html.dark-mode .service-form label,html.dark-mode .item-form label{color:#cbd5e1}html.dark-mode .service-form input,html.dark-mode .service-form select,html.dark-mode .service-form textarea,html.dark-mode .item-form input,html.dark-mode .library-search input{background:#020617!important;color:#e5e7eb!important;border-color:#475569!important}html.dark-mode .library-actions a,html.dark-mode .item-actions .preview{color:#4ade80}
+@@media(max-width:1100px){.editor-columns{grid-template-columns:1fr}.service-form{grid-template-columns:1fr 1fr}.service-form .notes{grid-column:1/-1}.service-form button{grid-column:1/-1}.library-results{max-height:none}}@@media(max-width:720px){.editor-hero{align-items:flex-start;flex-direction:column}.service-form{grid-template-columns:1fr}.service-form .notes,.service-form button{grid-column:auto}.set-item{grid-template-columns:22px 34px 1fr}.item-actions{grid-column:3}.item-form{grid-template-columns:1fr 1fr}.item-form .wide,.item-form .mini{grid-column:1/-1}.library-song{align-items:flex-start;flex-direction:column}.editor-actions{justify-content:flex-start}}
+</style>
+<script>
+(function(){
+ const list=document.getElementById('setList'); if(!list) return;
+ let dragged=null;
+ const refreshNumbers=()=>list.querySelectorAll('.set-item').forEach((x,i)=>x.querySelector('.number').textContent=i+1);
+ list.querySelectorAll('.set-item').forEach(item=>{
+   item.addEventListener('dragstart',()=>{dragged=item;item.classList.add('dragging');});
+   item.addEventListener('dragend',()=>{item.classList.remove('dragging');dragged=null;saveOrder();});
+   item.addEventListener('dragover',e=>{e.preventDefault(); if(!dragged||dragged===item)return; const r=item.getBoundingClientRect(); const after=e.clientY>r.top+r.height/2; list.insertBefore(dragged,after?item.nextSibling:item); refreshNumbers();});
+ });
+ async function saveOrder(){
+   const status=document.getElementById('orderStatus'); status.textContent='Saving order…';
+   const ids=[...list.querySelectorAll('.set-item')].map(x=>parseInt(x.dataset.itemId));
+   const token=document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+   const body=new URLSearchParams();
+   body.append('__RequestVerificationToken',token||'');
+   body.append('setId',list.dataset.setId);
+   ids.forEach(id=>body.append('itemIds',id));
+   try{
+     const res=await fetch('@Url.Action("Reorder","Worship")',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'},body:body.toString()});
+     status.textContent=res.ok?'Order saved':'Could not save order';
+     if(res.ok)setTimeout(()=>status.textContent='',1800);
+   }catch{status.textContent='Could not save order';}
+ }
+})();
+</script>

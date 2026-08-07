@@ -1,0 +1,23 @@
+Sunday Ready Platform v1.5.2 - Administration & Branding Fixes
+
+Build Date: 2026-08-07
+
+Administration validation
+- Fixed Organization & Branding settings failing to save when optional fields were left blank.
+- Corrected ASP.NET Core implicit validation behavior by marking optional administration input fields nullable.
+- Fixed the same validation risk for optional SMTP fields and the optional Worship Library path.
+- Improved Administration validation messages to identify the field that prevented a save.
+- Logo upload, organization phone, branding colors, SMTP settings and other optional settings can now be updated independently.
+
+Branding presentation
+- Removed the forced white logo container from the login page.
+- Organization logos now render directly on the portal branding panel with a transparent surrounding surface.
+- Removed the forced white logo card from the authenticated sidebar for consistent organization branding.
+- Added responsive logo sizing and object-fit behavior so wide and compact organization logos scale cleanly.
+- Removed logo-only dark-mode overrides that forced a white background.
+- Transparent PNG or WEBP logos are recommended for the cleanest result; the portal no longer adds its own background or border.
+
+Deployment
+- No database migration is required for this patch.
+- Existing organization branding and uploaded logo paths are preserved.
+- Test Organization settings, logo upload, login branding, sidebar branding, SMTP settings and dark mode before production promotion.

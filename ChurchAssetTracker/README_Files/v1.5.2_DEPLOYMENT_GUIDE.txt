@@ -1,0 +1,38 @@
+Sunday Ready Platform v1.5.2 - Administration & Branding Fixes
+Deployment Guide
+
+DATABASE
+- No database migration is required.
+
+RECOMMENDED DEPLOYMENT FLOW
+1. Back up the current production application folder and database.
+2. Preserve deployment-specific files/settings normally retained during your publish process.
+3. Preserve App_Data/DataProtectionKeys. SMTP secrets stored by the platform depend on this key ring.
+4. Deploy/publish the v1.5.2 application files to the DEV environment first.
+5. Recycle/restart the DEV IIS application pool/site as required by your normal deployment process.
+6. Complete the validation checklist below.
+7. Promote to Production only after DEV validation succeeds.
+
+VALIDATION CHECKLIST
+- Administration > Organization: save with optional Website/Email/Phone fields blank.
+- Administration > Organization: update only Organization Phone.
+- Administration > Organization: upload a supported logo.
+- Sign out: verify login-page logo no longer has a portal-generated white border/card.
+- Sign in: verify sidebar logo no longer has a portal-generated white card.
+- Verify transparent logo artwork blends directly with the configured theme.
+- Verify logo scaling on desktop and narrow/mobile layouts.
+- Verify light/dark mode does not force a white logo background.
+- Change Primary, Secondary and Accent colors and verify branding updates.
+- Save SMTP settings with optional fields blank.
+- Send a test email.
+- Verify Documentation and Worship storage settings remain intact.
+- Verify About shows v1.5.2 - Administration & Branding Fixes.
+
+ROLLBACK
+- Restore the previous application folder/package if application behavior is unexpected.
+- No database rollback is required because v1.5.2 contains no schema migration.
+
+LOGO NOTE
+- v1.5.2 removes the background/border added by the portal itself.
+- If the uploaded logo file contains its own solid rectangular background, that background is part of the image and will remain visible.
+- Transparent PNG or WEBP logos are recommended for the cleanest organization-specific branding.

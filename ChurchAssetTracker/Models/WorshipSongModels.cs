@@ -9,6 +9,8 @@ public class WorshipSongRow
     public long FileSizeBytes { get; set; }
     public DateTime ModifiedDate { get; set; }
     public string Token { get; set; } = "";
+    public int TimesUsed { get; set; }
+    public DateTime? LastUsedDate { get; set; }
 
     public string FileSizeDisplay => FileSizeBytes < 1024 * 1024
         ? $"{Math.Max(1, FileSizeBytes / 1024)} KB"
