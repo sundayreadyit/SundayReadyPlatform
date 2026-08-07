@@ -1,7 +1,10 @@
 @using ChurchAssetTracker.Models
+@inject ChurchAssetTracker.Services.SystemSettingsService SystemSettings
 
 @{
     ViewData["Title"] = "About";
+    var branding = await SystemSettings.GetBrandingAsync();
+    var modules = await SystemSettings.GetModulesAsync();
 }
 
 <style>
@@ -10,7 +13,7 @@
     }
 
     .about-hero {
-        background: linear-gradient(135deg, #14532d, #166534);
+        background: linear-gradient(135deg, var(--portal-secondary), var(--portal-primary));
         border-radius: 16px;
         padding: 28px;
         margin-bottom: 22px;
@@ -89,8 +92,9 @@
 
 <div class="about-page container-fluid mt-4">
     <div class="about-hero">
-        <h1 class="mb-2">CWC Operations Portal</h1>
-        <p class="mb-0">Centralized church and school operations management for Christian Worship Center.</p>
+        <h1 class="mb-2">@branding.PortalName</h1>
+        <p class="mb-1">@branding.PortalSubtitle</p>
+        <p class="mb-0" style="opacity:.78">Powered by Sunday Ready Platform • Developed by Sunday Ready IT</p>
     </div>
 
     <div class="row">
@@ -102,7 +106,7 @@
                         <tbody>
                             <tr>
                                 <td>Application</td>
-                                <td>CWC Operations Portal</td>
+                                <td>@branding.PortalName</td>
                             </tr>
                             <tr>
                                 <td>Version</td>
@@ -116,6 +120,18 @@
                                 <td>Build Date</td>
                                 <td>@PortalVersion.BuildDate</td>
                             </tr>
+                            <tr>
+                                <td>Developed By</td>
+                                <td><strong>Sunday Ready IT</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Licensed To</td>
+                                <td>@branding.OrganizationName</td>
+                            </tr>
+                            <tr>
+                                <td>Copyright</td>
+                                <td>© 2026 Sunday Ready IT. All Rights Reserved.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -127,25 +143,10 @@
                 <div class="card-header">Portal Modules</div>
                 <div class="card-body">
                     <ul class="module-list">
-                        <li>Dashboard</li>
-                        <li>Reservations</li>
-                        <li>Assets</li>
-                        <li>Checkouts</li>
-                        <li>Keys</li>
-                        <li>Key Assignments</li>
-                        <li>Access Areas</li>
-                        <li>IT Assets</li>
-                        <li>IT Support</li>
-                        <li>IT Documentation</li>
-                        <li>Password Vault</li>
-                        <li>Students</li>
-                        <li>Faculty / Staff</li>
-                        <li>People</li>
-                        <li>User Administration</li>
-                        <li>Audit Log</li>
-                        <li>Notifications</li>
-                        <li>Global Search</li>
-                        <li>User Guide</li>
+                        @foreach (var module in modules.Where(m => m.IsEnabled))
+                        {
+                            <li>@module.DisplayName</li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -159,23 +160,17 @@
                 <h5>v@(PortalVersion.Version) - @PortalVersion.ReleaseName</h5>
                 <p class="text-muted mb-2">Build Date: @PortalVersion.BuildDate</p>
                 <ul class="mb-0">
-                    <li>Redesigned the Key Assignments list to use a cleaner, person-focused summary view.</li>
-                    <li>Removed the bulky Active Keys display from the main Key Assignments grid.</li>
-                    <li>Made Key Holder names clickable to open a read-only key assignment details page.</li>
-                    <li>Added an Edit Assignments workflow for quickly adding or returning keys for a person.</li>
-                    <li>Improved User Guide readability and contrast in Dark Mode.</li>
-                    <li>Fixed IT Support ticket creation so manually entered requester phone numbers are preserved.</li>
-                    <li>Fixed Key Assignment detail and list pages so summary cards and person details display correctly in Dark Mode.</li>
-                    <li>Cleaned up the Add Reservation form layout with grouped sections for details, date/time, setup, contact information, and notes.</li>
-                    <li>Improved Reservations Calendar Dark Mode styling so calendar days, filters, and event blocks remain readable.</li>
-                    <li>Added Outlook-style calendar behavior: clicking an empty calendar day opens the Add Reservation form prefilled for that date.</li>
-                    <li>Fixed Add Reservation form Dark Mode styling so form sections, labels, inputs, dropdowns, text areas, and alerts remain readable.</li>
-                    <li>Added a New Person shortcut to the Add Reservation form so users can add a missing requester from the Requested By field.</li>
-                    <li>Updated the People create workflow to safely return users back to the reservation form after adding a person.</li>
-                    <li>Fixed Reservations Calendar Dark Mode legend readability so Room/Access Area labels remain visible beside their color dots.</li>
-                    <li>Added a New Person shortcut to the asset checkout form so users can add a missing borrower without leaving the workflow permanently.</li>
-                    <li>Updated the People create workflow messaging so it supports returning users to reservation and checkout workflows.</li>
-                    <li>Updated About page, footer version display, and release notes for the full v1.2.1 hotfix series.</li>
+                    <li>Added Administration → System Settings with runtime configuration stored in the portal database.</li>
+                    <li>Added a deployment Setup Wizard/checklist for organization, email, storage, modules and dashboard configuration.</li>
+                    <li>Added organization customization including organization name, portal name, subtitle and organization logo upload.</li>
+                    <li>Added Sunday Ready IT product branding, licensing footer and application ownership information.</li>
+                    <li>Moved SMTP configuration into the Administration GUI and added encrypted SMTP password storage plus Send Test Email.</li>
+                    <li>Moved Documentation Library and Worship Library paths into runtime Administration settings with path testing.</li>
+                    <li>Added Module Manager so organizations can enable or disable optional portal modules without deleting data.</li>
+                    <li>Added Dashboard Builder with role-profile widget selection and drag/drop ordering.</li>
+                    <li>Added collapsible navigation groups with per-browser remembered state for a cleaner sidebar.</li>
+                    <li>Added initial Worship Song Library for searching, viewing, printing and downloading licensed song files.</li>
+                    <li>Expanded dark-mode support to the Administration and Worship interfaces.</li>
                 </ul>
             </div>
         </div>

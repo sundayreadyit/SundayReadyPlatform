@@ -2,9 +2,9 @@ namespace ChurchAssetTracker.Models
 {
     public static class PortalVersion
     {
-        public const string AppName = "CWC Operations Portal";
-        public const string Version = "1.2.1f";
-        public const string ReleaseName = "Asset Checkout New Person Workflow";
-        public const string BuildDate = "2026-06-14";
+        public const string AppName = "Sunday Ready Platform";
+        public const string Version = "1.5.1";
+        public const string ReleaseName = "Portal Theme Customization Update";
+        public const string BuildDate = "2026-08-07";
     }
 }

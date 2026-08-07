@@ -70,6 +70,8 @@ public class ITSupportTicketDetailsViewModel
 {
     public ITSupportTicketRow Ticket { get; set; } = new();
     public List<ITSupportTicketCommentRow> Comments { get; set; } = new();
+    public List<ITSupportTicketAttachmentRow> Attachments { get; set; } = new();
+    public List<ITSupportTicketCommentAttachmentRow> CommentAttachments { get; set; } = new();
     public ITSupportCommentForm NewComment { get; set; } = new();
 }
 

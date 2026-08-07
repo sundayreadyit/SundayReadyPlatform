@@ -1,0 +1,52 @@
+CWC Operations Portal / Sunday Ready Platform
+v1.5.0 Platform Administration Update
+Deployment Guide
+
+1. BACK UP
+- Back up the ChurchAssetTracker SQL database.
+- Back up the current published IIS application directory.
+- Preserve App_Data/DataProtectionKeys. These keys are required to decrypt stored secrets such as the SMTP password.
+
+2. DATABASE
+- The application can safely create dbo.SystemSettings automatically if the application identity has permission.
+- For controlled production deployment, run SQL/014_PlatformAdministration_v1_5_0.sql before publishing.
+- The first portal request seeds SystemSettings from existing appsettings.json values when a key is missing.
+
+3. BUILD / PUBLISH
+- Build the project for .NET 10 and publish using the existing IIS publish process.
+- Do not deploy stale bin/obj output from an earlier release.
+
+4. FIRST VALIDATION
+- Sign in as an Admin.
+- Open Administration > Setup Wizard.
+- Verify Organization & Branding.
+- Open Administration > System Settings > Email / SMTP and send a test email.
+- Verify Documentation Library storage path.
+- Configure and test Worship Library storage if the Worship module will be used.
+- Review Module Manager before disabling any production modules.
+- Review Dashboard Builder defaults.
+
+5. IMPORTANT SETTINGS BEHAVIOR
+- Runtime settings are stored in dbo.SystemSettings.
+- SMTP password is encrypted using ASP.NET Data Protection.
+- Leaving the SMTP password box blank preserves the stored password.
+- Connection strings and other bootstrap-critical settings remain in appsettings.json.
+- Disabling a module hides and blocks the module but does not delete its data.
+
+6. WORSHIP LIBRARY
+- The Worship module indexes files in the configured directory.
+- Supported initial file types: PDF, DOC, DOCX, TXT, PNG, JPG/JPEG.
+- View / Print opens a browser-viewable representation where supported (PDF is recommended).
+- Only store/distribute song materials the organization is licensed to use.
+
+7. ROLLBACK
+- Restore the previous IIS application backup.
+- Restore the database backup only if the database must be reverted.
+- SystemSettings is additive and does not modify existing business tables.
+
+
+v1.5.1 THEME CUSTOMIZATION PATCH
+--------------------------------
+Administration > Organization now includes Primary, Secondary and Accent colors.
+No database schema migration is required; settings are stored in dbo.SystemSettings.
+Existing CWC colors remain the defaults. Color changes take effect immediately after saving.

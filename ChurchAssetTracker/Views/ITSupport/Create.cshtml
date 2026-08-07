@@ -9,7 +9,7 @@
     <p>Capture the issue, requester, assignment, priority, and related asset information.</p>
 </div>
 
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" enctype="multipart/form-data">
     @Html.AntiForgeryToken()
 
     @if (!ViewData.ModelState.IsValid)
@@ -72,6 +72,9 @@
                 <div class="it-field full">
                     <label asp-for="Description">Description</label>
                     <textarea asp-for="Description" placeholder="Describe what is happening, where it is happening, when it started, and any troubleshooting already attempted."></textarea>
+                <label style="margin-top:12px;">Attachment / Screenshot</label>
+                <input type="file" name="attachment" />
+                <small>Optional. Add a screenshot or document. Max 10 MB.</small>
                 </div>
             </div>
         </section>

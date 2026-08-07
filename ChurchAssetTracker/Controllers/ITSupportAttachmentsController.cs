@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ChurchAssetTracker.Controllers;
 
-[Authorize(Roles = "Admin,ITAdmin,ITSupportManager,ITSupportTech")]
+[Authorize]
 [Route("ITSupport")]
 public class ITSupportAttachmentsController : Controller
 {
@@ -29,6 +29,7 @@ public class ITSupportAttachmentsController : Controller
 
         var ticket = await _data.GetITSupportTicketAsync(ticketId);
         if (ticket == null) return NotFound();
+        if (!await CanCurrentUserAccessTicketAsync(ticketId)) return Forbid();
 
         if (attachment == null || attachment.Length == 0)
         {
@@ -77,6 +78,7 @@ Uploaded by: {User.Identity?.Name}");
     {
         var attachment = await _data.GetITSupportTicketAttachmentAsync(id);
         if (attachment == null) return NotFound();
+        if (!await CanCurrentUserAccessTicketAsync(attachment.TicketId)) return Forbid();
 
         var relativePath = attachment.FilePath.TrimStart('~', '/').Replace("/", Path.DirectorySeparatorChar.ToString());
         var fullPath = Path.Combine(_environment.WebRootPath, relativePath);
@@ -89,6 +91,31 @@ Uploaded by: {User.Identity?.Name}");
 
         var bytes = await System.IO.File.ReadAllBytesAsync(fullPath);
         return File(bytes, contentType, attachment.OriginalFileName);
+    }
+
+
+    [HttpGet("DownloadCommentAttachment/{id:int}")]
+    public async Task<IActionResult> DownloadCommentAttachment(int id)
+    {
+        var attachment = await _data.GetITSupportTicketCommentAttachmentAsync(id);
+        if (attachment == null) return NotFound();
+        if (!await CanCurrentUserAccessTicketAsync(attachment.TicketId)) return Forbid();
+
+        var relativePath = attachment.FilePath.TrimStart('~', '/').Replace("/", Path.DirectorySeparatorChar.ToString());
+        var fullPath = Path.Combine(_environment.WebRootPath, relativePath);
+        if (!System.IO.File.Exists(fullPath)) return NotFound();
+
+        var contentType = string.IsNullOrWhiteSpace(attachment.ContentType) ? "application/octet-stream" : attachment.ContentType;
+        var bytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+        return File(bytes, contentType, attachment.OriginalFileName);
+    }
+
+    private async Task<bool> CanCurrentUserAccessTicketAsync(int ticketId)
+    {
+        if (User.IsInRole("Admin") || User.IsInRole("ITAdmin") || User.IsInRole("ITSupportManager") || User.IsInRole("ITSupportTech"))
+            return true;
+        var userId = GetCurrentUserId();
+        return userId.HasValue && await _data.CanUserViewRequesterTicketAsync(ticketId, userId.Value);
     }
 
     private int? GetCurrentUserId()

@@ -7,12 +7,14 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<ModuleEnabledFilter>();
 builder.Services.AddControllersWithViews(options =>
 {
     var authenticatedUserPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
     options.Filters.Add(new AuthorizeFilter(authenticatedUserPolicy));
+    options.Filters.AddService<ModuleEnabledFilter>();
 });
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -33,9 +35,7 @@ builder.Services.AddDataProtection()
     .SetApplicationName("CWCOperationsPortal");
 builder.Services.AddScoped<SqlDataService>();
 builder.Services.AddScoped<AuthService>();
-builder.Services.Configure<EmailSettings>(
-    builder.Configuration.GetSection("EmailSettings"));
-
+builder.Services.AddScoped<SystemSettingsService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 
 var app = builder.Build();

@@ -1,0 +1,30 @@
+@using ChurchAssetTracker.Models
+@{
+    ViewData["Title"] = "Setup Wizard";
+    var branding = (PortalBrandingSettings)ViewBag.Branding;
+    var email = (PortalEmailSettings)ViewBag.Email;
+    var storage = (PortalStorageSettings)ViewBag.Storage;
+    var modules = (List<PortalModuleSetting>)ViewBag.Modules;
+    bool PathOkay(string? p){try{return !string.IsNullOrWhiteSpace(p)&&System.IO.Directory.Exists(p);}catch{return false;}}
+    var orgOk=!string.IsNullOrWhiteSpace(branding.OrganizationName)&&!string.IsNullOrWhiteSpace(branding.PortalName);
+    var emailOk=!email.Enabled || (!string.IsNullOrWhiteSpace(email.SmtpHost)&&!string.IsNullOrWhiteSpace(email.FromEmail));
+    var docsOk=PathOkay(storage.DocumentLibraryRootPath);
+    var worshipEnabled=modules.Any(m=>m.ModuleKey=="Worship"&&m.IsEnabled);
+    var worshipOk=!worshipEnabled || PathOkay(storage.WorshipLibraryRootPath);
+    var done=new[]{orgOk,emailOk,docsOk,worshipOk}.Count(x=>x);
+}
+<div class="setup-page">
+    <div class="setup-hero"><div><span>Sunday Ready Platform</span><h1>Deployment Setup</h1><p>Configure and validate this portal deployment without editing application files.</p></div><div class="setup-progress">@done / 4 Ready</div></div>
+    <div class="setup-grid">
+        <a asp-controller="Administration" asp-action="Index" asp-route-section="general" class="setup-card"><div class="setup-icon">🏛️</div><div><strong>1. Organization & Branding</strong><p>@branding.OrganizationName • @branding.PortalName</p></div><span class="state @(orgOk?"ok":"todo")">@(orgOk?"Ready":"Configure")</span></a>
+        <a asp-controller="Administration" asp-action="Index" asp-route-section="email" class="setup-card"><div class="setup-icon">✉️</div><div><strong>2. Email / SMTP</strong><p>@(email.Enabled ? $"{email.SmtpHost}:{email.SmtpPort}" : "Email is disabled")</p></div><span class="state @(emailOk?"ok":"todo")">@(emailOk?"Ready":"Configure")</span></a>
+        <a asp-controller="Administration" asp-action="Index" asp-route-section="storage" class="setup-card"><div class="setup-icon">📁</div><div><strong>3. Storage</strong><p>Documentation library and optional worship library paths.</p></div><span class="state @(docsOk&&worshipOk?"ok":"todo")">@(docsOk&&worshipOk?"Ready":"Check Paths")</span></a>
+        <a asp-controller="Administration" asp-action="Index" asp-route-section="modules" class="setup-card"><div class="setup-icon">🧩</div><div><strong>4. Modules</strong><p>@modules.Count(m=>m.IsEnabled) modules currently enabled.</p></div><span class="state ok">Ready</span></a>
+        <a asp-controller="DashboardBuilder" asp-action="Index" class="setup-card optional"><div class="setup-icon">📊</div><div><strong>Optional: Dashboard Builder</strong><p>Customize default dashboards for church, school, IT and admin users.</p></div><span class="state">Customize</span></a>
+    </div>
+    <div class="setup-footer"><strong>Configuration is stored in the portal database.</strong><span>Connection strings and startup-critical settings remain in application configuration; runtime organization settings are managed here.</span></div>
+</div>
+<style>
+.setup-page{max-width:1050px;margin:0 auto}.setup-hero{display:flex;justify-content:space-between;gap:20px;align-items:center;background:linear-gradient(135deg,var(--portal-secondary),var(--portal-primary));color:#fff;border-radius:20px;padding:28px;margin-bottom:18px}.setup-hero span{text-transform:uppercase;letter-spacing:.12em;font-size:.76rem;font-weight:800;color:rgba(255,255,255,.78)}.setup-hero h1{margin:4px 0 7px}.setup-hero p{margin:0;color:rgba(255,255,255,.86)}.setup-progress{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:10px 14px;font-weight:800;white-space:nowrap}.setup-grid{display:grid;gap:12px}.setup-card{display:grid;grid-template-columns:auto 1fr auto;gap:15px;align-items:center;text-decoration:none;color:#0f172a;background:#fff;border:1px solid #dbe3ea;border-radius:16px;padding:17px;box-shadow:0 8px 22px rgba(15,23,42,.05)}.setup-card:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(15,23,42,.09)}.setup-card.optional{border-style:dashed}.setup-icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:#eff6ff;border-radius:14px;font-size:1.5rem}.setup-card strong,.setup-card p{display:block}.setup-card p{margin:4px 0 0;color:#64748b}.state{border-radius:999px;padding:7px 10px;font-size:.78rem;font-weight:800;background:#e2e8f0;color:#475569}.state.ok{background:#dcfce7;color:#166534}.state.todo{background:#fef3c7;color:#92400e}.setup-footer{display:flex;flex-direction:column;background:#f8fafc;border:1px solid #dbe3ea;border-radius:14px;padding:16px;margin-top:16px}.setup-footer span{color:#64748b;margin-top:4px}html.dark-mode .setup-card,html.dark-mode .setup-footer{background:#111827!important;color:#e5e7eb!important;border-color:#334155!important}html.dark-mode .setup-card p,html.dark-mode .setup-footer span{color:#94a3b8!important}
+@@media(max-width:720px){.setup-hero{align-items:flex-start;flex-direction:column}.setup-card{grid-template-columns:auto 1fr}.setup-card .state{grid-column:1/-1;width:fit-content}}
+</style>

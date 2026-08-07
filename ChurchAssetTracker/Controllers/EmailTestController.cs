@@ -8,10 +8,12 @@ namespace ChurchAssetTracker.Controllers;
 public class EmailTestController : Controller
 {
     private readonly IEmailService _email;
+    private readonly SystemSettingsService _settings;
 
-    public EmailTestController(IEmailService email)
+    public EmailTestController(IEmailService email, SystemSettingsService settings)
     {
         _email = email;
+        _settings = settings;
     }
 
     [HttpGet]
@@ -32,10 +34,11 @@ public class EmailTestController : Controller
 
         try
         {
+            var branding = await _settings.GetBrandingAsync();
             await _email.SendEmailAsync(
                 toEmail,
-                "CWC Operations Portal Test Email",
-                "This is a test email from the CWC Operations Portal. If you received this, SMTP email is working.");
+                $"{branding.PortalName} Test Email",
+                $"This is a test email from {branding.PortalName}. If you received this, SMTP email is working.");
 
             TempData["EmailTestMessage"] = "Test email sent or logged. If EmailSettings:Enabled is false, it was logged only.";
         }

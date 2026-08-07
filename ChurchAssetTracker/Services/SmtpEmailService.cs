@@ -1,26 +1,24 @@
 using System.Net;
 using System.Net.Mail;
-using ChurchAssetTracker.Data;
-using Microsoft.Extensions.Options;
 
 namespace ChurchAssetTracker.Services;
 
 public class SmtpEmailService : IEmailService
 {
-    private readonly EmailSettings _settings;
+    private readonly SystemSettingsService _systemSettings;
     private readonly ILogger<SmtpEmailService> _logger;
 
-    public SmtpEmailService(
-        IOptions<EmailSettings> settings,
-        ILogger<SmtpEmailService> logger)
+    public SmtpEmailService(SystemSettingsService systemSettings, ILogger<SmtpEmailService> logger)
     {
-        _settings = settings.Value;
+        _systemSettings = systemSettings;
         _logger = logger;
     }
 
     public async Task SendEmailAsync(string toEmail, string subject, string body)
     {
-        if (!_settings.Enabled)
+        var settings = await _systemSettings.GetEmailAsync();
+
+        if (!settings.Enabled)
         {
             _logger.LogInformation("Email disabled. Would have sent to {ToEmail}: {Subject}", toEmail, subject);
             return;
@@ -32,55 +30,49 @@ public class SmtpEmailService : IEmailService
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(_settings.SmtpHost))
-            throw new InvalidOperationException("EmailSettings:SmtpHost is not configured.");
+        if (string.IsNullOrWhiteSpace(settings.SmtpHost))
+            throw new InvalidOperationException("SMTP host is not configured. Open Administration > System Settings > Email.");
 
-        if (string.IsNullOrWhiteSpace(_settings.FromEmail))
-            throw new InvalidOperationException("EmailSettings:FromEmail is not configured.");
+        if (string.IsNullOrWhiteSpace(settings.FromEmail))
+            throw new InvalidOperationException("Default From address is not configured. Open Administration > System Settings > Email.");
 
         using var message = new MailMessage
         {
-            From = new MailAddress(_settings.FromEmail, _settings.FromName),
+            From = new MailAddress(settings.FromEmail, string.IsNullOrWhiteSpace(settings.FromName) ? settings.FromEmail : settings.FromName),
             Subject = subject,
             Body = body,
             IsBodyHtml = false
         };
-
         message.To.Add(toEmail);
 
-        using var client = new SmtpClient(_settings.SmtpHost, _settings.SmtpPort)
+        using var client = new SmtpClient(settings.SmtpHost, settings.SmtpPort)
         {
-            EnableSsl = _settings.UseSsl
+            EnableSsl = settings.UseSsl
         };
 
-        if (!string.IsNullOrWhiteSpace(_settings.Username))
-        {
-            client.Credentials = new NetworkCredential(_settings.Username, _settings.Password);
-        }
+        if (!string.IsNullOrWhiteSpace(settings.Username))
+            client.Credentials = new NetworkCredential(settings.Username, settings.Password);
 
         await client.SendMailAsync(message);
     }
 
     public async Task SendAdminEmailAsync(string subject, string body)
     {
-        await SendEmailAsync(_settings.AdminEmail, subject, body);
+        var settings = await _systemSettings.GetEmailAsync();
+        await SendEmailAsync(settings.AdminEmail, subject, body);
     }
 
     public async Task SendITSupportEmailAsync(string subject, string body)
     {
-        var recipient = string.IsNullOrWhiteSpace(_settings.ITSupportEmail)
-            ? _settings.AdminEmail
-            : _settings.ITSupportEmail;
-
+        var settings = await _systemSettings.GetEmailAsync();
+        var recipient = string.IsNullOrWhiteSpace(settings.ITSupportEmail) ? settings.AdminEmail : settings.ITSupportEmail;
         await SendEmailAsync(recipient, subject, body);
     }
 
     public async Task SendReservationsEmailAsync(string subject, string body)
     {
-        var recipient = string.IsNullOrWhiteSpace(_settings.ReservationsEmail)
-            ? _settings.AdminEmail
-            : _settings.ReservationsEmail;
-
+        var settings = await _systemSettings.GetEmailAsync();
+        var recipient = string.IsNullOrWhiteSpace(settings.ReservationsEmail) ? settings.AdminEmail : settings.ReservationsEmail;
         await SendEmailAsync(recipient, subject, body);
     }
 }

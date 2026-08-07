@@ -1,0 +1,14 @@
+Sunday Ready Platform v1.5.1 - Portal Theme Customization Update
+Build Date: 2026-08-07
+
+NEW
+- Added portal-wide color scheme settings under Administration > Organization & Branding.
+- Added Primary, Secondary, and Accent color controls with native color pickers and HEX input.
+- Added live theme preview before saving.
+- Theme colors are stored in SystemSettings and apply immediately.
+- Main sidebar, mobile menu, top-bar branding, profile avatar, core buttons, login branding, and browser theme color now follow organization theme settings.
+- Existing defaults preserve the CWC green color scheme.
+
+DEPLOYMENT
+- No new table is required. Existing dbo.SystemSettings accepts the new settings automatically.
+- Existing v1.5.0 installations are upgraded safely because missing theme keys fall back to CWC defaults and are inserted when saved.

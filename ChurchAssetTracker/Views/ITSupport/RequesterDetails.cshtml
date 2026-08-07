@@ -3,6 +3,8 @@
     ViewData["Title"] = "My IT Ticket";
     var t = Model.Ticket;
     var publicComments = Model.Comments.Where(c => !c.IsInternal).OrderBy(c => c.CreatedDate).ToList();
+    var attachments = Model.Attachments;
+    var commentAttachments = Model.CommentAttachments.GroupBy(a => a.CommentId).ToDictionary(g => g.Key, g => g.ToList());
     var priorityClass = "priority-" + (t.Priority ?? "").Replace(" ", "-").ToLowerInvariant();
     var statusClass = "status-" + (t.Status ?? "").Replace(" ", "-").ToLowerInvariant();
 }
@@ -43,6 +45,9 @@
 
         <h3 style="margin-top:20px;">Description</h3>
         <p style="white-space:pre-wrap;">@t.Description</p>
+        <h3 style="margin-top:20px;">Attachments</h3>
+        @if (!attachments.Any()) { <p style="color:#64748b;">No attachments yet.</p> }
+        else { foreach (var a in attachments) { <p><a asp-controller="ITSupportAttachments" asp-action="DownloadAttachment" asp-route-id="@a.AttachmentId">@a.OriginalFileName</a> <small style="color:#64748b;">@a.FileSizeDisplay</small></p> } }
     </section>
 
     <aside class="ticket-action-panel">
@@ -59,12 +64,12 @@
     <h3>Conversation</h3>
     <p style="color:#64748b;">Updates visible to you and the IT team.</p>
 
-    <form asp-action="RequesterAddComment" method="post" class="comment-box">
+    <form asp-action="RequesterAddComment" method="post" enctype="multipart/form-data" class="comment-box">
         @Html.AntiForgeryToken()
         <input type="hidden" name="ticketId" value="@t.TicketId" />
         <label>Add Update</label>
         <textarea name="commentText" placeholder="Add additional details or answer a question from IT."></textarea>
-        <div class="form-actions"><button class="btn primary" type="submit">Add Update</button></div>
+        <label>Attachment / Screenshot</label><input type="file" name="attachment" /><small style="color:#64748b;">Optional. Max 10 MB.</small><div class="form-actions"><button class="btn primary" type="submit">Add Update</button></div>
     </form>
 
     @if (!publicComments.Any())
@@ -78,6 +83,7 @@
             <div class="comment-card public">
                 <div class="comment-meta"><strong>@(c.CreatedByName ?? "Unknown")</strong><span>@c.CreatedDate.ToString("g")</span></div>
                 <p>@c.CommentText</p>
+                @if (commentAttachments.ContainsKey(c.CommentId)) { foreach (var a in commentAttachments[c.CommentId]) { <p><a asp-controller="ITSupportAttachments" asp-action="DownloadCommentAttachment" asp-route-id="@a.CommentAttachmentId">📎 @a.OriginalFileName</a> <small style="color:#64748b;">@a.FileSizeDisplay</small></p> } }
             </div>
         }
     }

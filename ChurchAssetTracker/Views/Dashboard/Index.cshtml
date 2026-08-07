@@ -1,19 +1,24 @@
 @model ChurchAssetTracker.Data.DashboardEnhancedViewModel
+@inject ChurchAssetTracker.Services.SystemSettingsService SystemSettings
 @{
     ViewData["Title"] = "Dashboard";
     var studentSearch = Convert.ToString(ViewBag.StudentSearch ?? "");
     var assetSearch = Convert.ToString(ViewBag.AssetSearch ?? "");
 
     var isAdmin = User.IsInRole("Admin");
+    var modules = await SystemSettings.GetModulesAsync();
+    var enabledModules = modules.Where(x => x.IsEnabled).Select(x => x.ModuleKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
+    var widgetOrder = (ViewBag.DashboardWidgetOrder as List<string>) ?? new List<string>();
+    var enabledWidgets = widgetOrder.ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-    var canReservations = isAdmin || User.IsInRole("ReservationManager") || User.IsInRole("Pastor");
-    var canAssets = isAdmin || User.IsInRole("AssetManager");
-    var canKeys = isAdmin || User.IsInRole("KeyManager");
+    var canReservations = enabledModules.Contains("Reservations") && (isAdmin || User.IsInRole("ReservationManager") || User.IsInRole("Pastor"));
+    var canAssets = enabledModules.Contains("Assets") && (isAdmin || User.IsInRole("AssetManager"));
+    var canKeys = enabledModules.Contains("Keys") && (isAdmin || User.IsInRole("KeyManager"));
 
-    var canSchool = isAdmin || User.IsInRole("SchoolAdmin") || User.IsInRole("SchoolStaff");
+    var canSchool = enabledModules.Contains("School") && (isAdmin || User.IsInRole("SchoolAdmin") || User.IsInRole("SchoolStaff"));
 
-    var canITAssets = isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITAssetManager") || User.IsInRole("ITAssetViewer");
-    var canITSupport = isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITSupportManager") || User.IsInRole("ITSupportTech");
+    var canITAssets = enabledModules.Contains("ITAssets") && (isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITAssetManager") || User.IsInRole("ITAssetViewer"));
+    var canITSupport = enabledModules.Contains("ITSupport") && (isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITSupportManager") || User.IsInRole("ITSupportTech"));
 
     var canAudit = isAdmin || User.IsInRole("Pastor");
 }
@@ -50,45 +55,35 @@
 
 <div class="metric-grid">
 
-    @if (canReservations)
+    @if (canReservations && enabledWidgets.Contains("UpcomingReservationsMetric"))
     {
-        <a class="metric-card" asp-controller="Reservations" asp-action="Index">
+        <a class="metric-card" data-dashboard-widget="UpcomingReservationsMetric" asp-controller="Reservations" asp-action="Index">
             <div class="metric-icon">📅</div>
-            <div>
-                <span>Upcoming Reservations</span>
-                <strong>@Model.ReservationSummary.UpcomingReservations</strong>
-                <small>Scheduled future events</small>
-            </div>
-        </a>
-
-        <a class="metric-card attention" asp-controller="Reservations" asp-action="Index" asp-route-status="Pending">
-            <div class="metric-icon">⏳</div>
-            <div>
-                <span>Pending Reservations</span>
-                <strong>@Model.ReservationSummary.PendingReservations</strong>
-                <small>Awaiting approval</small>
-            </div>
+            <div><span>Upcoming Reservations</span><strong>@Model.ReservationSummary.UpcomingReservations</strong><small>Scheduled future events</small></div>
         </a>
     }
 
-    @if (canITSupport)
+    @if (canReservations && enabledWidgets.Contains("PendingReservationsMetric"))
     {
-        <a class="metric-card" asp-controller="ITSupport" asp-action="Index">
-            <div class="metric-icon">🎫</div>
-            <div>
-                <span>Open IT Tickets</span>
-                <strong>@Model.ITSupportSummary.OpenTickets</strong>
-                <small>Active support requests</small>
-            </div>
+        <a class="metric-card attention" data-dashboard-widget="PendingReservationsMetric" asp-controller="Reservations" asp-action="Index" asp-route-status="Pending">
+            <div class="metric-icon">⏳</div>
+            <div><span>Pending Reservations</span><strong>@Model.ReservationSummary.PendingReservations</strong><small>Awaiting approval</small></div>
         </a>
+    }
 
-        <a class="metric-card danger-card" asp-controller="ITSupport" asp-action="Index">
+    @if (canITSupport && enabledWidgets.Contains("OpenTicketsMetric"))
+    {
+        <a class="metric-card" data-dashboard-widget="OpenTicketsMetric" asp-controller="ITSupport" asp-action="Index">
+            <div class="metric-icon">🎫</div>
+            <div><span>Open IT Tickets</span><strong>@Model.ITSupportSummary.OpenTickets</strong><small>Active support requests</small></div>
+        </a>
+    }
+
+    @if (canITSupport && enabledWidgets.Contains("CriticalTicketsMetric"))
+    {
+        <a class="metric-card danger-card" data-dashboard-widget="CriticalTicketsMetric" asp-controller="ITSupport" asp-action="Index">
             <div class="metric-icon">🚨</div>
-            <div>
-                <span>Critical Tickets</span>
-                <strong>@Model.ITSupportSummary.CriticalTickets</strong>
-                <small>High urgency issues</small>
-            </div>
+            <div><span>Critical Tickets</span><strong>@Model.ITSupportSummary.CriticalTickets</strong><small>High urgency issues</small></div>
         </a>
     }
 
@@ -96,9 +91,9 @@
 
 <div class="dashboard-layout">
 
-    @if (canReservations)
+    @if (canReservations && enabledWidgets.Contains("UpcomingReservationsPanel"))
     {
-        <section class="dash-panel">
+        <section class="dash-panel" data-dashboard-widget="UpcomingReservationsPanel">
             <div class="panel-title-row">
                 <div>
                     <h3>Upcoming Reservations</h3>
@@ -136,9 +131,9 @@
         </section>
     }
 
-    @if (canAssets)
+    @if (canAssets && enabledWidgets.Contains("OverdueAssetsPanel"))
     {
-        <section class="dash-panel">
+        <section class="dash-panel" data-dashboard-widget="OverdueAssetsPanel">
             <div class="panel-title-row">
                 <div>
                     <h3>Overdue Assets</h3>
@@ -177,9 +172,9 @@
         </section>
     }
 
-    @if (canSchool)
+    @if (canSchool && enabledWidgets.Contains("StudentSearchPanel"))
     {
-        <section class="dash-panel">
+        <section class="dash-panel" data-dashboard-widget="StudentSearchPanel">
             <div class="panel-title-row">
                 <div>
                     <h3>Student Quick Search</h3>
@@ -217,9 +212,9 @@
         </section>
     }
 
-    @if (canITAssets)
+    @if (canITAssets && enabledWidgets.Contains("ITAssetSearchPanel"))
     {
-        <section class="dash-panel">
+        <section class="dash-panel" data-dashboard-widget="ITAssetSearchPanel">
             <div class="panel-title-row">
                 <div>
                     <h3>IT Asset Quick Search</h3>
@@ -257,9 +252,9 @@
         </section>
     }
 
-    @if (canAudit)
+    @if (canAudit && enabledWidgets.Contains("RecentActivityPanel"))
     {
-        <section class="dash-panel full-width">
+        <section class="dash-panel full-width" data-dashboard-widget="RecentActivityPanel">
             <div class="panel-title-row">
                 <div>
                     <h3>Recent Activity</h3>
@@ -298,12 +293,22 @@
 
 </div>
 
+<script>
+(function(){
+    var order=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(widgetOrder));
+    ['.metric-grid','.dashboard-layout'].forEach(function(selector){
+        var parent=document.querySelector(selector); if(!parent)return;
+        order.forEach(function(key){var item=parent.querySelector('[data-dashboard-widget="'+key+'"]'); if(item)parent.appendChild(item);});
+    });
+})();
+</script>
+
 <style>
 .dashboard-hero { display:flex; justify-content:space-between; gap:24px; align-items:flex-start; margin-bottom:24px; }
 .dashboard-hero h2 { margin:0; font-size:2rem; }
 .dashboard-hero p { margin:.5rem 0 0; color:#475569; }
 .quick-actions { display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
-.qa-button { text-decoration:none; border:1px solid #cbd5e1; background:#174c2f; color:#fff; border-radius:999px; padding:10px 14px; font-weight:700; box-shadow:0 4px 12px rgba(15,23,42,.06); }
+.qa-button { text-decoration:none; border:1px solid #cbd5e1; background:var(--portal-primary); color:#fff; border-radius:999px; padding:10px 14px; font-weight:700; box-shadow:0 4px 12px rgba(15,23,42,.06); }
 .qa-button:hover { opacity:.92; }
 .metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; margin-bottom:24px; }
 .metric-card { display:flex; gap:16px; align-items:center; text-decoration:none; color:#0f172a; background:#fff; border:1px solid #dbe3ea; border-radius:18px; padding:20px; box-shadow:0 10px 28px rgba(15,23,42,.07); }
@@ -333,14 +338,14 @@
 .overdue { border-color:#fecaca; background:#fff7f7; }
 .quick-search-form { display:flex; gap:10px; margin-bottom:14px; }
 .quick-search-form input { flex:1; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; }
-.search-button { border:0; border-radius:10px; padding:10px 14px; background:#174c2f; color:#fff; font-weight:700; }
+.search-button { border:0; border-radius:10px; padding:10px 14px; background:var(--portal-primary); color:#fff; font-weight:700; }
 .mini-results { display:flex; flex-direction:column; gap:8px; }
 .mini-result { border:1px solid #e2e8f0; border-radius:12px; padding:10px 12px; }
 .mini-result strong, .mini-result span { display:block; }
 .mini-result span { color:#64748b; font-size:.9rem; }
 .activity-feed { display:flex; flex-direction:column; gap:14px; }
 .activity-row { display:grid; grid-template-columns:14px 1fr; gap:12px; align-items:start; }
-.activity-dot { width:10px; height:10px; margin-top:6px; border-radius:50%; background:#174c2f; }
+.activity-dot { width:10px; height:10px; margin-top:6px; border-radius:50%; background:var(--portal-accent); }
 .activity-row p { margin:.15rem 0 .35rem; color:#475569; }
 .activity-row small { color:#64748b; }
 

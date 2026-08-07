@@ -1,6 +1,8 @@
+@inject ChurchAssetTracker.Services.SystemSettingsService SystemSettings
 @{
     Layout = null;
     ViewData["Title"] = "Login";
+    var branding = await SystemSettings.GetBrandingAsync();
 }
 
 <!DOCTYPE html>
@@ -10,20 +12,21 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
 
-    <title>Login - CWC Operations Portal</title>
+    <title>Login - @branding.PortalName</title>
 
     <link rel="stylesheet"
           href="~/css/site.css"
           asp-append-version="true" />
 
     <style>
+        :root{--portal-primary:@branding.PrimaryColor;--portal-secondary:@branding.SecondaryColor;--portal-accent:@branding.AccentColor;}
         body {
             margin: 0;
             min-height: 100vh;
             font-family: Arial, Helvetica, sans-serif;
             background:
-                radial-gradient(circle at top left, rgba(23,76,47,.18), transparent 34%),
-                radial-gradient(circle at bottom right, rgba(34,197,94,.12), transparent 28%),
+                radial-gradient(circle at top left, color-mix(in srgb,var(--portal-primary) 18%,transparent), transparent 34%),
+                radial-gradient(circle at bottom right, color-mix(in srgb,var(--portal-accent) 12%,transparent), transparent 28%),
                 #f1f5f9;
             display: flex;
             align-items: center;
@@ -42,7 +45,7 @@
         .brand-card {
             background:
                 linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.02)),
-                #174c2f;
+                var(--portal-primary);
             color: white;
             border-radius: 28px;
             padding: 42px;
@@ -133,7 +136,7 @@
 
         .login-card h2 {
             margin: 0;
-            color: #174c2f;
+            color: var(--portal-primary);
             font-size: 1.9rem;
         }
 
@@ -168,7 +171,7 @@
         }
 
         .form-group input:focus {
-            border-color: #174c2f;
+            border-color: var(--portal-primary);
             box-shadow: 0 0 0 4px rgba(23,76,47,.12);
         }
 
@@ -177,7 +180,7 @@
             border: 0;
             border-radius: 12px;
             padding: 13px 16px;
-            background: #174c2f;
+            background: var(--portal-primary);
             color: white;
             font-size: 1rem;
             font-weight: 800;
@@ -186,7 +189,7 @@
         }
 
         .login-button:hover {
-            background: #14532d;
+            background: var(--portal-secondary);
         }
 
         .internal-note {
@@ -278,11 +281,11 @@
                 <span>Internal Portal</span>
             </div>
 
-            <h1>CWC Operations Portal</h1>
+            <div style="background:#fff;border-radius:16px;padding:8px 12px;width:fit-content;margin-bottom:18px;position:relative;z-index:1"><img src="@branding.LogoPath" alt="@branding.OrganizationName" style="max-width:210px;max-height:80px;display:block;object-fit:contain" /></div>
+            <h1>@branding.PortalName</h1>
 
             <p>
-                Centralized church and school operations management for reservations,
-                assets, keys, IT support, school records, and administrative workflows.
+                @branding.PortalSubtitle
             </p>
 
             <div class="feature-list">
@@ -329,7 +332,7 @@
                 <div style="margin-top:12px;text-align:center;">
                     <a asp-controller="ForgotPassword"
                        asp-action="Index"
-                       style="color:#174c2f;font-weight:800;text-decoration:none;">
+                       style="color:var(--portal-primary);font-weight:800;text-decoration:none;">
                         Forgot your password?
                     </a>
                 </div>
@@ -338,11 +341,12 @@
 
             <div class="internal-note">
                 <strong>Internal Use Only.</strong><br />
-                This system is intended for authorized CWC church and school operations users.
+                This system is intended for authorized @branding.OrganizationName users.
             </div>
 
             <div class="footer-text">
-                CWC Operations Portal
+                @branding.PortalName<br />
+                Powered by Sunday Ready IT • © 2026 Sunday Ready IT
             </div>
         </section>
 

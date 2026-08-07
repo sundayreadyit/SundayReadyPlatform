@@ -1,0 +1,24 @@
+CWC Operations Portal / Sunday Ready Platform
+v1.5.0 - Platform Administration Update
+Build Date: 2026-08-07
+
+Highlights
+- Added Administration > System Settings.
+- Added Deployment Setup Wizard/checklist.
+- Organization name, portal name, subtitle and logo are configurable at runtime.
+- Added Sunday Ready IT / Sunday Ready Platform branding and copyright information.
+- SMTP configuration moved to the GUI with encrypted password storage and Send Test Email.
+- Documentation and Worship library paths are configurable with path testing.
+- Added Module Manager for optional modules.
+- Added collapsible sidebar navigation groups with remembered state.
+- Added role-profile Dashboard Builder with widget visibility and drag/drop ordering.
+- Added Worship Song Library for searching, viewing/printing and downloading licensed song files.
+- Administration, Dashboard Builder and Worship pages support dark mode.
+
+Deployment Notes
+- Back up the database and application before deployment.
+- The app automatically creates dbo.SystemSettings if missing; SQL/014_PlatformAdministration_v1_5_0.sql is included for controlled/manual deployment.
+- Existing EmailSettings and DocumentLibrary appsettings values are imported as initial defaults the first time SystemSettings is initialized.
+- SMTP passwords are stored encrypted with the application's ASP.NET Data Protection key ring.
+- After deployment, visit Administration > System Settings and verify Organization, Email, Storage and Module settings.
+- Configure the Worship library path before enabling/using the Worship Song Library in production.

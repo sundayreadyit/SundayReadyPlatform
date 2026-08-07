@@ -11,11 +11,13 @@ public class ITSupportController : Controller
 {
     private readonly SqlDataService _data;
     private readonly IEmailService _email;
+    private readonly IWebHostEnvironment _environment;
 
-    public ITSupportController(SqlDataService data, IEmailService email)
+    public ITSupportController(SqlDataService data, IEmailService email, IWebHostEnvironment environment)
     {
         _data = data;
         _email = email;
+        _environment = environment;
     }
 
     [Authorize(Roles = "Admin,ITAdmin,ITSupportManager,ITSupportTech")]
@@ -44,11 +46,15 @@ public class ITSupportController : Controller
         if (ticket == null) return NotFound();
 
         var comments = await _data.GetITSupportTicketCommentsAsync(id);
+        var attachments = await _data.GetITSupportTicketAttachmentsAsync(id);
+        var commentAttachments = await _data.GetITSupportTicketCommentAttachmentsAsync(id);
 
         return View(new ITSupportTicketDetailsViewModel
         {
             Ticket = ticket,
             Comments = comments,
+            Attachments = attachments,
+            CommentAttachments = commentAttachments,
             NewComment = new ITSupportCommentForm { TicketId = id }
         });
     }
@@ -67,7 +73,7 @@ public class ITSupportController : Controller
     [Authorize(Roles = "Admin,ITAdmin,ITSupportManager,ITSupportTech")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(ITSupportTicketForm model)
+    public async Task<IActionResult> Create(ITSupportTicketForm model, IFormFile? attachment)
     {
         await ApplyRequesterContactWithoutLosingManualPhoneAsync(model);
 
@@ -81,6 +87,7 @@ public class ITSupportController : Controller
         }
 
         var id = await _data.CreateITSupportTicketAsync(model, User.Identity?.Name ?? "Unknown");
+        await SaveTicketAttachmentIfProvidedAsync(id, attachment);
 
         await SendCreateEmailAsync(id, model);
         await NotifyTicketCreatedByITAsync(id, model);
@@ -134,7 +141,7 @@ public class ITSupportController : Controller
     [Authorize(Roles = "ITRequester")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RequesterCreate(ITSupportTicketForm model)
+    public async Task<IActionResult> RequesterCreate(ITSupportTicketForm model, IFormFile? attachment)
     {
         var requesterUserId = CurrentUserId;
         if (requesterUserId <= 0) return Unauthorized();
@@ -166,6 +173,7 @@ public class ITSupportController : Controller
         model.DueDate = null;
 
         var id = await _data.CreateITSupportTicketAsync(model, User.Identity?.Name ?? "Unknown");
+        await SaveTicketAttachmentIfProvidedAsync(id, attachment);
 
         await TrySendITSupportEmailAsync(
             null,
@@ -199,11 +207,15 @@ Description:
         if (ticket == null) return NotFound();
 
         var comments = await _data.GetITSupportTicketCommentsAsync(id);
+        var attachments = await _data.GetITSupportTicketAttachmentsAsync(id);
+        var commentAttachments = await _data.GetITSupportTicketCommentAttachmentsAsync(id);
 
         return View(new ITSupportTicketDetailsViewModel
         {
             Ticket = ticket,
             Comments = comments,
+            Attachments = attachments,
+            CommentAttachments = commentAttachments,
             NewComment = new ITSupportCommentForm { TicketId = id }
         });
     }
@@ -211,7 +223,7 @@ Description:
     [Authorize(Roles = "ITRequester")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RequesterAddComment(int ticketId, string commentText)
+    public async Task<IActionResult> RequesterAddComment(int ticketId, string commentText, IFormFile? attachment = null)
     {
         var userId = CurrentUserId;
         if (userId <= 0) return Unauthorized();
@@ -225,12 +237,13 @@ Description:
             return RedirectToAction(nameof(RequesterDetails), new { id = ticketId });
         }
 
-        await _data.AddITSupportTicketCommentAsync(new ITSupportCommentForm
+        var commentId = await _data.AddITSupportTicketCommentAsync(new ITSupportCommentForm
         {
             TicketId = ticketId,
             CommentText = commentText,
             IsInternal = false
         }, CurrentUserId, CurrentUserDisplayName);
+        await SaveCommentAttachmentIfProvidedAsync(ticketId, commentId, attachment);
 
         var assignedEmail = await _data.GetITSupportTicketAssignedUserEmailAsync(ticketId);
 
@@ -334,7 +347,7 @@ Description:
     [Authorize(Roles = "Admin,ITAdmin,ITSupportManager,ITSupportTech")]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddComment(int ticketId, string commentText, bool isInternal = false)
+    public async Task<IActionResult> AddComment(int ticketId, string commentText, bool isInternal = false, IFormFile? attachment = null)
     {
         if (ticketId <= 0) return NotFound();
 
@@ -344,12 +357,13 @@ Description:
             return RedirectToAction(nameof(Details), new { id = ticketId });
         }
 
-        await _data.AddITSupportTicketCommentAsync(new ITSupportCommentForm
+        var commentId = await _data.AddITSupportTicketCommentAsync(new ITSupportCommentForm
         {
             TicketId = ticketId,
             CommentText = commentText,
             IsInternal = isInternal
         }, CurrentUserId, CurrentUserDisplayName);
+        await SaveCommentAttachmentIfProvidedAsync(ticketId, commentId, attachment);
 
         var assignedEmail = await _data.GetITSupportTicketAssignedUserEmailAsync(ticketId);
 
@@ -624,6 +638,55 @@ Changed by: {User.Identity?.Name}");
         {
             // Email should never block ticket workflows.
         }
+    }
+
+
+    private async Task SaveTicketAttachmentIfProvidedAsync(int ticketId, IFormFile? attachment)
+    {
+        if (attachment == null || attachment.Length == 0) return;
+        var saved = await SaveITSupportUploadAsync(ticketId, attachment);
+        await _data.CreateITSupportTicketAttachmentAsync(ticketId, saved.OriginalFileName, saved.StoredFileName, saved.FilePath, saved.ContentType, saved.FileSizeBytes, CurrentUserId > 0 ? CurrentUserId : null);
+    }
+
+    private async Task SaveCommentAttachmentIfProvidedAsync(int ticketId, int commentId, IFormFile? attachment)
+    {
+        if (attachment == null || attachment.Length == 0) return;
+        var saved = await SaveITSupportUploadAsync(ticketId, attachment);
+        await _data.CreateITSupportTicketCommentAttachmentAsync(commentId, saved.OriginalFileName, saved.StoredFileName, saved.FilePath, saved.ContentType, saved.FileSizeBytes, CurrentUserId > 0 ? CurrentUserId : null);
+    }
+
+    private async Task<SavedAttachmentInfo> SaveITSupportUploadAsync(int ticketId, IFormFile file)
+    {
+        const long maxBytes = 10 * 1024 * 1024;
+        if (file.Length > maxBytes) throw new InvalidOperationException("Attachment must be 10 MB or smaller.");
+        var blocked = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".exe", ".bat", ".cmd", ".ps1", ".vbs", ".js", ".msi", ".scr", ".com", ".dll" };
+        var originalFileName = Path.GetFileName(file.FileName);
+        var extension = Path.GetExtension(originalFileName);
+        if (string.IsNullOrWhiteSpace(originalFileName)) throw new InvalidOperationException("Invalid file name.");
+        if (blocked.Contains(extension)) throw new InvalidOperationException("This file type is not allowed.");
+        var uploadRoot = Path.Combine(_environment.WebRootPath, "uploads", "it-support-attachments", ticketId.ToString());
+        Directory.CreateDirectory(uploadRoot);
+        var storedFileName = $"{Guid.NewGuid():N}{extension}";
+        var fullPath = Path.Combine(uploadRoot, storedFileName);
+        await using var stream = System.IO.File.Create(fullPath);
+        await file.CopyToAsync(stream);
+        return new SavedAttachmentInfo
+        {
+            OriginalFileName = originalFileName,
+            StoredFileName = storedFileName,
+            FilePath = $"~/uploads/it-support-attachments/{ticketId}/{storedFileName}",
+            ContentType = file.ContentType,
+            FileSizeBytes = file.Length
+        };
+    }
+
+    private sealed class SavedAttachmentInfo
+    {
+        public string OriginalFileName { get; set; } = "";
+        public string StoredFileName { get; set; } = "";
+        public string FilePath { get; set; } = "";
+        public string? ContentType { get; set; }
+        public long FileSizeBytes { get; set; }
     }
 
     private void ValidateTicket(ITSupportTicketForm model)

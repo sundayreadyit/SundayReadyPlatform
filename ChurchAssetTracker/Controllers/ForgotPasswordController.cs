@@ -12,13 +12,15 @@ public class ForgotPasswordController : Controller
 {
     private readonly string _connectionString;
     private readonly IEmailService _email;
+    private readonly SystemSettingsService _settings;
 
-    public ForgotPasswordController(IConfiguration configuration, IEmailService email)
+    public ForgotPasswordController(IConfiguration configuration, IEmailService email, SystemSettingsService settings)
     {
         _connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Missing DefaultConnection in appsettings.json");
 
         _email = email;
+        _settings = settings;
     }
 
     private SqlConnection CreateConnection() => new(_connectionString);
@@ -77,10 +79,11 @@ public class ForgotPasswordController : Controller
             return View("~/Views/Account/ForgotPassword.cshtml");
         }
 
+        var branding = await _settings.GetBrandingAsync();
         var body =
 $@"Hello {user.Value.DisplayName},
 
-A password reset was requested for your CWC Operations Portal account.
+A password reset was requested for your {branding.PortalName} account.
 
 Username: {user.Value.Username}
 
@@ -91,15 +94,15 @@ This link expires in 2 hours and can only be used once.
 
 If you did not request this reset, you can ignore this email.
 
-CWC Operations Portal";
+{branding.PortalName}";
 
         try
         {
-            await _email.SendEmailAsync(user.Value.Email, "Reset your CWC Operations Portal password", body);
+            await _email.SendEmailAsync(user.Value.Email, $"Reset your {branding.PortalName} password", body);
 
             await _email.SendITSupportEmailAsync(
                 "Password reset link generated",
-$@"A password reset link was generated in the CWC Operations Portal.
+$@"A password reset link was generated in {branding.PortalName}.
 
 User: {user.Value.DisplayName}
 Username: {user.Value.Username}

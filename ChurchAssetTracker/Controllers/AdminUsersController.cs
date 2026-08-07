@@ -14,12 +14,14 @@ public class AdminUsersController : Controller
 {
     private readonly string _connectionString;
     private readonly IEmailService _email;
+    private readonly SystemSettingsService _settings;
 
-    public AdminUsersController(IConfiguration configuration, IEmailService email)
+    public AdminUsersController(IConfiguration configuration, IEmailService email, SystemSettingsService settings)
     {
         _connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Missing DefaultConnection in appsettings.json");
         _email = email;
+        _settings = settings;
     }
 
     private SqlConnection CreateConnection() => new(_connectionString);
@@ -234,12 +236,13 @@ public class AdminUsersController : Controller
         if (string.IsNullOrWhiteSpace(setupUrl))
             throw new InvalidOperationException("Could not create password setup URL.");
 
-        var subject = "Set your CWC Operations Portal password";
+        var branding = await _settings.GetBrandingAsync();
+        var subject = $"Set your {branding.PortalName} password";
 
         var body =
 $@"Hello {displayName},
 
-An account has been created for you in the CWC Operations Portal.
+An account has been created for you in {branding.PortalName}.
 
 Username: {username}
 
@@ -248,7 +251,7 @@ Use the link below to set your password:
 
 This link expires in 72 hours and can only be used once.
 
-CWC Operations Portal";
+{branding.PortalName}";
 
         // Send the actual invite to the user's email address.
         await _email.SendEmailAsync(email.Trim(), subject, body);
@@ -257,7 +260,7 @@ CWC Operations Portal";
         // This confirms the invite was generated and gives IT a copy of the setup link if the user's mailbox filters it.
         await _email.SendITSupportEmailAsync(
             "User password setup invite generated",
-$@"A password setup invite was generated in the CWC Operations Portal.
+$@"A password setup invite was generated in {branding.PortalName}.
 
 User: {displayName}
 Username: {username}

@@ -1,10 +1,16 @@
 @using ChurchAssetTracker.Models
+@inject ChurchAssetTracker.Services.SystemSettingsService SystemSettings
+@{
+    var portalBranding = await SystemSettings.GetBrandingAsync();
+    var portalModules = await SystemSettings.GetModulesAsync();
+    var enabledModules = portalModules.Where(x => x.IsEnabled).Select(x => x.ModuleKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CWC Operations Portal</title>
+    <title>@ViewData["Title"] - @portalBranding.PortalName</title>
 
     <script>
 
@@ -25,9 +31,11 @@ function toggleDarkMode(){
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
+        :root{--portal-primary:@portalBranding.PrimaryColor;--portal-secondary:@portalBranding.SecondaryColor;--portal-accent:@portalBranding.AccentColor;}
+        .btn-primary,.button.primary,.quick-actions a{background:var(--portal-primary)!important;border-color:var(--portal-primary)!important}.btn-secondary{color:var(--portal-primary)!important}.nav{background:var(--portal-primary)!important}.nav-link.active{background:color-mix(in srgb,var(--portal-accent) 35%,transparent)!important}
         body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f1f5f9;color:#0f172a}
         .app-shell{display:flex;min-height:100vh}
-        .sidebar{width:280px;background:#174c2f;color:white;display:flex;flex-direction:column;box-shadow:4px 0 18px rgba(0,0,0,.12);z-index:20;transition:width .2s ease}
+        .sidebar{width:280px;background:linear-gradient(180deg,var(--portal-primary),var(--portal-secondary));color:white;display:flex;flex-direction:column;box-shadow:4px 0 18px rgba(0,0,0,.12);z-index:20;transition:width .2s ease}
         .sidebar-header{padding:24px;border-bottom:1px solid rgba(255,255,255,.12)}
         .sidebar-header-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
         .sidebar-brand h1{margin:0;font-size:1.5rem;line-height:1.2}
@@ -37,6 +45,10 @@ function toggleDarkMode(){
         .sidebar-close{display:none;margin-top:14px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:white;border-radius:10px;padding:8px 12px;cursor:pointer}
         .nav-section{padding:20px 18px 8px}
         .nav-section-title{font-size:.8rem;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.65);text-transform:uppercase;margin-bottom:10px}
+        .nav-section-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;border:0;background:transparent;padding:0;color:inherit;cursor:pointer;font:inherit;text-align:left}
+        .nav-chevron{transition:transform .16s ease;font-size:.75rem}
+        .nav-group.group-collapsed .nav-links{display:none}
+        .nav-group.group-collapsed .nav-chevron{transform:rotate(-90deg)}
         .nav-links{display:flex;flex-direction:column;gap:4px}
         .nav-link{display:flex;align-items:center;gap:12px;text-decoration:none;color:white;padding:12px 14px;border-radius:12px;transition:background .15s ease;white-space:nowrap}
         .nav-link:hover{background:rgba(255,255,255,.10)}
@@ -44,16 +56,16 @@ function toggleDarkMode(){
         .nav-label{overflow:hidden;text-overflow:ellipsis}
         .main-shell{flex:1;display:flex;flex-direction:column;min-width:0}
         .topbar{background:white;border-bottom:1px solid #dbe3ea;padding:16px 28px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 10px rgba(15,23,42,.04);gap:16px}
-        .mobile-menu-button{display:none;border:0;background:#174c2f;color:white;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
+        .mobile-menu-button{display:none;border:0;background:var(--portal-primary);color:white;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}
         .topbar-title{display:flex;flex-direction:column;flex:1}
-        .topbar-title strong{font-size:1.2rem;color:#174c2f}
+        .topbar-title strong{font-size:1.2rem;color:var(--portal-primary)}
         .topbar-title span{color:#64748b;font-size:.92rem}
         .content-area{padding:28px}
         .footer{margin-top:auto;padding:16px 28px;border-top:1px solid #dbe3ea;background:white;color:#64748b;font-size:.9rem}
         .sidebar-backdrop{display:none}
         .profile-menu{position:relative}
         .profile-menu-button{display:flex;align-items:center;gap:10px;border:1px solid #dbe3ea;background:#fff;border-radius:999px;padding:6px 10px 6px 6px;cursor:pointer;font-weight:700;color:#334155}
-        .profile-avatar{width:34px;height:34px;border-radius:50%;background:#174c2f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;object-fit:cover;flex-shrink:0}
+        .profile-avatar{width:34px;height:34px;border-radius:50%;background:var(--portal-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;object-fit:cover;flex-shrink:0}
         .profile-dropdown{display:none;position:absolute;right:0;top:48px;min-width:220px;background:#fff;border:1px solid #dbe3ea;border-radius:14px;box-shadow:0 18px 40px rgba(15,23,42,.14);z-index:50;overflow:hidden}
         .profile-dropdown.open{display:block}
         .profile-dropdown-header{padding:14px;border-bottom:1px solid #e2e8f0}
@@ -73,6 +85,7 @@ function toggleDarkMode(){
         body.sidebar-collapsed .nav-link{justify-content:center;padding:12px 10px}
         body.sidebar-collapsed .nav-label{display:none}
         body.sidebar-collapsed .nav-icon{width:auto;font-size:1.25rem}
+        body.sidebar-collapsed .nav-group.group-collapsed .nav-links{display:flex}
 
         @@media(max-width:1000px){.sidebar{width:248px}}
         @@media(max-width:800px){
@@ -116,7 +129,7 @@ function toggleDarkMode(){
 
         .topbar-global-search{min-width:260px;max-width:420px;flex:0 1 360px}
         .topbar-global-search input{width:100%;border:1px solid #cbd5e1;border-radius:999px;padding:10px 14px;background:#f8fafc;color:#0f172a}
-        .topbar-global-search input:focus{outline:none;border-color:#174c2f;background:#fff;box-shadow:0 0 0 3px rgba(23,76,47,.12)}
+        .topbar-global-search input:focus{outline:none;border-color:var(--portal-accent);background:#fff;box-shadow:0 0 0 3px color-mix(in srgb,var(--portal-accent) 18%,transparent)}
 
 
         :root {
@@ -163,7 +176,7 @@ function toggleDarkMode(){
         }
 
         html.dark-mode .sidebar {
-            background: #052e1a !important;
+            background: linear-gradient(180deg,var(--portal-primary),var(--portal-secondary)) !important;
             box-shadow: 4px 0 18px rgba(0,0,0,.38) !important;
         }
 
@@ -275,9 +288,9 @@ function toggleDarkMode(){
         html.dark-mode .search-button,
         html.dark-mode button.primary,
         html.dark-mode a.primary {
-            background: #15803d !important;
+            background: var(--portal-primary) !important;
             color: #ffffff !important;
-            border-color: #166534 !important;
+            border-color: var(--portal-accent) !important;
         }
 
         html.dark-mode .btn.danger,
@@ -480,25 +493,27 @@ function toggleDarkMode(){
 
 </style>
 
-    <link rel="icon" type="image/png" href="~/images/branding/cwc-app-icon-192.png" />
-    <link rel="apple-touch-icon" href="~/images/branding/cwc-app-icon-192.png" />
+    <link rel="icon" type="image/png" href="@portalBranding.FaviconPath" />
+    <link rel="apple-touch-icon" href="@portalBranding.FaviconPath" />
     <link rel="manifest" href="~/manifest.webmanifest" />
-    <meta name="theme-color" content="#14532d" />
+    <meta name="theme-color" content="@portalBranding.PrimaryColor" />
 
 </head>
 <body>
 @{
     var isAdmin = User.IsInRole("Admin");
-    var canPeople = isAdmin;
-    var canSchool = isAdmin || User.IsInRole("SchoolAdmin") || User.IsInRole("SchoolStaff");
-    var canAssets = isAdmin || User.IsInRole("AssetManager");
-    var canKeys = isAdmin || User.IsInRole("KeyManager");
-    var canReservations = isAdmin || User.IsInRole("ReservationManager") || User.IsInRole("Pastor");
-    var canITAssets = isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITAssetManager") || User.IsInRole("ITAssetViewer");
-    var canITSupport = isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITSupportManager") || User.IsInRole("ITSupportTech");
-    var canPasswordVault = isAdmin || User.IsInRole("PasswordVault");
+    var canPeople = isAdmin && enabledModules.Contains("People");
+    var canSchool = enabledModules.Contains("School") && (isAdmin || User.IsInRole("SchoolAdmin") || User.IsInRole("SchoolStaff"));
+    var canAssets = enabledModules.Contains("Assets") && (isAdmin || User.IsInRole("AssetManager"));
+    var canKeys = enabledModules.Contains("Keys") && (isAdmin || User.IsInRole("KeyManager"));
+    var canReservations = enabledModules.Contains("Reservations") && (isAdmin || User.IsInRole("ReservationManager") || User.IsInRole("Pastor"));
+    var canITAssets = enabledModules.Contains("ITAssets") && (isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITAssetManager") || User.IsInRole("ITAssetViewer"));
+    var canITSupport = enabledModules.Contains("ITSupport") && (isAdmin || User.IsInRole("ITAdmin") || User.IsInRole("ITSupportManager") || User.IsInRole("ITSupportTech"));
+    var canPasswordVault = enabledModules.Contains("PasswordVault") && (isAdmin || User.IsInRole("PasswordVault"));
+    var canDocumentation = enabledModules.Contains("Documentation");
+    var canWorship = enabledModules.Contains("Worship");
     
-    var canITRequester = User.IsInRole("ITRequester");
+    var canITRequester = enabledModules.Contains("ITSupport") && User.IsInRole("ITRequester");
 var canAudit = isAdmin || User.IsInRole("Pastor");
     var canUsers = isAdmin;
 }
@@ -510,83 +525,101 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
     <aside id="sidebar" class="sidebar">
         <div class="sidebar-header">
                 <div class="brand-logo-card">
-                    <img src="~/images/branding/cwc-church-logo.png" alt="Christian Worship Center" class="sidebar-brand-logo" />
+                    <img src="@portalBranding.LogoPath" alt="@portalBranding.OrganizationName" class="sidebar-brand-logo" />
                 </div>
             <div class="sidebar-header-top">
                 <div class="sidebar-brand">
-                    <h1>CWC Operations Portal</h1>
-                    <p>Centralized church and school operations management</p>
+                    <h1>@portalBranding.PortalName</h1>
+                    <p>@portalBranding.PortalSubtitle</p>
                 </div>
                 <button type="button" class="sidebar-toggle" onclick="toggleSidebarCollapse()" title="Collapse sidebar">☰</button>
             </div>
             <button type="button" class="sidebar-close" onclick="closeSidebar()">Close Menu</button>
         </div>
 
-        <div class="nav-section"><div class="nav-section-title">Main</div><div class="nav-links"><a class="nav-link" asp-controller="Dashboard" asp-action="Index" title="Dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a><a class="nav-link" asp-controller="About" asp-action="Index" title="About"><span class="nav-icon">ℹ️</span><span class="nav-label">About</span></a><a class="nav-link" asp-controller="App" asp-action="Index" title="Install App"><span class="nav-icon">⬇️</span><span class="nav-label">Install App</span></a><a class="nav-link" asp-controller="UserGuide" asp-action="Index" title="User Guide"><span class="nav-icon">📖</span><span class="nav-label">User Guide</span></a></div></div>
+        <div class="nav-section nav-group" data-nav-group="main">
+            <button type="button" class="nav-section-title nav-section-toggle" onclick="toggleNavGroup('main')"><span>Main</span><span class="nav-chevron">▾</span></button>
+            <div class="nav-links">
+                <a class="nav-link" asp-controller="Dashboard" asp-action="Index" title="Dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+                <a class="nav-link" asp-controller="About" asp-action="Index" title="About"><span class="nav-icon">ℹ️</span><span class="nav-label">About</span></a>
+                <a class="nav-link" asp-controller="App" asp-action="Index" title="Install App"><span class="nav-icon">⬇️</span><span class="nav-label">Install App</span></a>
+                <a class="nav-link" asp-controller="UserGuide" asp-action="Index" title="User Guide"><span class="nav-icon">📖</span><span class="nav-label">User Guide</span></a>
+                @if (canDocumentation)
+                {
+                    <a class="nav-link" asp-controller="ITDocuments" asp-action="Index" title="Documentation Library"><span class="nav-icon">📚</span><span class="nav-label">Documentation</span></a>
+                }
+            </div>
+        </div>
 
-        @if (canReservations || canAssets || canKeys)
+        @if (canReservations || canAssets || canKeys || canWorship)
         {
-            <div class="nav-section"><div class="nav-section-title">Church Operations</div><div class="nav-links">
-            @if(canReservations){<a class="nav-link" asp-controller="Reservations" asp-action="Index" title="Reservations"><span class="nav-icon">📅</span><span class="nav-label">Reservations</span></a>}
-            @if(canAssets){<a class="nav-link" asp-controller="Assets" asp-action="Index" title="Assets"><span class="nav-icon">📦</span><span class="nav-label">Assets</span></a><a class="nav-link" asp-controller="Checkouts" asp-action="Index" title="Checkouts"><span class="nav-icon">📋</span><span class="nav-label">Checkouts</span></a>}
-            @if(canKeys){<a class="nav-link" asp-controller="Keys" asp-action="Index" title="Keys"><span class="nav-icon">🔑</span><span class="nav-label">Keys</span></a><a class="nav-link" asp-controller="KeyAssignments" asp-action="Index" title="Key Assignments"><span class="nav-icon">🗝️</span><span class="nav-label">Key Assignments</span></a><a class="nav-link" asp-controller="AccessAreas" asp-action="Index" title="Access Areas"><span class="nav-icon">🚪</span><span class="nav-label">Access Areas</span></a>}
-            </div></div>
+            <div class="nav-section nav-group" data-nav-group="church">
+                <button type="button" class="nav-section-title nav-section-toggle" onclick="toggleNavGroup('church')"><span>Church Operations</span><span class="nav-chevron">▾</span></button>
+                <div class="nav-links">
+                    @if (canReservations) { <a class="nav-link" asp-controller="Reservations" asp-action="Index" title="Reservations"><span class="nav-icon">📅</span><span class="nav-label">Reservations</span></a> }
+                    @if (canAssets) { <a class="nav-link" asp-controller="Assets" asp-action="Index" title="Assets"><span class="nav-icon">📦</span><span class="nav-label">Assets</span></a><a class="nav-link" asp-controller="Checkouts" asp-action="Index" title="Checkouts"><span class="nav-icon">📋</span><span class="nav-label">Checkouts</span></a> }
+                    @if (canKeys) { <a class="nav-link" asp-controller="Keys" asp-action="Index" title="Keys"><span class="nav-icon">🔑</span><span class="nav-label">Keys</span></a><a class="nav-link" asp-controller="KeyAssignments" asp-action="Index" title="Key Assignments"><span class="nav-icon">🗝️</span><span class="nav-label">Key Assignments</span></a><a class="nav-link" asp-controller="AccessAreas" asp-action="Index" title="Access Areas"><span class="nav-icon">🚪</span><span class="nav-label">Access Areas</span></a> }
+                    @if (canWorship) { <a class="nav-link" asp-controller="Worship" asp-action="Index" title="Worship Song Library"><span class="nav-icon">🎵</span><span class="nav-label">Worship</span></a> }
+                </div>
+            </div>
         }
 
         @if (canSchool)
         {
-            <div class="nav-section"><div class="nav-section-title">School</div><div class="nav-links">
-                <a class="nav-link" asp-controller="Students" asp-action="Index" title="Students"><span class="nav-icon">👨‍🎓</span><span class="nav-label">Students</span></a>
-                <a class="nav-link" asp-controller="FacultyStaff" asp-action="Index" title="Faculty / Staff"><span class="nav-icon">👩‍🏫</span><span class="nav-label">Faculty / Staff</span></a>
-            </div></div>
+            <div class="nav-section nav-group" data-nav-group="school">
+                <button type="button" class="nav-section-title nav-section-toggle" onclick="toggleNavGroup('school')"><span>School</span><span class="nav-chevron">▾</span></button>
+                <div class="nav-links">
+                    <a class="nav-link" asp-controller="Students" asp-action="Index" title="Students"><span class="nav-icon">👨‍🎓</span><span class="nav-label">Students</span></a>
+                    <a class="nav-link" asp-controller="FacultyStaff" asp-action="Index" title="Faculty / Staff"><span class="nav-icon">👩‍🏫</span><span class="nav-label">Faculty / Staff</span></a>
+                </div>
+            </div>
         }
 
         @if (canITAssets || canITSupport || canITRequester || canPasswordVault)
         {
-            <div class="nav-section"><div class="nav-section-title">IT Operations</div><div class="nav-links">
-            @if(canITAssets){<a class="nav-link" asp-controller="ITAssets" asp-action="Index" title="IT Assets"><span class="nav-icon">💻</span><span class="nav-label">IT Assets</span></a>}
-            @if(canPasswordVault){<a class="nav-link" asp-controller="PasswordVault" asp-action="Index" title="Password Vault"><span class="nav-icon">🔐</span><span class="nav-label">Password Vault</span></a>}
-            @if(canITSupport){<a class="nav-link" asp-controller="ITSupport" asp-action="Index" title="IT Support"><span class="nav-icon">🎫</span><span class="nav-label">IT Support</span></a>
-                    <a class="nav-link" asp-controller="ITDocuments" asp-action="Index" title="IT Documentation">
-                        <span class="nav-icon">📚</span>
-                        <span class="nav-label">IT Documentation</span>
-                    </a>
-
-                    <a class="nav-link" asp-controller="ITSupport" asp-action="TechnicianDashboard" title="Technician Dashboard">
-                        <span class="nav-icon">🧰</span>
-                        <span class="nav-label">IT Dashboard</span>
-                    </a>
-
-            @if (canITRequester && !canITSupport)
-            {
-                <a class="nav-link" asp-controller="ITSupport" asp-action="RequesterCreate" title="Submit IT Ticket">
-                    <span class="nav-icon">🆘</span>
-                    <span class="nav-label">Submit IT Ticket</span>
-                </a>
-
-                <a class="nav-link" asp-controller="ITSupport" asp-action="MyTickets" title="My IT Tickets">
-                    <span class="nav-icon">🎫</span>
-                    <span class="nav-label">My IT Tickets</span>
-                </a>
-            }
-}
-            </div></div>
+            <div class="nav-section nav-group" data-nav-group="it">
+                <button type="button" class="nav-section-title nav-section-toggle" onclick="toggleNavGroup('it')"><span>IT Operations</span><span class="nav-chevron">▾</span></button>
+                <div class="nav-links">
+                    @if (canITAssets) { <a class="nav-link" asp-controller="ITAssets" asp-action="Index" title="IT Assets"><span class="nav-icon">💻</span><span class="nav-label">IT Assets</span></a> }
+                    @if (canPasswordVault) { <a class="nav-link" asp-controller="PasswordVault" asp-action="Index" title="Password Vault"><span class="nav-icon">🔐</span><span class="nav-label">Password Vault</span></a> }
+                    @if (canITSupport)
+                    {
+                        <a class="nav-link" asp-controller="ITSupport" asp-action="Index" title="IT Support"><span class="nav-icon">🎫</span><span class="nav-label">IT Support</span></a>
+                        <a class="nav-link" asp-controller="ITSupport" asp-action="TechnicianDashboard" title="Technician Dashboard"><span class="nav-icon">🧰</span><span class="nav-label">IT Dashboard</span></a>
+                    }
+                    @if (canITRequester && !canITSupport)
+                    {
+                        <a class="nav-link" asp-controller="ITSupport" asp-action="RequesterCreate" title="Submit IT Ticket"><span class="nav-icon">🆘</span><span class="nav-label">Submit IT Ticket</span></a>
+                        <a class="nav-link" asp-controller="ITSupport" asp-action="MyTickets" title="My IT Tickets"><span class="nav-icon">🎫</span><span class="nav-label">My IT Tickets</span></a>
+                    }
+                </div>
+            </div>
         }
 
         @if (canPeople || canAudit || canUsers)
         {
-            <div class="nav-section"><div class="nav-section-title">Administration</div><div class="nav-links">
-            @if(canPeople){<a class="nav-link" asp-controller="People" asp-action="Index" title="People"><span class="nav-icon">👥</span><span class="nav-label">People</span></a>}
-            @if(canAudit){<a class="nav-link" asp-controller="Audit" asp-action="Index" title="Audit Log"><span class="nav-icon">📝</span><span class="nav-label">Audit Log</span></a>}
-            @if(canUsers){<a class="nav-link" asp-controller="AdminUsers" asp-action="Index" title="Users"><span class="nav-icon">⚙️</span><span class="nav-label">Users</span></a><a class="nav-link" asp-controller="SystemInfo" asp-action="Index" title="System Information"><span class="nav-icon">🖥️</span><span class="nav-label">System Info</span></a>}
-            </div></div>
+            <div class="nav-section nav-group" data-nav-group="administration">
+                <button type="button" class="nav-section-title nav-section-toggle" onclick="toggleNavGroup('administration')"><span>Administration</span><span class="nav-chevron">▾</span></button>
+                <div class="nav-links">
+                    @if (canPeople) { <a class="nav-link" asp-controller="People" asp-action="Index" title="People"><span class="nav-icon">👥</span><span class="nav-label">People</span></a> }
+                    @if (canAudit) { <a class="nav-link" asp-controller="Audit" asp-action="Index" title="Audit Log"><span class="nav-icon">📝</span><span class="nav-label">Audit Log</span></a> }
+                    @if (canUsers)
+                    {
+                        <a class="nav-link" asp-controller="AdminUsers" asp-action="Index" title="Users"><span class="nav-icon">👤</span><span class="nav-label">Users</span></a>
+                        <a class="nav-link" asp-controller="SetupWizard" asp-action="Index" title="Setup Wizard"><span class="nav-icon">🧭</span><span class="nav-label">Setup Wizard</span></a>
+                        <a class="nav-link" asp-controller="Administration" asp-action="Index" title="System Settings"><span class="nav-icon">⚙️</span><span class="nav-label">System Settings</span></a>
+                        <a class="nav-link" asp-controller="DashboardBuilder" asp-action="Index" title="Dashboard Builder"><span class="nav-icon">🧩</span><span class="nav-label">Dashboard Builder</span></a>
+                        <a class="nav-link" asp-controller="SystemInfo" asp-action="Index" title="System Information"><span class="nav-icon">🖥️</span><span class="nav-label">System Info</span></a>
+                    }
+                </div>
+            </div>
         }
     </aside>
 }
 <div class="main-shell">
 <header class="topbar">
 @if (User.Identity?.IsAuthenticated == true){<button type="button" class="mobile-menu-button" onclick="openSidebar()">☰ Menu</button>}
-<div class="topbar-title"><strong>CWC Operations Portal</strong><span>Centralized church and school operations management</span></div>
+<div class="topbar-title"><strong>@portalBranding.PortalName</strong><span>@portalBranding.PortalSubtitle</span></div>
 @if (User.Identity?.IsAuthenticated == true)
 {
 
@@ -603,7 +636,7 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
 @await Component.InvokeAsync("UserAvatar")
 <span>@User.Identity.Name</span><span>▾</span></button>
 <div id="profileDropdown" class="profile-dropdown">
-<div class="profile-dropdown-header"><strong>@User.Identity.Name</strong><span>CWC Operations Portal</span></div>
+<div class="profile-dropdown-header"><strong>@User.Identity.Name</strong><span>@portalBranding.PortalName</span></div>
 <a asp-controller="Profile" asp-action="Index">Profile</a>
 <a asp-controller="Profile" asp-action="ChangePassword">Change Password</a>
 <button type="button" class="theme-toggle-button" onclick="toggleDarkMode()">Toggle Dark Mode</button>
@@ -615,7 +648,7 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
 </div></div>}
 </header>
 <main class="content-area">@RenderBody()</main>
-<footer class="footer">CWC Operations Portal v@(PortalVersion.Version) • @PortalVersion.ReleaseName • Build @PortalVersion.BuildDate • Internal Use Only</footer>
+<footer class="footer"><strong>@portalBranding.PortalName</strong> v@(PortalVersion.Version) • @PortalVersion.ReleaseName • Build @PortalVersion.BuildDate<br /><span>Powered by Sunday Ready IT • © 2026 Sunday Ready IT • Licensed to @portalBranding.OrganizationName</span></footer>
 </div></div>
 <script>
 
@@ -637,6 +670,19 @@ function toggleSidebarCollapse(){
         localStorage.setItem('cwc.sidebar.collapsed', document.body.classList.contains('sidebar-collapsed') ? 'true' : 'false');
     } catch (e) {}
 }
+
+function toggleNavGroup(key){
+    var group=document.querySelector('[data-nav-group="'+key+'"]');
+    if(!group)return;
+    group.classList.toggle('group-collapsed');
+    try{localStorage.setItem('cwc.nav.group.'+key,group.classList.contains('group-collapsed')?'collapsed':'expanded');}catch(e){}
+}
+(function initializeNavGroups(){
+    document.querySelectorAll('[data-nav-group]').forEach(function(group){
+        var key=group.getAttribute('data-nav-group');
+        try{if(localStorage.getItem('cwc.nav.group.'+key)==='collapsed')group.classList.add('group-collapsed');}catch(e){}
+    });
+})();
 
 function openSidebar(){var s=document.getElementById('sidebar');var b=document.getElementById('sidebarBackdrop');if(s)s.classList.add('open');if(b)b.classList.add('open');}
 function closeSidebar(){var s=document.getElementById('sidebar');var b=document.getElementById('sidebarBackdrop');if(s)s.classList.remove('open');if(b)b.classList.remove('open');}

@@ -1,0 +1,147 @@
+@model ChurchAssetTracker.Models.AdministrationSettingsViewModel
+@{
+    ViewData["Title"] = "Administration";
+    var section = Context.Request.Query["section"].ToString();
+    if (string.IsNullOrWhiteSpace(section)) section = "general";
+}
+
+<div class="admin-page">
+    <div class="admin-hero">
+        <div>
+            <span class="eyebrow">Sunday Ready Platform</span>
+            <h1>Administration</h1>
+            <p>Configure organization branding, email, storage and portal modules without editing appsettings.json.</p>
+        </div>
+        <div class="health-chip">⚙️ Runtime Configuration</div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="admin-alert success">✓ @Model.StatusMessage</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="admin-alert error">⚠ @Model.ErrorMessage</div>
+    }
+
+    <div class="admin-tabs" role="tablist">
+        <button type="button" class="admin-tab @(section == "general" ? "active" : "")" data-tab="general">Organization</button>
+        <button type="button" class="admin-tab @(section == "email" ? "active" : "")" data-tab="email">Email / SMTP</button>
+        <button type="button" class="admin-tab @(section == "storage" ? "active" : "")" data-tab="storage">Storage</button>
+        <button type="button" class="admin-tab @(section == "modules" ? "active" : "")" data-tab="modules">Modules</button>
+    </div>
+
+    <section class="admin-panel @(section == "general" ? "active" : "")" data-panel="general">
+        <div class="panel-heading">
+            <div><h2>Organization & Branding</h2><p>Customize this deployment for the organization using it.</p></div>
+            @if (!string.IsNullOrWhiteSpace(Model.Branding.LogoPath))
+            {
+                <img src="@Model.Branding.LogoPath" class="logo-preview" alt="Organization logo" />
+            }
+        </div>
+        <form asp-action="SaveGeneral" method="post" enctype="multipart/form-data" class="settings-form">
+            @Html.AntiForgeryToken()
+            <div class="field-grid">
+                <label><span>Organization Name</span><input name="OrganizationName" value="@Model.Branding.OrganizationName" required /></label>
+                <label><span>Short Name</span><input name="OrganizationShortName" value="@Model.Branding.OrganizationShortName" /></label>
+                <label><span>Portal Name</span><input name="PortalName" value="@Model.Branding.PortalName" required /></label>
+                <label><span>Time Zone</span><input name="TimeZone" value="@Model.Branding.TimeZone" /></label>
+                <label class="full"><span>Portal Subtitle</span><input name="PortalSubtitle" value="@Model.Branding.PortalSubtitle" /></label>
+                <label><span>Website</span><input name="OrganizationWebsite" value="@Model.Branding.OrganizationWebsite" /></label>
+                <label><span>Organization Email</span><input type="email" name="OrganizationEmail" value="@Model.Branding.OrganizationEmail" /></label>
+                <label><span>Organization Phone</span><input name="OrganizationPhone" value="@Model.Branding.OrganizationPhone" /></label>
+                <label><span>Organization Logo</span><input type="file" name="organizationLogo" accept=".png,.jpg,.jpeg,.webp" /><small>PNG/JPG/WEBP, maximum 5 MB.</small></label>
+                <div class="full color-settings">
+                    <div class="color-settings-copy"><strong>Portal Color Scheme</strong><small>Choose the primary navigation color, secondary gradient color, and accent used for actions and highlights.</small></div>
+                    <div class="color-grid">
+                        <label class="color-field"><span>Primary</span><div><input type="color" id="PrimaryColorPicker" value="@Model.Branding.PrimaryColor" /><input class="hex-input" id="PrimaryColor" name="PrimaryColor" value="@Model.Branding.PrimaryColor" maxlength="7" required /></div></label>
+                        <label class="color-field"><span>Secondary</span><div><input type="color" id="SecondaryColorPicker" value="@Model.Branding.SecondaryColor" /><input class="hex-input" id="SecondaryColor" name="SecondaryColor" value="@Model.Branding.SecondaryColor" maxlength="7" required /></div></label>
+                        <label class="color-field"><span>Accent</span><div><input type="color" id="AccentColorPicker" value="@Model.Branding.AccentColor" /><input class="hex-input" id="AccentColor" name="AccentColor" value="@Model.Branding.AccentColor" maxlength="7" required /></div></label>
+                    </div>
+                    <div id="themePreview" class="theme-preview"><div class="theme-preview-sidebar"><span>Organization</span><strong>Portal</strong></div><div class="theme-preview-content"><span class="theme-preview-pill">Accent</span><button type="button">Primary Action</button></div></div>
+                </div>
+            </div>
+            <div class="form-actions"><button class="primary-action" type="submit">Save Organization Settings</button></div>
+        </form>
+    </section>
+
+    <section class="admin-panel @(section == "email" ? "active" : "")" data-panel="email">
+        <div class="panel-heading"><div><h2>Email / SMTP</h2><p>Configure ticket, reservation and system email delivery.</p></div><span class="status-badge @(Model.Email.Enabled ? "on" : "off")">@(Model.Email.Enabled ? "Enabled" : "Disabled")</span></div>
+        <form asp-action="SaveEmail" method="post" class="settings-form">
+            @Html.AntiForgeryToken()
+            <div class="field-grid">
+                <label class="toggle-field"><input type="checkbox" name="Enabled" value="true" @(Model.Email.Enabled ? "checked" : "") /><input type="hidden" name="Enabled" value="false" /><span>Enable SMTP email</span></label>
+                <label class="toggle-field"><input type="checkbox" name="UseSsl" value="true" @(Model.Email.UseSsl ? "checked" : "") /><input type="hidden" name="UseSsl" value="false" /><span>Use SSL/TLS</span></label>
+                <label><span>SMTP Host</span><input name="SmtpHost" value="@Model.Email.SmtpHost" /></label>
+                <label><span>SMTP Port</span><input type="number" min="1" max="65535" name="SmtpPort" value="@Model.Email.SmtpPort" /></label>
+                <label><span>Username</span><input name="Username" value="@Model.Email.Username" autocomplete="off" /></label>
+                <label><span>Password</span><input type="password" name="Password" value="" autocomplete="new-password" placeholder="@(Model.Email.PasswordConfigured ? "Password configured — leave blank to keep it" : "Enter SMTP password")" /><small>Stored encrypted using ASP.NET Data Protection.</small></label>
+                <label><span>From Email</span><input type="email" name="FromEmail" value="@Model.Email.FromEmail" /></label>
+                <label><span>From Name</span><input name="FromName" value="@Model.Email.FromName" /></label>
+                <label><span>Admin Email</span><input type="email" name="AdminEmail" value="@Model.Email.AdminEmail" /></label>
+                <label><span>IT Support Email</span><input type="email" name="ITSupportEmail" value="@Model.Email.ITSupportEmail" /></label>
+                <label><span>Reservations Email</span><input type="email" name="ReservationsEmail" value="@Model.Email.ReservationsEmail" /></label>
+            </div>
+            <div class="form-actions"><button class="primary-action" type="submit">Save Email Settings</button></div>
+        </form>
+        <div class="test-strip">
+            <form asp-action="SendTestEmail" method="post">
+                @Html.AntiForgeryToken()
+                <div><strong>Send Test Email</strong><span>Validate the saved SMTP configuration.</span></div>
+                <input type="email" name="testEmailRecipient" placeholder="recipient@example.org" required />
+                <button type="submit">Send Test</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="admin-panel @(section == "storage" ? "active" : "")" data-panel="storage">
+        <div class="panel-heading"><div><h2>Storage Paths</h2><p>Configure shared storage locations used by portal libraries.</p></div></div>
+        <form asp-action="SaveStorage" method="post" class="settings-form">
+            @Html.AntiForgeryToken()
+            <div class="field-grid one-column">
+                <label><span>Documentation Library Root</span><input name="DocumentLibraryRootPath" value="@Model.Storage.DocumentLibraryRootPath" /><small>Example: \\SERVER\Documentation</small></label>
+                <label><span>Worship Song Library Root</span><input name="WorshipLibraryRootPath" value="@Model.Storage.WorshipLibraryRootPath" /><small>Directory containing licensed PDF/song files.</small></label>
+            </div>
+            <div class="form-actions"><button class="primary-action" type="submit">Save Storage Settings</button></div>
+        </form>
+        <div class="path-tests">
+            <form asp-action="TestPath" method="post">@Html.AntiForgeryToken()<input type="hidden" name="pathType" value="documents" /><button type="submit">Test Documentation Path</button></form>
+            <form asp-action="TestPath" method="post">@Html.AntiForgeryToken()<input type="hidden" name="pathType" value="worship" /><button type="submit">Test Worship Path</button></form>
+        </div>
+    </section>
+
+    <section class="admin-panel @(section == "modules" ? "active" : "")" data-panel="modules">
+        <div class="panel-heading"><div><h2>Module Manager</h2><p>Enable only the capabilities this organization uses. Disabling a module hides it without deleting its data.</p></div></div>
+        <form asp-action="SaveModules" method="post">
+            @Html.AntiForgeryToken()
+            <div class="module-grid">
+                @foreach (var module in Model.Modules)
+                {
+                    <label class="module-card @(module.IsCore ? "core" : "")">
+                        <div class="module-card-top"><strong>@module.DisplayName</strong>@if(module.IsCore){<span>Core</span>}</div>
+                        <p>@module.Description</p>
+                        @if (module.IsCore)
+                        {
+                            <input type="checkbox" checked disabled />
+                        }
+                        else
+                        {
+                            <input type="checkbox" name="enabledModules" value="@module.ModuleKey" @(module.IsEnabled ? "checked" : "") />
+                        }
+                    </label>
+                }
+            </div>
+            <div class="form-actions"><button class="primary-action" type="submit">Save Module Configuration</button></div>
+        </form>
+    </section>
+</div>
+
+<style>
+.admin-page{max-width:1240px;margin:0 auto}.admin-hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;background:linear-gradient(135deg,var(--portal-secondary),var(--portal-primary));color:#fff;border-radius:20px;padding:28px;margin-bottom:20px;box-shadow:0 14px 34px rgba(15,23,42,.14)}.admin-hero h1{margin:3px 0 8px;font-size:2rem}.admin-hero p{margin:0;color:rgba(255,255,255,.84)}.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-weight:800;font-size:.76rem;color:#bbf7d0}.health-chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:9px 13px;font-weight:800;white-space:nowrap}.admin-alert{border-radius:14px;padding:14px 16px;margin:0 0 16px;border:1px solid}.admin-alert.success{background:#f0fdf4;border-color:#86efac;color:#166534}.admin-alert.error{background:#fef2f2;border-color:#fecaca;color:#991b1b}.admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.admin-tab{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:999px;padding:10px 15px;font-weight:800;cursor:pointer}.admin-tab.active{background:var(--portal-primary);color:#fff;border-color:var(--portal-primary)}.admin-panel{display:none;background:#fff;border:1px solid #dbe3ea;border-radius:18px;padding:22px;box-shadow:0 10px 28px rgba(15,23,42,.06);margin-bottom:20px}.admin-panel.active{display:block}.panel-heading{display:flex;justify-content:space-between;gap:20px;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:16px;margin-bottom:18px}.panel-heading h2{margin:0}.panel-heading p{margin:5px 0 0;color:#64748b}.logo-preview{width:140px;height:74px;object-fit:contain;border:1px solid #e2e8f0;border-radius:12px;background:#fff;padding:6px}.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.field-grid.one-column{grid-template-columns:1fr}.field-grid label{display:flex;flex-direction:column;gap:7px;font-weight:700;color:#334155}.field-grid label.full{grid-column:1/-1}.field-grid input,.field-grid select{border:1px solid #cbd5e1;border-radius:10px;padding:11px 12px;background:#fff;color:#0f172a;font:inherit}.field-grid small{font-weight:400;color:#64748b}.toggle-field{flex-direction:row!important;align-items:center!important;border:1px solid #e2e8f0;border-radius:12px;padding:12px!important;background:#f8fafc}.toggle-field input{width:auto!important}.form-actions{display:flex;justify-content:flex-end;margin-top:20px}.primary-action,.test-strip button,.path-tests button{border:0;background:var(--portal-primary);color:#fff;border-radius:10px;padding:11px 15px;font-weight:800;cursor:pointer}.test-strip{margin-top:20px;border-top:1px solid #e2e8f0;padding-top:18px}.test-strip form{display:grid;grid-template-columns:1fr minmax(220px,360px) auto;gap:12px;align-items:center}.test-strip strong,.test-strip span{display:block}.test-strip span{color:#64748b;font-size:.9rem}.test-strip input{border:1px solid #cbd5e1;border-radius:10px;padding:11px 12px}.path-tests{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.status-badge{border-radius:999px;padding:7px 10px;font-size:.8rem;font-weight:800}.status-badge.on{background:#dcfce7;color:#166534}.status-badge.off{background:#e2e8f0;color:#475569}.module-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.module-card{position:relative;border:1px solid #dbe3ea;border-radius:15px;padding:16px;background:#f8fafc;cursor:pointer}.module-card.core{background:#f0fdf4;border-color:#bbf7d0}.module-card-top{display:flex;justify-content:space-between;gap:12px}.module-card-top span{font-size:.72rem;background:#dcfce7;color:#166534;border-radius:999px;padding:3px 7px}.module-card p{color:#64748b;min-height:42px;font-size:.9rem}.module-card input{width:20px;height:20px}.color-settings{border:1px solid #e2e8f0;border-radius:14px;padding:16px;background:#f8fafc}.color-settings-copy strong,.color-settings-copy small{display:block}.color-settings-copy small{margin-top:4px}.color-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.color-field>div{display:grid;grid-template-columns:52px 1fr;gap:8px}.color-field input[type=color]{width:52px;height:44px;padding:2px;border-radius:10px;cursor:pointer}.hex-input{text-transform:uppercase}.theme-preview{display:grid;grid-template-columns:180px 1fr;min-height:100px;margin-top:14px;border:1px solid #dbe3ea;border-radius:13px;overflow:hidden;background:#fff}.theme-preview-sidebar{background:linear-gradient(145deg,var(--preview-primary,#174c2f),var(--preview-secondary,#14532d));color:#fff;padding:18px;display:flex;flex-direction:column;justify-content:center}.theme-preview-sidebar span{font-size:.8rem;opacity:.8}.theme-preview-content{padding:18px;display:flex;gap:12px;align-items:center}.theme-preview-pill{background:color-mix(in srgb,var(--preview-accent,#16a34a) 16%,white);color:var(--preview-primary,#174c2f);border:1px solid color-mix(in srgb,var(--preview-accent,#16a34a) 40%,white);border-radius:999px;padding:7px 10px;font-weight:800}.theme-preview-content button{border:0;background:var(--preview-accent,#16a34a);color:#fff;border-radius:10px;padding:10px 13px;font-weight:800}
+html.dark-mode .admin-panel,html.dark-mode .admin-tab,html.dark-mode .module-card,html.dark-mode .toggle-field,html.dark-mode .test-strip input,html.dark-mode .color-settings,html.dark-mode .theme-preview{background:#111827!important;color:#e5e7eb!important;border-color:#334155!important}html.dark-mode .admin-tab.active{background:#15803d!important;color:#fff!important;border-color:#16a34a!important}html.dark-mode .panel-heading{border-bottom-color:#334155!important}html.dark-mode .panel-heading p,html.dark-mode .module-card p,html.dark-mode .field-grid small,html.dark-mode .test-strip span{color:#94a3b8!important}html.dark-mode .field-grid label{color:#e5e7eb!important}html.dark-mode .field-grid input,html.dark-mode .field-grid select{background:#020617!important;color:#e5e7eb!important;border-color:#475569!important}html.dark-mode .admin-alert.success{background:#052e1a!important;color:#bbf7d0!important;border-color:#166534!important}html.dark-mode .admin-alert.error{background:#450a0a!important;color:#fecaca!important;border-color:#991b1b!important}
+@@media(max-width:760px){.admin-hero{flex-direction:column}.field-grid{grid-template-columns:1fr}.field-grid label.full{grid-column:auto}.test-strip form{grid-template-columns:1fr}.panel-heading{align-items:flex-start;flex-direction:column}.module-grid,.color-grid{grid-template-columns:1fr}.theme-preview{grid-template-columns:1fr}}
+</style>
+<script>
+document.querySelectorAll('.admin-tab').forEach(function(btn){btn.addEventListener('click',function(){var tab=btn.dataset.tab;document.querySelectorAll('.admin-tab').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('.admin-panel').forEach(x=>x.classList.toggle('active',x.dataset.panel===tab));try{history.replaceState(null,'','?section='+encodeURIComponent(tab));}catch(e){}});});
+(function(){var preview=document.getElementById('themePreview');if(!preview)return;[['PrimaryColor','PrimaryColorPicker','--preview-primary'],['SecondaryColor','SecondaryColorPicker','--preview-secondary'],['AccentColor','AccentColorPicker','--preview-accent']].forEach(function(pair){var text=document.getElementById(pair[0]),picker=document.getElementById(pair[1]);function apply(v){if(/^#[0-9a-fA-F]{6}$/.test(v)){preview.style.setProperty(pair[2],v);picker.value=v;}}picker.addEventListener('input',function(){text.value=picker.value.toUpperCase();apply(picker.value);});text.addEventListener('input',function(){apply(text.value);});apply(text.value);});})();
+</script>

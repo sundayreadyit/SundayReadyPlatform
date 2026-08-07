@@ -316,7 +316,7 @@ public partial class SqlDataService
         return list;
     }
 
-    public async Task AddITSupportTicketCommentAsync(ITSupportCommentForm model, int createdByUserId, string username)
+    public async Task<int> AddITSupportTicketCommentAsync(ITSupportCommentForm model, int createdByUserId, string username)
     {
         await using var conn = CreateConnection();
 
@@ -328,6 +328,7 @@ public partial class SqlDataService
                 IsInternal,
                 CreatedByUserId
             )
+            OUTPUT INSERTED.CommentId
             VALUES
             (
                 @TicketId,
@@ -343,9 +344,11 @@ public partial class SqlDataService
         cmd.Parameters.AddWithValue("@CreatedByUserId", createdByUserId);
 
         await conn.OpenAsync();
-        await cmd.ExecuteNonQueryAsync();
+        var result = await cmd.ExecuteScalarAsync();
+        var commentId = Convert.ToInt32(result);
 
         await WriteITSupportAuditLogAsync(username, "Comment", "ITSupportTicket", model.TicketId, "Added comment to IT support ticket");
+        return commentId;
     }
 
     private static ITSupportTicketRow ReadITSupportTicketRow(SqlDataReader r)
