@@ -38,6 +38,8 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<SystemSettingsService>();
 builder.Services.AddScoped<WorshipPlanningService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddHttpClient("SundayReadyLicensing", client => client.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddScoped<LicenseService>();
 
 var app = builder.Build();
 
@@ -46,6 +48,8 @@ using (var startupScope = app.Services.CreateScope())
 {
     var worshipPlanning = startupScope.ServiceProvider.GetRequiredService<WorshipPlanningService>();
     await worshipPlanning.EnsureSchemaAsync();
+    var licensing = startupScope.ServiceProvider.GetRequiredService<LicenseService>();
+    await licensing.EnsureSchemaAsync();
 }
 
 if (!app.Environment.IsDevelopment())

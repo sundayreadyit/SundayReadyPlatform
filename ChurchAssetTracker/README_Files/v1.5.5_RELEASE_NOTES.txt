@@ -1,0 +1,25 @@
+Sunday Ready Platform v1.5.5 - Licensing Client Cleanup / Public API Ready
+Build Date: 2026-08-08
+
+Changes
+-------
+- Cleaned and restyled Administration > License Management.
+- Added explicit dark-mode styling for the licensing page.
+- Fixed Installed Version rendering so the actual PortalVersion value is displayed.
+- Removed the customer-facing licensing service URL from the page.
+- Uses customer-friendly secure-storage wording for the protected license key.
+- Keeps detailed connection failures in server logs while presenting generic client-facing errors.
+- Retains encrypted local license-key storage, cached license state, and the 7-day offline grace period.
+- Licensing client now points to the public Azure-hosted Sunday Ready Licensing API instead of the temporary Hyper-V development endpoint.
+
+Public Licensing API
+--------------------
+https://sundayready-licensing-api-axhcgbe9aybebvaa.westus3-01.azurewebsites.net
+
+Database
+--------
+No new SQL migration is required. The v1.5.4 ApplicationLicense schema remains current.
+
+Deployment
+----------
+See v1.5.5_DEPLOYMENT_GUIDE.txt.

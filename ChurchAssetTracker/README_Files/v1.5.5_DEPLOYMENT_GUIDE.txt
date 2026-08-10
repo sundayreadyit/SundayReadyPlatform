@@ -1,0 +1,46 @@
+Sunday Ready Platform v1.5.5 - Public Licensing API Deployment Guide
+=====================================================================
+
+Purpose
+-------
+This package is a clean drag-and-drop source update for Sunday Ready Platform v1.5.5.
+It changes the licensing client from the temporary Hyper-V development API endpoint to the public Azure-hosted Sunday Ready Licensing API.
+
+Public licensing endpoint
+-------------------------
+https://sundayready-licensing-api-axhcgbe9aybebvaa.westus3-01.azurewebsites.net
+
+DEV deployment
+--------------
+1. Back up or commit the current DEV repository first.
+2. Stop the DEV IIS application pool/site if files are locked.
+3. Copy the contents of the ChurchAssetTracker folder from this package over the DEV repo's ChurchAssetTracker folder and allow overwrite/merge.
+4. No new SQL migration is required for this update. The existing v1.5.4 ApplicationLicense schema remains current.
+5. Build the solution in Visual Studio.
+6. Publish using the existing DEV publish profile.
+7. Copy the published output to the DEV IIS site.
+8. Preserve App_Data/DataProtectionKeys across deployments after license activation.
+9. Start/recycle the DEV IIS application pool.
+10. Browse to Administration > License Management.
+11. Click Validate Now, or activate using the assigned license key.
+12. Confirm the license validates against the Azure-hosted API.
+13. Verify License Management in both light and dark mode.
+
+Expected licensing behavior
+---------------------------
+- Valid/Active license: portal remains usable and validation state is cached.
+- Revoked/Expired/NotFound/WrongProduct: explicit invalid state.
+- Licensing API unavailable after a prior successful validation: offline grace period is used.
+- Default offline grace period: 7 days.
+- The application no longer depends on the developer PC or Hyper-V host for license validation.
+
+Configuration
+-------------
+appsettings.json now contains:
+  Licensing:ApiBaseUrl = https://sundayready-licensing-api-axhcgbe9aybebvaa.westus3-01.azurewebsites.net
+  Licensing:ProductCode = SRP
+  Licensing:OfflineGraceDays = 7
+
+Future custom domain
+--------------------
+If Sunday Ready IT later maps a custom hostname such as licensing.sundayreadyit.com to the Azure App Service, only Licensing:ApiBaseUrl needs to be changed. No database or licensing-service code change is required.

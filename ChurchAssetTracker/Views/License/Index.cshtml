@@ -1,0 +1,245 @@
+@model ChurchAssetTracker.Models.LicenseAdministrationViewModel
+@{
+    ViewData["Title"] = "License";
+    var s = Model.State;
+}
+
+<style>
+    .license-page {
+        max-width: 980px;
+        margin: 0 auto;
+    }
+
+    .license-hero {
+        background: linear-gradient(135deg, var(--portal-secondary), var(--portal-primary));
+        color: #fff;
+        border-radius: 18px;
+        padding: 26px;
+        margin-bottom: 18px;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .12);
+    }
+
+    .license-eyebrow {
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: .12em;
+        font-size: .76rem;
+        font-weight: 800;
+        opacity: .82;
+    }
+
+    .license-hero h1 {
+        margin: 5px 0;
+        color: #fff;
+    }
+
+    .license-hero p {
+        margin: 0;
+        color: rgba(255,255,255,.88);
+    }
+
+    .license-card {
+        background: #fff;
+        border: 1px solid #dbe3ec;
+        border-radius: 16px;
+        padding: 22px;
+        margin-bottom: 16px;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, .06);
+    }
+
+    .license-card h2 {
+        margin: 0 0 18px;
+        font-size: 1.35rem;
+    }
+
+    .license-status-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px 26px;
+    }
+
+    .license-field-label {
+        display: block;
+        margin-bottom: 4px;
+        color: #64748b;
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .license-field-value {
+        color: #0f172a;
+        font-size: 1.02rem;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+    }
+
+    .license-field-value.prominent {
+        font-size: 1.18rem;
+    }
+
+    .license-form-row {
+        display: flex;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .license-form-row .form-control {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .license-help {
+        margin-top: 8px;
+        color: #64748b;
+        font-size: .88rem;
+    }
+
+    .license-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+    }
+
+    .license-alert {
+        border-radius: 12px;
+        margin-bottom: 14px;
+    }
+
+    html.dark-mode .license-card {
+        background: #111827 !important;
+        color: #e5e7eb !important;
+        border-color: #334155 !important;
+        box-shadow: 0 12px 28px rgba(0,0,0,.32) !important;
+    }
+
+    html.dark-mode .license-field-label,
+    html.dark-mode .license-help {
+        color: #94a3b8 !important;
+    }
+
+    html.dark-mode .license-field-value,
+    html.dark-mode .license-card h2 {
+        color: #f8fafc !important;
+    }
+
+    html.dark-mode .license-hero h1,
+    html.dark-mode .license-hero p,
+    html.dark-mode .license-hero .license-eyebrow {
+        color: #fff !important;
+    }
+
+    html.dark-mode .license-card .btn-outline-secondary {
+        color: #e5e7eb;
+        border-color: #64748b;
+    }
+
+    html.dark-mode .license-card .btn-outline-secondary:hover {
+        background: #334155;
+        border-color: #94a3b8;
+        color: #fff;
+    }
+
+    @@media (max-width: 760px) {
+        .license-status-grid {
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .license-form-row {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="license-page">
+    <section class="license-hero">
+        <span class="license-eyebrow">Sunday Ready Platform</span>
+        <h1>License Management</h1>
+        <p>Activate and validate this installation with Sunday Ready IT.</p>
+    </section>
+
+    @if (TempData["LicenseSuccess"] is string ok)
+    {
+        <div class="alert alert-success license-alert">@ok</div>
+    }
+
+    @if (TempData["LicenseError"] is string err)
+    {
+        <div class="alert alert-danger license-alert">@err</div>
+    }
+
+    <section class="license-card">
+        <h2>License Status</h2>
+
+        <div class="license-status-grid">
+            <div>
+                <span class="license-field-label">Status</span>
+                <div class="license-field-value prominent">@s.Status</div>
+            </div>
+
+            <div>
+                <span class="license-field-label">Licensed To</span>
+                <div class="license-field-value prominent">@(s.Customer ?? "Not activated")</div>
+            </div>
+
+            <div>
+                <span class="license-field-label">Product</span>
+                <div class="license-field-value prominent">@(s.Product ?? "Sunday Ready Platform")</div>
+            </div>
+
+            <div>
+                <span class="license-field-label">Installed Version</span>
+                <div class="license-field-value">v@(Model.InstalledVersion)</div>
+            </div>
+
+            <div>
+                <span class="license-field-label">Licensed Version</span>
+                <div class="license-field-value">@(s.LicensedVersion ?? "—")</div>
+            </div>
+
+            <div>
+                <span class="license-field-label">Expiration</span>
+                <div class="license-field-value">@(s.ExpirationDate?.ToString("d") ?? "No expiration")</div>
+            </div>
+
+            <div>
+                <span class="license-field-label">Last Validated</span>
+                <div class="license-field-value">@(s.LastValidatedUtc?.ToLocalTime().ToString("g") ?? "Never")</div>
+            </div>
+
+            <div>
+                <span class="license-field-label">Offline Grace Through</span>
+                <div class="license-field-value">@(s.GracePeriodEndsUtc?.ToLocalTime().ToString("g") ?? "—")</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="license-card">
+        <h2>@(s.IsActivated ? "Replace / Reactivate License" : "Activate License")</h2>
+
+        <form asp-action="Activate" method="post">
+            <label asp-for="LicenseKey" class="form-label">License Key</label>
+            <div class="license-form-row">
+                <input asp-for="LicenseKey"
+                       class="form-control"
+                       autocomplete="off"
+                       spellcheck="false"
+                       placeholder="SRIT-....." />
+                <button class="btn btn-primary" type="submit">Activate</button>
+            </div>
+            <div class="license-help">Product code: @Model.ProductCode. License keys are stored securely on this installation.</div>
+        </form>
+
+        @if (s.IsActivated)
+        {
+            <div class="license-actions">
+                <form asp-action="Revalidate" method="post">
+                    <button class="btn btn-outline-secondary" type="submit">Validate Now</button>
+                </form>
+            </div>
+        }
+    </section>
+</div>

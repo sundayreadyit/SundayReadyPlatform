@@ -1,0 +1,10 @@
+Sunday Ready Platform v1.5.4 - Licensing Foundation
+Build: 2026-08-08
+
+- Added administrator Product License page.
+- Added activation and revalidation against the Sunday Ready Licensing API.
+- License keys are encrypted at rest with ASP.NET Core Data Protection.
+- Added cached license metadata and a configurable 7-day offline grace window.
+- Added Product License to Deployment Setup and Administration navigation.
+- Added ApplicationLicense database schema with automatic startup provisioning.
+- This release establishes licensing infrastructure; global access enforcement is intentionally deferred until the production licensing API endpoint is deployed and verified.

@@ -8,7 +8,8 @@ namespace ChurchAssetTracker.Controllers;
 public class SetupWizardController : Controller
 {
     private readonly SystemSettingsService _settings;
-    public SetupWizardController(SystemSettingsService settings) => _settings = settings;
+    private readonly LicenseService _licenses;
+    public SetupWizardController(SystemSettingsService settings, LicenseService licenses) { _settings = settings; _licenses = licenses; }
 
     [HttpGet]
     public async Task<IActionResult> Index()
@@ -17,6 +18,7 @@ public class SetupWizardController : Controller
         ViewBag.Email = await _settings.GetEmailAsync();
         ViewBag.Storage = await _settings.GetStorageAsync();
         ViewBag.Modules = await _settings.GetModulesAsync();
+        ViewBag.License = await _licenses.GetStateAsync();
         return View();
     }
 }
