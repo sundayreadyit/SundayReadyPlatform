@@ -1,9 +1,17 @@
 @using ChurchAssetTracker.Models
 @inject ChurchAssetTracker.Services.SystemSettingsService SystemSettings
+@inject ChurchAssetTracker.Services.LicenseService LicenseService
 @{
     var portalBranding = await SystemSettings.GetBrandingAsync();
     var portalModules = await SystemSettings.GetModulesAsync();
     var enabledModules = portalModules.Where(x => x.IsEnabled).Select(x => x.ModuleKey).ToHashSet(StringComparer.OrdinalIgnoreCase);
+    LicenseState licenseState = new();
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        licenseState = Context.Items[ChurchAssetTracker.Services.LicenseEnforcementFilter.LicenseStateItemKey] as LicenseState
+            ?? await LicenseService.GetEnforcementStateAsync();
+    }
+    var licenseViewOnly = licenseState.IsViewOnly;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -497,6 +505,16 @@ function toggleDarkMode(){
             border-color: #334155 !important;
         }
 
+
+        .license-view-only-banner{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 28px;background:#fff7ed;border-bottom:1px solid #fdba74;color:#9a3412}
+        .license-view-only-banner strong{display:block;color:#9a3412;font-size:.95rem}
+        .license-view-only-banner span{display:block;margin-top:2px;font-size:.88rem}
+        .license-view-only-banner a{white-space:nowrap;font-weight:800;color:#9a3412;text-decoration:underline}
+        body.license-view-only [data-license-write-disabled="true"]{opacity:.55;cursor:not-allowed!important}
+        html.dark-mode .license-view-only-banner{background:#431407;color:#fed7aa;border-color:#9a3412}
+        html.dark-mode .license-view-only-banner strong,html.dark-mode .license-view-only-banner span,html.dark-mode .license-view-only-banner a{color:#fed7aa!important}
+        @@media(max-width:800px){.license-view-only-banner{padding:12px 18px;align-items:flex-start;flex-direction:column;gap:8px}}
+
 </style>
 
     <link rel="icon" type="image/png" href="@portalBranding.FaviconPath" />
@@ -505,7 +523,7 @@ function toggleDarkMode(){
     <meta name="theme-color" content="@portalBranding.PrimaryColor" />
 
 </head>
-<body>
+<body class="@(licenseViewOnly ? "license-view-only" : null)">
 @{
     var isAdmin = User.IsInRole("Admin");
     var canPeople = isAdmin && enabledModules.Contains("People");
@@ -654,10 +672,57 @@ var canAudit = isAdmin || User.IsInRole("Pastor");
 <form asp-controller="Account" asp-action="Logout" method="post">@Html.AntiForgeryToken()<button type="submit">Logout</button></form>
 </div></div>}
 </header>
+@if (User.Identity?.IsAuthenticated == true && licenseViewOnly)
+{
+    <div class="license-view-only-banner" role="alert">
+        <div>
+            <strong>VIEW-ONLY MODE — License action required</strong>
+            <span>@(licenseState.AccessReason ?? "This installation currently permits viewing only. Data-changing actions are disabled.")</span>
+        </div>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="License" asp-action="Index">Manage License</a>
+        }
+        else
+        {
+            <span>Contact your administrator or Sunday Ready IT.</span>
+        }
+    </div>
+}
 <main class="content-area">@RenderBody()</main>
 <footer class="footer"><strong>@portalBranding.PortalName</strong> v@(PortalVersion.Version) • @PortalVersion.ReleaseName • Build @PortalVersion.BuildDate<br /><span>Powered by Sunday Ready IT • © 2026 Sunday Ready IT • Licensed to @portalBranding.OrganizationName</span></footer>
 </div></div>
 <script>
+
+@if (licenseViewOnly)
+{
+<text>
+(function enforceViewOnlyUi(){
+    function isExemptForm(form){
+        var action=(form.getAttribute('action')||'').toLowerCase();
+        return action.indexOf('/license/')>=0 || action.endsWith('/license') || action.indexOf('/account/logout')>=0;
+    }
+
+    document.querySelectorAll('form').forEach(function(form){
+        var method=(form.getAttribute('method')||'get').toLowerCase();
+        if(method==='get' || isExemptForm(form)) return;
+        form.querySelectorAll('button[type="submit"],input[type="submit"]').forEach(function(control){
+            control.disabled=true;
+            control.setAttribute('data-license-write-disabled','true');
+            control.title='Disabled while Sunday Ready Platform is in View-Only mode.';
+        });
+    });
+
+    document.querySelectorAll('a[href]').forEach(function(link){
+        var href=(link.getAttribute('href')||'').toLowerCase();
+        if(href.indexOf('/license')>=0) return;
+        if(/\/(create|edit|delete|assign|checkout|cancel|close|upload)(\/|\?|$)/i.test(href)){
+            link.style.display='none';
+        }
+    });
+})();
+</text>
+}
 
 function toggleNotificationMenu(){var m=document.getElementById('notificationDropdown');if(m)m.classList.toggle('open');}
 document.addEventListener('click',function(e){var m=document.getElementById('notificationDropdown');var p=document.querySelector('.notification-menu');if(m&&p&&!p.contains(e.target)){m.classList.remove('open');}});

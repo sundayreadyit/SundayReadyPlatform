@@ -4,6 +4,9 @@ public class LicenseState
 {
     public bool IsActivated { get; set; }
     public bool IsUsable { get; set; }
+    public string AccessMode { get; set; } = "FullAccess";
+    public bool IsViewOnly => AccessMode.Equals("ViewOnly", StringComparison.OrdinalIgnoreCase);
+    public string? AccessReason { get; set; }
     public string Status { get; set; } = "NotActivated";
     public string? Message { get; set; }
     public string? Customer { get; set; }

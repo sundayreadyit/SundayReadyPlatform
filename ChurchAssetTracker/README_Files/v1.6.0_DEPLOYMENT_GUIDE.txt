@@ -1,0 +1,42 @@
+Sunday Ready Platform v1.6.0 Deployment Guide
+License Enforcement & View-Only Mode
+
+DEV DEPLOYMENT
+1. Back up or commit the current development repo before applying the drop-in package.
+2. Copy the ChurchAssetTracker folder from this package over the current development repo and allow files to overwrite.
+3. Open the solution/project in Visual Studio.
+4. Build the project. Resolve any compile errors before proceeding.
+5. No SQL migration is required for v1.6.0.
+6. Publish using the normal development IIS publish workflow.
+7. Replace the files in the dev IIS site with the new publish output.
+8. Start/recycle the application pool and browse the site.
+
+VALIDATION TESTS
+A. Valid license
+- Sign in.
+- Administration > License Management should show Access Mode: FullAccess.
+- Confirm normal create/edit operations work.
+
+B. Expired license / View-Only
+- Use the Sunday Ready IT - Dev license for testing; do not alter a customer production license.
+- Temporarily set the Dev license expiration to a past date in License Manager.
+- In the Platform, go to License Management and click Validate Now.
+- Confirm Access Mode becomes ViewOnly and the portal banner appears.
+- Confirm list/detail/dashboard pages still open.
+- Confirm POST/write operations are blocked and redirected to License Management.
+- Confirm common write buttons are disabled/hidden.
+- Confirm Logout still works.
+- Restore the Dev license and click Validate Now.
+- Confirm FullAccess returns immediately.
+
+C. Offline grace
+- The Platform periodically refreshes licensing automatically. A failed automatic validation is throttled to avoid a network timeout on every request.
+- Full write access is retained only while the last successful validation is within Licensing:OfflineGraceDays.
+
+ROLLBACK
+- Restore the prior application files/publish output.
+- No database rollback is required because v1.6.0 has no schema migration.
+
+NOTES
+- Server-side enforcement is authoritative. UI hiding/disable behavior is convenience only.
+- License and Account controllers are exempt from write blocking so administrators can recover licensing and users can log out.

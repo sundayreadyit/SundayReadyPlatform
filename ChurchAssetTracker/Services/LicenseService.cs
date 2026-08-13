@@ -16,7 +16,11 @@ public class LicenseService
     private readonly string _productCode;
     private readonly int _graceDays;
     private static readonly SemaphoreSlim SchemaLock = new(1, 1);
+    private static readonly SemaphoreSlim AutomaticValidationLock = new(1, 1);
     private static bool _schemaReady;
+    private static DateTime _lastAutomaticValidationAttemptUtc = DateTime.MinValue;
+    private static readonly TimeSpan AutomaticValidationInterval = TimeSpan.FromHours(24);
+    private static readonly TimeSpan FailedValidationRetryInterval = TimeSpan.FromHours(1);
 
     public LicenseService(IConfiguration configuration, IHttpClientFactory httpClientFactory,
         IDataProtectionProvider dataProtectionProvider, ILogger<LicenseService> logger)
@@ -79,27 +83,106 @@ ExpirationDate, LicensedModules, LastValidatedUtc FROM dbo.ApplicationLicense WH
         await using var cmd = new SqlCommand(sql, conn);
         await using var r = await cmd.ExecuteReaderAsync();
         if (!await r.ReadAsync()) return new LicenseState();
+
         var hasKey = !r.IsDBNull(0) && !string.IsNullOrWhiteSpace(r.GetString(0));
         var status = r.IsDBNull(1) ? "NotActivated" : r.GetString(1);
+        DateTime? expiration = r.IsDBNull(5) ? null : r.GetDateTimeOffset(5).UtcDateTime;
         DateTime? last = r.IsDBNull(7) ? null : DateTime.SpecifyKind(r.GetDateTime(7), DateTimeKind.Utc);
         var graceEnd = last?.AddDays(_graceDays);
+        var now = DateTime.UtcNow;
+
         var explicitInvalid = status.Equals("Revoked", StringComparison.OrdinalIgnoreCase)
             || status.Equals("Expired", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("Suspended", StringComparison.OrdinalIgnoreCase)
             || status.Equals("WrongProduct", StringComparison.OrdinalIgnoreCase)
-            || status.Equals("NotFound", StringComparison.OrdinalIgnoreCase);
+            || status.Equals("NotFound", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("Invalid", StringComparison.OrdinalIgnoreCase);
+
+        // A date-only license remains usable through its expiration date and becomes
+        // view-only on the following UTC day, even if the API is temporarily unavailable.
+        var locallyExpired = expiration.HasValue && expiration.Value.Date < now.Date;
+        var withinOfflineGrace = graceEnd.HasValue && graceEnd.Value > now;
+        var isUsable = hasKey && !explicitInvalid && !locallyExpired && withinOfflineGrace;
+
+        var accessMode = "FullAccess";
+        string? accessReason = null;
+
+        // Preserve setup/activation access on an installation that has never been activated.
+        // Once a key has been installed, an unusable license becomes View-Only.
+        if (hasKey && !isUsable)
+        {
+            accessMode = "ViewOnly";
+
+            if (locallyExpired || status.Equals("Expired", StringComparison.OrdinalIgnoreCase))
+                accessReason = $"The Sunday Ready Platform license expired on {expiration?.ToLocalTime():d}.";
+            else if (status.Equals("Revoked", StringComparison.OrdinalIgnoreCase))
+                accessReason = "The Sunday Ready Platform license has been revoked.";
+            else if (status.Equals("Suspended", StringComparison.OrdinalIgnoreCase))
+                accessReason = "The Sunday Ready Platform license has been suspended.";
+            else if (status.Equals("WrongProduct", StringComparison.OrdinalIgnoreCase))
+                accessReason = "The installed license is not valid for Sunday Ready Platform.";
+            else if (status.Equals("NotFound", StringComparison.OrdinalIgnoreCase) || status.Equals("Invalid", StringComparison.OrdinalIgnoreCase))
+                accessReason = "The installed license is no longer recognized by the Sunday Ready licensing service.";
+            else if (!withinOfflineGrace)
+                accessReason = graceEnd.HasValue
+                    ? $"The licensing service has not been successfully reached since {last?.ToLocalTime():g}, and the offline grace period ended {graceEnd.Value.ToLocalTime():g}."
+                    : "This installation has not completed a successful license validation.";
+            else
+                accessReason = "The installed license does not currently permit write access.";
+        }
+
         return new LicenseState
         {
             IsActivated = hasKey,
-            IsUsable = hasKey && !explicitInvalid && (status.Equals("Valid", StringComparison.OrdinalIgnoreCase) || (graceEnd.HasValue && graceEnd > DateTime.UtcNow)),
-            Status = status,
+            IsUsable = isUsable,
+            AccessMode = accessMode,
+            AccessReason = accessReason,
+            Status = locallyExpired ? "Expired" : status,
             Customer = r.IsDBNull(2) ? null : r.GetString(2),
             Product = r.IsDBNull(3) ? null : r.GetString(3),
             LicensedVersion = r.IsDBNull(4) ? null : r.GetString(4),
-            ExpirationDate = r.IsDBNull(5) ? null : r.GetDateTimeOffset(5).DateTime,
+            ExpirationDate = expiration,
             LicensedModules = DeserializeModules(r.IsDBNull(6) ? null : r.GetString(6)),
             LastValidatedUtc = last,
             GracePeriodEndsUtc = graceEnd
         };
+    }
+
+    /// <summary>
+    /// Returns the current enforcement state and periodically refreshes the license
+    /// against the public licensing API. Failed automatic checks are throttled so an
+    /// API outage does not add a network timeout to every portal request.
+    /// </summary>
+    public async Task<LicenseState> GetEnforcementStateAsync()
+    {
+        var state = await GetStateAsync();
+        if (!state.IsActivated) return state;
+
+        var now = DateTime.UtcNow;
+        var needsRefresh = !state.LastValidatedUtc.HasValue
+            || state.LastValidatedUtc.Value.Add(AutomaticValidationInterval) <= now;
+
+        if (!needsRefresh) return state;
+
+        if (_lastAutomaticValidationAttemptUtc.Add(FailedValidationRetryInterval) > now)
+            return state;
+
+        if (!await AutomaticValidationLock.WaitAsync(0))
+            return state;
+
+        try
+        {
+            now = DateTime.UtcNow;
+            if (_lastAutomaticValidationAttemptUtc.Add(FailedValidationRetryInterval) > now)
+                return await GetStateAsync();
+
+            _lastAutomaticValidationAttemptUtc = now;
+            return await RevalidateAsync();
+        }
+        finally
+        {
+            AutomaticValidationLock.Release();
+        }
     }
 
     public async Task<LicenseState> ActivateAsync(string licenseKey)

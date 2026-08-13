@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<ModuleEnabledFilter>();
+builder.Services.AddScoped<LicenseEnforcementFilter>();
 builder.Services.AddControllersWithViews(options =>
 {
     var authenticatedUserPolicy = new AuthorizationPolicyBuilder()
@@ -15,6 +16,7 @@ builder.Services.AddControllersWithViews(options =>
         .Build();
     options.Filters.Add(new AuthorizeFilter(authenticatedUserPolicy));
     options.Filters.AddService<ModuleEnabledFilter>();
+    options.Filters.AddService<LicenseEnforcementFilter>();
 });
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

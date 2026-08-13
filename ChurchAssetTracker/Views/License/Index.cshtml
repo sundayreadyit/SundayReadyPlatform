@@ -171,10 +171,25 @@
         <div class="alert alert-danger license-alert">@err</div>
     }
 
+    @if (Context.Request.Query["viewOnly"].ToString().Equals("true", StringComparison.OrdinalIgnoreCase))
+    {
+        <div class="alert alert-warning license-alert">A data-changing action was blocked because this installation is currently in View-Only mode. Revalidate or replace the license below to restore write access.</div>
+    }
+
+    @if (s.IsViewOnly)
+    {
+        <div class="alert alert-warning license-alert"><strong>View-Only Mode:</strong> @(s.AccessReason ?? "Write access is currently disabled by licensing.")</div>
+    }
+
     <section class="license-card">
         <h2>License Status</h2>
 
         <div class="license-status-grid">
+            <div>
+                <span class="license-field-label">Access Mode</span>
+                <div class="license-field-value prominent">@s.AccessMode</div>
+            </div>
+
             <div>
                 <span class="license-field-label">Status</span>
                 <div class="license-field-value prominent">@s.Status</div>

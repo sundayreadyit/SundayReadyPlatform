@@ -1,0 +1,32 @@
+Sunday Ready Platform v1.6.0
+License Enforcement & View-Only Mode
+Build date: 2026-08-13
+
+OVERVIEW
+Sunday Ready Platform now actively enforces license state instead of displaying licensing information only. An activated installation with an expired, revoked, suspended, invalid, or unverifiable license beyond its offline grace period enters View-Only mode.
+
+WHAT'S NEW
+- Added centralized license access state: FullAccess / ViewOnly.
+- Added global server-side write enforcement for POST, PUT, PATCH, and DELETE requests.
+- GET/HEAD/OPTIONS requests remain available so customers retain access to their data.
+- License activation and revalidation remain available to administrators while View-Only mode is active.
+- Logout remains available while View-Only mode is active.
+- Added a prominent View-Only banner across the authenticated portal.
+- Added UI suppression/disable behavior for common create, edit, delete, assignment, checkout, upload, close, and cancel actions.
+- Added local expiration enforcement so a stored expiration date cannot be bypassed by an API outage.
+- Corrected offline-grace enforcement: a previously Valid status no longer grants write access forever after the last successful validation ages beyond the configured grace period.
+- Added periodic automatic license refresh with failed-request throttling.
+- Updated License Management to display Access Mode and the reason for View-Only state.
+
+LICENSE BEHAVIOR
+Valid / successfully validated within grace: Full Access
+Licensing API unavailable but within offline grace: Full Access
+Expired: View-Only
+Revoked: View-Only
+Suspended: View-Only
+Invalid / not found / wrong product: View-Only
+Offline grace exhausted: View-Only
+Never activated: existing setup/activation behavior is preserved
+
+DATABASE
+No SQL migration is required for v1.6.0. Existing ApplicationLicense data is used.
